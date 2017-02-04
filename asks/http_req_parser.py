@@ -1,8 +1,8 @@
 import curio
 
-from req_structs import CaseInsensitiveDict as c_i_Dict
+from .req_structs import CaseInsensitiveDict as c_i_Dict
 
-from asks_exceptions import RequestTimeout
+from .exceptions import RequestTimeout
 
 
 class HttpParser:

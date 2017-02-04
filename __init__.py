@@ -1,1 +1,0 @@
-from asks import get, head, post, put, delete, options

@@ -7,15 +7,12 @@ import curio
 from curio.socket import *
 from curio.file import aopen
 
-from req_structs import CaseInsensitiveDict as c_i_Dict
-from response_objects import Response
+from .req_structs import CaseInsensitiveDict as c_i_Dict
+from .response_objects import Response
 
-from http_req_parser import HttpParser
+from .http_req_parser import HttpParser
 
-from asks_exceptions import TooManyRedirects
-
-
-__all__ = [get, head, post, put, delete, options]
+from .exceptions import TooManyRedirects
 
 
 _BOUNDARY = "8banana133744910kmmr13ay5fa56"

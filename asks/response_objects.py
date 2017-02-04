@@ -4,13 +4,13 @@ import zlib
 
 from types import SimpleNamespace
 
-from encode_values import encode_strings
+from .encode_values import encode_strings
 
 
 class Response(SimpleNamespace):
     '''
     A response object supporting a range of methods and attribs
-    for accessing the status line, header, cookies, history and 
+    for accessing the status line, header, cookies, history and
     body of a response.
     '''
     def __init__(self, encoding, cookies, **data):
