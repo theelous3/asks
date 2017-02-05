@@ -33,7 +33,7 @@ async def get_tasker(url):
 
 async def main(url_list):
     for url in url_list:
-        await curio.spawn(example(url))
+        await curio.spawn(get_tasker(url))
 
 curio.run(main(url_list))
 ```
