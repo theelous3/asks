@@ -14,11 +14,11 @@ asks aims to have a mostly familiar API, using simple functions like get() for g
 import asks
 import curio
 
-def example():
+async def example():
     r = await asks.get('http://httpbin.org')
     print(r.content)
 
-curio.run(blah())
+curio.run(example())
 ```
 ```python
 # many requests
