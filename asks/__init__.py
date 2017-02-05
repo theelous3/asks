@@ -39,7 +39,7 @@ async def _build_request(uri,
                          files=None,
                          cookies=None,
                          callback=None,
-                         timeout=(9999, 9999),
+                         timeout=9999,
                          max_redirects=float('inf'),
                          history_objects=[]):
     '''
