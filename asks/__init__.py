@@ -3,16 +3,16 @@ from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
 import json as _json
 
-import curio
-from curio.socket import *
+from curio import socket
 from curio.file import aopen
 
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
-
 from .http_req_parser import HttpParser
-
 from .exceptions import TooManyRedirects
+
+
+__all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
 
 
 _BOUNDARY = "8banana133744910kmmr13ay5fa56"
@@ -359,8 +359,8 @@ async def _open_connection(location):
     '''
     Creates an async socket, set to stream mode and returns it.
     '''
-    sock = socket(AF_INET, SOCK_STREAM)
-    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     await sock.connect(location)
     sock = sock.as_stream()
     return sock
