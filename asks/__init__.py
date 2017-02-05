@@ -22,7 +22,7 @@ _HTTP_METHODS = {}
 
 def _method_map(func):
     '''
-    A simple wrapper to store HTTP methods in a dict for use in redirects.
+    A simple decorator to store HTTP methods in a dict for use in redirects.
     '''
     _HTTP_METHODS[func.__name__.upper()] = func
     return func
@@ -58,9 +58,11 @@ async def _build_request(uri,
     except ValueError:
         cnect_to = (netloc, 80)
 
+    host = (cnect_to[0] if cnect_to[1] == 80 else
+            ':'.join(map(str, cnect_to)))
+
     # default header construction
-    _headers = c_i_Dict([('Host', ' ' + (cnect_to[0] if cnect_to[1] == 80 else
-                                         ':'.join(str(x) for x in cnect_to))),
+    _headers = c_i_Dict([('Host', ' ' + host),
                          ('Connection', ' keep-alive'),
                          ('Accept-Encoding', ' gzip, deflate'),
                          ('Accept', ' */*'),
@@ -124,7 +126,7 @@ async def _build_request(uri,
             max_redirects -= 1
         response_obj = await _redirect(method,
                                        response_obj,
-                                       (scheme, _headers['Host'].strip()),
+                                       (scheme, host.strip()),
                                        history_objects,
                                        encoding=encoding,
                                        timeout=timeout,
@@ -325,7 +327,7 @@ async def _catch_response(sock, encoding, timeout, callback):
     the callback function.
     '''
     parser = HttpParser(sock)
-    resp = await parser.parse_stream_headers(timeout[0])
+    resp = await parser.parse_stream_headers(timeout)
     cookies = resp.pop('cookies')
     parse_kwargs = {}
     try:
