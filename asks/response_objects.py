@@ -25,7 +25,7 @@ class Response:
         # maybe a status_text attribute or something could be nice too?
         # requests has a status codes dictionary thingy, it can be used
         # like requests.status_codes.codes['NOT_FOUND']
-        return "<Response %d at 0x%x>"  % (self.status_code, id(self))
+        return "<Response {} at 0x{:x}>".format(self.status_code, id(self))
 
     def __iter__(self):
         for k, v in self.__dict__.items():
