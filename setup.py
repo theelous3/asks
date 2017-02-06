@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(name='asks',
       description='asks - async http',
-      long_description='asks is an async http lib'
+      long_description='asks is an async http lib',
       licence='MIT',
       version='0.0.1',
       author='Mark Jameson - aka theelous3',

@@ -2,8 +2,9 @@ from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
 import json as _json
+from random import randint
 
-from curio import socket
+from curio import socket, open_connection
 from curio.file import aopen
 
 from .req_structs import CaseInsensitiveDict as c_i_Dict
@@ -15,7 +16,7 @@ from .exceptions import TooManyRedirects
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
 
 
-_BOUNDARY = "8banana133744910kmmr13ay5fa56"
+_BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
 
 _HTTP_METHODS = {}
 
@@ -101,7 +102,10 @@ async def _build_request(uri,
             package.append('Cookie: {}={}'.format(k, v))
 
     # begin interfacing with remote server
-    sock = await _open_connection(cnect_to)
+    if scheme == 'https':
+        sock = await _open_connection_https(cnect_to)
+    else:
+        sock = await _open_connection_http(cnect_to)
     parser = HttpParser(sock)
     async with sock:
         # send
@@ -356,13 +360,25 @@ async def _catch_response(sock, encoding, timeout, callback):
     return Response(encoding, cookies, statuscode, **resp)
 
 
-async def _open_connection(location):
+async def _open_connection_http(location):
     '''
     Creates an async socket, set to stream mode and returns it.
     '''
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     await sock.connect(location)
+    sock = sock.as_stream()
+    return sock
+
+
+async def _open_connection_https(location):
+    '''
+    Creates an async SSL socket, set to stream mode and returns it.
+    '''
+    sock = await open_connection(location[0],
+                                 443,
+                                 ssl=True,
+                                 server_hostname=location[0])
     sock = sock.as_stream()
     return sock
 
