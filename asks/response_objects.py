@@ -1,3 +1,4 @@
+import codecs
 from types import SimpleNamespace
 import json as _json
 import gzip
@@ -45,11 +46,12 @@ class Response:
     def _guess_encoding(self):
         try:
             guess = self.headers['content-type'].split('=')[1]
-        except:
+            codecs.lookup(guess)
+        # TODO: replace Exception with errors from first line
+        except (Exception, LookupError):
             pass
         else:
-            if guess in encode_strings:
-                self.encoding = guess
+            self.encoding = guess
 
     def _parse_cookies(self, host):
         cookie_pie = []
