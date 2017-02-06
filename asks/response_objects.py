@@ -1,34 +1,39 @@
+import codecs
+from types import SimpleNamespace
 import json as _json
 import gzip
 import zlib
 
-from types import SimpleNamespace
 
-from .encode_values import encode_strings
-
-
-class Response(SimpleNamespace):
+class Response:
     '''
     A response object supporting a range of methods and attribs
     for accessing the status line, header, cookies, history and
     body of a response.
     '''
-    def __init__(self, encoding, cookies, **data):
-        super().__init__(**data)
+    def __init__(self, encoding, cookies, status_code, **data):
+        for name, value in data.items():
+            setattr(self, name, value)
         self.encoding = encoding
         self.history = []
         self.cookies = cookies
+        self.status_code = status_code
 
     def __repr__(self):
-        return '<Response object {}>'.format(hex(id(self)))
+        # TODO: include the name of the response here
+        # e.g. "201 Created" or "404 Not Found"
+        # maybe a status_text attribute or something could be nice too?
+        # requests has a status codes dictionary thingy, it can be used
+        # like requests.status_codes.codes['NOT_FOUND']
+        return "<Response {} at 0x{:x}>".format(self.status_code, id(self))
 
     def __iter__(self):
         for k, v in self.__dict__.items():
             yield k, v
 
     def _check_redirect(self):
-        if self.status_code.startswith('3'):
-            if self.status_code in ['301', '305']:
+        if 300 <= self.status_code < 400:
+            if self.status_code in [301, 305]:
                 # redirect / force GET / location
                 return True, False, self.headers['Location']
             else:
@@ -39,11 +44,12 @@ class Response(SimpleNamespace):
     def _guess_encoding(self):
         try:
             guess = self.headers['content-type'].split('=')[1]
-        except:
+            codecs.lookup(guess)
+        # TODO: replace Exception with errors from first line
+        except (Exception, LookupError):
             pass
         else:
-            if guess in encode_strings:
-                self.encoding = guess
+            self.encoding = guess
 
     def _parse_cookies(self, host):
         cookie_pie = []

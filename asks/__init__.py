@@ -329,6 +329,7 @@ async def _catch_response(sock, encoding, timeout, callback):
     parser = HttpParser(sock)
     resp = await parser.parse_stream_headers(timeout)
     cookies = resp.pop('cookies')
+    statuscode = int(resp.pop('status_code'))
     parse_kwargs = {}
     try:
         content_len = int(resp['headers']['Content-Length'])
@@ -352,7 +353,7 @@ async def _catch_response(sock, encoding, timeout, callback):
         resp['body'] = await parser.parse_body(**parse_kwargs)
     else:
         resp['body'] = None
-    return Response(encoding, cookies, **resp)
+    return Response(encoding, cookies, statuscode, **resp)
 
 
 async def _open_connection(location):
