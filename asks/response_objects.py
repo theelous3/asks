@@ -20,7 +20,10 @@ class Response(SimpleNamespace):
         self.cookies = cookies
 
     def __repr__(self):
-        return '<Response object {}>'.format(hex(id(self)))
+        # TODO: include the name of the response here
+        # e.g. "201 Created" or "404 Not Found"
+        # maybe a status_text attribute or something could be nice too?
+        return "<asks response [%d]>"  % self.status_code
 
     def __iter__(self):
         for k, v in self.__dict__.items():
