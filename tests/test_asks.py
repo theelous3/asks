@@ -13,6 +13,11 @@ def curio_run(func):
         return curio.run(func(*args, **kwargs))
     return func_wrapper
 
+@curio_run
+async def test_https_get():
+    r = await asks.get('https://www.reddit.com')
+    print(r.content)
+    assert r.status_code == 200
 
 @curio_run
 async def test_http_get():
