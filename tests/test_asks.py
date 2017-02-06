@@ -17,7 +17,7 @@ def curio_run(func):
 @curio_run
 async def test_http_get():
     r = await asks.get('http://httpbin.org/get')
-    assert r.status_code == '200'
+    assert r.status_code == 200
 
 
 @curio_run
