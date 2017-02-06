@@ -4,8 +4,6 @@ import json as _json
 import gzip
 import zlib
 
-from .encode_values import encode_strings
-
 
 class Response:
     '''
@@ -27,7 +25,7 @@ class Response:
         # maybe a status_text attribute or something could be nice too?
         # requests has a status codes dictionary thingy, it can be used
         # like requests.status_codes.codes['NOT_FOUND']
-        return "<asks response [%d]>"  % self.status_code
+        return "<Response %d at 0x%x>"  % (self.status_code, id(self))
 
     def __iter__(self):
         for k, v in self.__dict__.items():
