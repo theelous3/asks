@@ -88,8 +88,7 @@ class Response:
     def json(self):
         body = self._decompress(self.body)
         try:
-            return _json.loads(body.decode(encoding=self.encoding,
-                                            errors='replace'))
+            return _json.loads(body.decode(self.encoding, errors='replace'))
         except AttributeError:
             return None
 

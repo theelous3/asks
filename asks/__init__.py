@@ -78,14 +78,10 @@ async def _build_request(uri,
 
     # handle building the request body, if any
     if any((data, files, json)):
-        content_type, content_len, query_data = await _formulate_body(encoding,
-                                                                      data,
-                                                                      files,
-                                                                      json)
+        content_type, content_len, query_data = await _formulate_body(
+            encoding, data, files, json)
         _headers['Content-Type'] = content_type
         _headers['Content-Length'] = content_len
-    else:
-        query_data = ''
 
     # add custom headers, if any
     # note that custom headers take precedence
@@ -106,19 +102,13 @@ async def _build_request(uri,
         sock = await _open_connection_https(cnect_to)
     else:
         sock = await _open_connection_http(cnect_to)
-    parser = HttpParser(sock)
     async with sock:
         # send
-        await _send(sock,
-                    package,
-                    encoding,
-                    data)
+        await _send(sock, package, encoding, data)
 
         # recv and return Response object
-        response_obj = await _catch_response(sock,
-                                             encoding,
-                                             timeout,
-                                             callback)
+        response_obj = await _catch_response(
+            sock, encoding, timeout, callback)
 
     response_obj._parse_cookies(_headers['Host'])
     response_obj._guess_encoding()
@@ -207,7 +197,7 @@ async def _formulate_body(encoding, data, files, json):
     appropriately, returning the contents type, len,
     and the request body its self.
     '''
-    c_type, content_len, query_data = None, '0', ''
+    c_type, query_data = None, ''
     multipart_ctype = ' multipart/form-data; boundary={}'.format(_BOUNDARY)
     if files and data:
         c_type = multipart_ctype

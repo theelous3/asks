@@ -1,11 +1,11 @@
 import sys
-sys.path.append('..')
-import curio
 
+import curio
+import pytest
+
+sys.path.append('..')   # noqa
 import asks
 from asks.exceptions import TooManyRedirects, RequestTimeout
-
-import pytest
 
 
 def curio_run(func):
@@ -13,11 +13,13 @@ def curio_run(func):
         return curio.run(func(*args, **kwargs))
     return func_wrapper
 
+
 @curio_run
 async def test_https_get():
     r = await asks.get('https://www.reddit.com')
     print(r.content)
     assert r.status_code == 200
+
 
 @curio_run
 async def test_http_get():
@@ -34,10 +36,10 @@ async def test_http_redirect():
 @curio_run
 async def test_http_max_redirect():
     with pytest.raises(TooManyRedirects):
-        r = await asks.get('http://httpbin.org/redirect/2', max_redirects=1)
+        await asks.get('http://httpbin.org/redirect/2', max_redirects=1)
 
 
 @curio_run
 async def test_http_timeout():
     with pytest.raises(RequestTimeout):
-        r = await asks.get('http://httpbin.org/delay/1', timeout=1)
+        await asks.get('http://httpbin.org/delay/1', timeout=1)

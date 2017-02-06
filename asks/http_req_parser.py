@@ -29,8 +29,8 @@ class HttpParser:
             if timeout:
                 response_task = await curio.spawn(self.stream_obj.__anext__())
                 try:
-                    status_line = await curio.timeout_after(timeout,
-                                                            response_task.join())
+                    status_line = await curio.timeout_after(
+                        timeout, response_task.join())
                 except curio.TaskTimeout:
                     await response_task.cancel()
                     raise RequestTimeout
