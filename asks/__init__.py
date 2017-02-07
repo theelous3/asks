@@ -98,10 +98,10 @@ async def _build_request(uri,
             package.append('Cookie: {}={}'.format(k, v))
 
     # begin interfacing with remote server
-    if scheme == 'https':
-        sock = await _open_connection_https(cnect_to)
-    else:
+    if scheme == 'http':
         sock = await _open_connection_http(cnect_to)
+    else:
+        sock = await _open_connection_https(cnect_to)
     async with sock:
         # send
         await _send(sock, package, encoding, data)
