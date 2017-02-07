@@ -133,7 +133,7 @@ async def example():
 
  You may limit the number of redirects by setting `max_redirects`. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.
 
- ### Set Timeout
+### Set Timeout
 ```python
 
 async def example():
