@@ -1,7 +1,7 @@
 # asks
-asks is an async requests-like http lib, currently for use in conjunction with the wonderful [cuio](https://github.com/dabeaz/curio) async lib. The poject's long term goal is to be event loop agnostic, meaning it could be used in any async "framework", be it asyncio, curio<sup>*</sup> or others.
+asks is an async requests-like http lib, currently for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib. The poject's long term goal is to be event loop agnostic, meaning it could be used in any async "framework", be it asyncio, curio<sup>*</sup> or others.
 
-asks aims to have a mostly familiar API, using simple functions like get() for getting, post() for posting.
+asks aims to have a mostly familiar API, using simple functions like `get()` for getting, `post()` for posting.
 
 <sup>Not a framework :)</sup>
 
@@ -85,7 +85,7 @@ You may add your own custom headers or overwrite the default headers by supplyin
 ```python
 
 files_to_send = {'Some file': 'path/to/file.txt',
-                'Some other file': 'path/to/file_2.txt'}
+                 'Some other file': 'path/to/file_2.txt'}
 
 async def example():
     r = await(asks.post('www.example.com', files=files_to_send))
