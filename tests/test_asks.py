@@ -5,7 +5,7 @@ import pytest
 
 sys.path.append('..')   # noqa
 import asks
-from asks.exceptions import TooManyRedirects, RequestTimeout
+from asks.errors import TooManyRedirects, RequestTimeout
 
 
 def curio_run(func):
