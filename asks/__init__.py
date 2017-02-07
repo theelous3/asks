@@ -10,7 +10,7 @@ from curio.file import aopen
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
 from .http_req_parser import HttpParser
-from .exceptions import TooManyRedirects
+from .errors import TooManyRedirects
 
 
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
