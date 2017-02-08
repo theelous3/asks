@@ -56,9 +56,13 @@ class Response:
         for cookie in self.cookies:
             cookie_jar = {}
             name_val, *rest = cookie.split(';')
-            name, value = name_val.split('=')
-            cookie_jar['name'] = name
-            cookie_jar['value'] = value
+            try:
+                name, value = name_val.split('=')
+                cookie_jar['name'] = name
+                cookie_jar['value'] = value
+            except ValueError:
+                value = name_val
+                cookie_jar['value'] = value
             for item in rest:
                 try:
                     name, value = item.split('=')
@@ -128,7 +132,10 @@ class Cookie(SimpleNamespace):
         self.host = host
 
     def __repr__(self):
-        return '<Cookie {} from {}>'.format(self.name, self.host)
+        if self.name:
+            return '<Cookie {} from {}>'.format(self.name, self.host)
+        else:
+            return '<Cookie {} from {}>'.format(self.value, self.host)
 
     def __iter__(self):
         for k, v in self.__dict__.items():

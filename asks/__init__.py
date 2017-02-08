@@ -52,6 +52,8 @@ async def _build_request(uri,
     Currently a slight disaster of a function. Needs to be broken up a
     little more, especially the section regarding redirects.
     '''
+    if not uri.startswith('http'):
+        uri = 'https://' + uri
     scheme, netloc, path, parameters, query, fragment = urlparse(uri)
     try:
         netloc, port = netloc.split(':')
