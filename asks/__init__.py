@@ -3,6 +3,7 @@ from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
 import json as _json
 from random import randint
+import mimetypes
 
 from curio import socket, open_connection
 from curio.file import aopen
@@ -79,6 +80,7 @@ async def _build_request(uri,
     package = [' '.join((method, path, 'HTTP/1.1'))]
 
     # handle building the request body, if any
+    query_data = ''
     if any((data, files, json)):
         content_type, content_len, query_data = await _formulate_body(
             encoding, data, files, json)
@@ -104,9 +106,9 @@ async def _build_request(uri,
         sock = await _open_connection_http(cnect_to)
     else:
         sock = await _open_connection_https(cnect_to)
+
     async with sock:
-        # send
-        await _send(sock, package, encoding, data)
+        await _send(sock, package, encoding, query_data)
 
         # recv and return Response object
         response_obj = await _catch_response(
@@ -231,7 +233,7 @@ def _dict_to_query(data, encoding, params=True, base_query=False):
     in the request url. Unlike the stdlib quote() and it's variations,
     this also works on iterables like lists which are normally not valid.
 
-    The use of lists in this manner is, I suppose not a great idea unless
+    The use of lists in this manner is not a great idea unless
     the server supports it. Caveat emptor.
     '''
     query = []
@@ -264,34 +266,41 @@ async def _multipart(files_dict, encoding):
     Forms multipart requests from a dict with name, path k/vs. Name
     does not have to be the actual file name.
     '''
-    boundary = b"--8banana133744910kmmr13ay5fa56"
+    boundary = bytes(_BOUNDARY, encoding)
     hder_format = 'Content-Disposition: form-data; name="{}"'
-    hder_format_io = hder_format + '; filename="{}"'
+    hder_format_io = '; filename="{}"'
 
     multip_pkg = b''
 
     num_of_parts = len(files_dict)
 
     for index, kv in enumerate(files_dict.items(), start=1):
-        multip_pkg += boundary + b'\r\n'
+        multip_pkg += (b'--' + boundary + b'\r\n')
         k, v = kv
 
         try:
             async with aopen(v, 'rb') as o_file:
                 pkg_body = b''.join(await o_file.readlines()) + b'\r\n'
-            multip_pkg += bytes(hder_format_io.format(k, basename(v)) +
-                                '\r\n'*2,
+            multip_pkg += bytes(hder_format.format(k) +
+                                hder_format_io.format(basename(v)),
                                 encoding)
-            multip_pkg += pkg_body
+            mime_type = mimetypes.guess_type(basename(v))
+            if not mime_type[1]:
+                mime_type = 'application/octet-stream'
+            else:
+                mime_type = '/'.join(mime_type)
+            multip_pkg += bytes('; Content-Type: ' + mime_type,
+                                encoding)
+            multip_pkg += b'\r\n'*2 + pkg_body
 
-        except (TypeError, FileNotFoundError):
+        except (TypeError, FileNotFoundError) as e:
             pkg_body = bytes(v, encoding) + b'\r\n'
             multip_pkg += bytes(hder_format.format(k) + '\r\n'*2, encoding)
             multip_pkg += pkg_body
 
         if index == num_of_parts:
-            multip_pkg += boundary + b'--\r\n'
-
+            multip_pkg += b'--' + boundary + b'--\r\n'
+    print(multip_pkg)
     return multip_pkg
 
 

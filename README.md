@@ -57,7 +57,7 @@ All functions share the same set of args and keyword args, though they are not a
 ### Passing Parameters in a url and / or in the Request Body
 ```python
 async def example():
-    r = await(asks.get('www.example.com', params={'Elmo': 'wants data'}))
+    r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
 
 # sends as request path:
 b'/?Elmo=wants+data'
@@ -67,7 +67,7 @@ The `params` and `data` args take a dictionary and convert it in to a valid quer
 
 ```python
 async def example():
-    r = await(asks.get('www.example.com', params='Elmo wants data'))
+    r = await asks.get('www.example.com', params='Elmo wants data'))
 
 # sends as request path:
 b'/?Elmo+wants+data'
@@ -76,7 +76,7 @@ b'/?Elmo+wants+data'
 ### Custom Headers
 ```python
 async def example():
-    r = await(asks.get('www.example.com', headers={'Custom-Header': 'My value'}))
+    r = await asks.get('www.example.com', headers={'Custom-Header': 'My value'}))
 ```
 
 You may add your own custom headers or overwrite the default headers by supplying your own dict to the `headers` argument. Note that headers set in this way will, if conflicting, take precedence.
@@ -88,7 +88,7 @@ files_to_send = {'Some file': 'path/to/file.txt',
                  'Some other file': 'path/to/file_2.txt'}
 
 async def example():
-    r = await(asks.post('www.example.com', files=files_to_send))
+    r = await asks.post('www.example.com', files=files_to_send))
 ```
 
 Sending files is straight forward. Just pass a dict with file paths as values. asks uses an async wrapper around the files for opening them, so you don't have to worry about your program grinding to a halt on file reads.
@@ -100,7 +100,7 @@ dict_to_send = {'Data_1': 'Important thing',
                 'Data_2': 'Really important thing'}
 
 async def example():
-    r = await(asks.post('www.example.com', json=dict_to_send))
+    r = await asks.post('www.example.com', json=dict_to_send))
 ```
 
 Pass python dict objects to the `json` argument to send them as json in your request.
@@ -109,7 +109,7 @@ Pass python dict objects to the `json` argument to send them as json in your req
 ```python
 
 async def example():
-    r = await(asks.get('www.example.com', cookies={'Cookie Monster': 'Is huuungry!'}))
+    r = await asks.get('www.example.com', cookies={'Cookie Monster': 'Is huuungry!'}))
 ```
 
 Pass a dict of cookie name(key) / value pairs to the `cookies` arg to ship 'em off.
@@ -118,7 +118,7 @@ Pass a dict of cookie name(key) / value pairs to the `cookies` arg to ship 'em o
 ```python
 
 async def example():
-    r = await(asks.get('www.example.com', encoding='Latin-1'))
+    r = await asks.get('www.example.com', encoding='Latin-1'))
 ```
 
 Asks defaults to `utf-8` encoding. You may override this by supplying a different encoding, be it
@@ -128,7 +128,7 @@ a standard encoding or a custom one you've registered locally.
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/redirect/3', max_redirects=2))
+    r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
 ```
 
  You may limit the number of redirects by setting `max_redirects`. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.
@@ -137,7 +137,7 @@ async def example():
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/redirect/3', timeout=1))
+    r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
 ```
 
 You may set a timeout with the `timeout` arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.
@@ -149,7 +149,7 @@ You may set a timeout with the `timeout` arg. This limits the time asks will wai
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/get'))
+    r = await asks.get('www.httpbin.org/get'))
     print(r.status_code,
           r.reason_phrase,
           r.http_version,
@@ -163,7 +163,7 @@ The response headers, status line parts, and errors can be accessed as attribute
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/get'))
+    r = await asks.get('www.httpbin.org/get'))
     print(r.raw)
 ```
 
@@ -173,7 +173,7 @@ The response body as received can be accessed with the .raw property.
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/gzip'))
+    r = await asks.get('www.httpbin.org/gzip'))
     print(r.content)
 ```
 
@@ -183,7 +183,7 @@ The decompressed (if any compression) response body can be accessed with the .co
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/deflate'))
+    r = await asks.get('www.httpbin.org/deflate'))
     print(r.text)
 ```
 
@@ -193,7 +193,7 @@ The decompressed (if any compression) and decoded response body can be accessed 
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/get'))
+    r = await asks.get('www.httpbin.org/get'))
     print(r.encoding='Latin-1')
 ```
 
@@ -205,7 +205,7 @@ An attempt to guess the encoding is made by asks if the correct header is suppli
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/get'))
+    r = await asks.get('www.httpbin.org/get'))
     j = r.json()
 ```
 If the response body is valid JSON, you may grab it using the response `.json()` method.
@@ -214,7 +214,7 @@ If the response body is valid JSON, you may grab it using the response `.json()`
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/redirect/1'))
+    r = await asks.get('www.httpbin.org/redirect/1'))
     print(r.history,
           r.history[0])
 ```
@@ -225,7 +225,7 @@ If there were redirects, you may access a list of the intermediary response obje
 ```python
 
 async def example():
-    r = await(asks.get('www.httpbin.org/cookies/set?cookie=jar'))
+    r = await asks.get('www.httpbin.org/cookies/set?cookie=jar'))
     print(r.cookies,
           r.history[0].cookies)
 ```
@@ -240,3 +240,5 @@ You may access the cookies from a response object by using the `.cookies` attrib
 - Resend recvd cookies
 - ???
 - Non-profit
+
+### Holla holla to ##lp, and 8banana
