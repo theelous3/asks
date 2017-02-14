@@ -155,3 +155,9 @@ async def test_gzip():
 async def test_deflate():
     r = await asks.get('http://httpbin.org/deflate')
     assert r.text
+
+
+# Test chunked TE
+async def test_chunked_te():
+    r = await asks.get('http://httpbin.org/range/3072')
+    assert r.status_code == 200
