@@ -1,9 +1,6 @@
-import sys
-
 import curio
 import pytest
 
-sys.path.append('..')   # noqa
 import asks
 from asks.errors import TooManyRedirects, RequestTimeout
 
