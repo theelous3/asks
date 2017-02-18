@@ -73,13 +73,10 @@ class Response:
             resp_encoding = self.headers['Content-Encoding'].strip()
         except KeyError:
             return body
-        try:
-            if resp_encoding == 'gzip':
-                return gzip.decompress(body)
-            elif resp_encoding == 'deflate':
-                return zlib.decompress(body)
-        except KeyError:
-            pass
+        if resp_encoding == 'gzip':
+            return gzip.decompress(body)
+        elif resp_encoding == 'deflate':
+            return zlib.decompress(body)
         return body
 
     def encoding(self, new_encoding):
