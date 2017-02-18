@@ -20,6 +20,7 @@ class Response:
         self.status_code = status_code
 
     def __repr__(self):
+        # pylint: disable=fixme
         # TODO: include the name of the response here
         # e.g. "201 Created" or "404 Not Found"
         # maybe a status_text attribute or something could be nice too?
@@ -45,6 +46,7 @@ class Response:
         try:
             guess = self.headers['content-type'].split('=')[1]
             codecs.lookup(guess)
+		# pylint: disable=fixme,broad-except
         # TODO: replace Exception with errors from first line
         except (Exception, LookupError):
             pass
@@ -117,7 +119,7 @@ class Cookie(SimpleNamespace):
         self.expires = None
         self.comment = None
         for k, v in data.items():
-                setattr(self, k, v)
+            setattr(self, k, v)
         super().__init__(**self.__dict__)
         self.host = host
 

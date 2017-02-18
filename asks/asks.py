@@ -62,7 +62,7 @@ async def _build_request(uri,
 
     if not uri.startswith('http'):
         uri = 'https://' + uri
-    scheme, netloc, path, parameters, query, fragment = urlparse(uri)
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     try:
         netloc, port = netloc.split(':')
         cnect_to = netloc, int(port)
@@ -321,7 +321,7 @@ async def _multipart(files_dict, encoding):
                                 encoding)
             multip_pkg += b'\r\n'*2 + pkg_body
 
-        except (TypeError, FileNotFoundError) as e:
+        except (TypeError, FileNotFoundError):
             pkg_body = bytes(v, encoding) + b'\r\n'
             multip_pkg += bytes(hder_format.format(k) + '\r\n'*2, encoding)
             multip_pkg += pkg_body
