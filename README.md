@@ -5,7 +5,14 @@ asks aims to have a mostly familiar API, using simple functions like `get()` for
 
 <sup>Not a framework :)</sup>
 
-## Example usage
+## Contents
+
+1. [Making requests.](asks#making-requests)
+2. [Using a Session.](asks#using-a-session)
+
+## Making requests
+
+### Example usage
 
 ```python
 # one request
@@ -233,6 +240,63 @@ async def example():
 You may access the cookies from a response object by using the `.cookies` attribute to return a list of cookie objects.
 
 #### Note: You may use any of these methods, properties or attributes on any response object in the response history.
+
+## Using a Session
+
+By default asks is stateless, in that it's a httplib and it doen't return cookies to the server unless explicitly told to. To solve this, we have sessions!
+
+The primary use of sessions really, is to make life easier by suppling a host and master endpoint when you instance the session, allowing for a convenient way to throw paramaters and such at an API.
+
+## Example usage
+
+```python
+# Without cookies, for bashing away at an API
+import asks
+from asks import Session
+import curio
+
+param_dict = {'Dict': 'full of params'}
+
+s = Session('www.some-web-api.com', endpoint='/api')
+
+async def worker(param):
+    r = await s.get(params=param)
+    print(r.text)
+
+async def main(things_to_get):
+    for k, v in things_to_get.items():
+        await curio.spawn(worker({k: v}))
+
+curio.run(main(param_dict))
+```
+
+```python
+# With cookies. Setting endpoint using attribute and supplying a path
+# to the method with the path argument.
+import asks
+from asks import Session
+import curio
+
+cookies_to_set = {'cookie1': 'value1',
+                  'cookie2': 'value2',
+                  'cookie3': 'value3'}
+
+s = Session('http://httpbin.org', store_cookies=True)
+
+async def worker(cookie):
+    r = await s.get(path='/set', params=cookie)
+    print(r.text)
+
+async def main(cookie_stuff):
+    s.endpoint = '/cookies'
+    for k, v in cookie_stuff.items():
+        await curio.spawn(worker({k: v}))
+
+curio.run(main(cookies_to_set))
+```
+
+That's pretty much all there is to it. Storing cookies must be done explicitly on instanciation, setting the master endpoint can be done on the fly, additional paths can
+be supplied in the same fashion and all of the methods remain the same as the basic usage seen above.
 
 ## TO DO:
 - Path to json for async .json file opens

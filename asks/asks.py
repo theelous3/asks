@@ -39,12 +39,13 @@ async def _build_request(uri,
                          encoding='utf-8',
                          json=None,
                          files=None,
-                         cookies=None,
+                         cookies={},
                          callback=None,
                          sock=None,
                          timeout=9999,
                          max_redirects=float('inf'),
-                         history_objects=[]):
+                         history_objects=[],
+                         persist_cookies=None):
     '''
     Takes kw args from any of the public api HTTP methods (get, post, etc.)
     and acts as a request builder, and center point for sending
@@ -75,6 +76,13 @@ async def _build_request(uri,
                          ('User-Agent', ' python-asks/0.0.1')
                          ])
 
+    # check for a CookieTracker object, and if it's there inject
+    # the relevant cookies in to the (next) request.
+    if persist_cookies is not None:
+        persist_cookies.get_current_endpoint(netloc, path)  # #
+        additional_cookies = persist_cookies._check_cookies()  # #
+        cookies = {**additional_cookies, **cookies}
+
     # formulate path / query and intended extra querys for use in uri
     path = _build_path(path, query, params, encoding)
 
@@ -99,8 +107,10 @@ async def _build_request(uri,
 
     # add cookies
     if cookies:
+        cookie_str = ''
         for k, v in cookies.items():
-            package.append('Cookie: {}={}'.format(k, v))
+            cookie_str += '{}={}; '.format(k, v)
+        package.append('Cookie: ' + cookie_str[:-1])
 
     # begin interfacing with remote server
     if sock is None:
@@ -122,6 +132,10 @@ async def _build_request(uri,
                 sock, encoding, timeout, callback)
 
     response_obj._parse_cookies(_headers['Host'])
+
+    if persist_cookies is not None:
+        persist_cookies._store_cookies(response_obj)
+
     response_obj._guess_encoding()
     # check redirects
     if method != 'HEAD':
@@ -136,7 +150,8 @@ async def _build_request(uri,
                                        encoding=encoding,
                                        timeout=timeout,
                                        max_redirects=max_redirects,
-                                       sock=sock)
+                                       sock=sock,
+                                       persist_cookies=persist_cookies)
 
     response_obj.history = history_objects
     return response_obj
