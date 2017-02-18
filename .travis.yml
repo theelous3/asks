@@ -8,10 +8,13 @@ python:
 
 install:
   - ./setup.py develop
+  - pip3 install pylint==1.6.5
 
 script:
   - cd tests
   - pytest --verbose
+  - cd ..
+  - pylint asks tests/*.py
 
 notifications:
   email:
