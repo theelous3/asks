@@ -12,7 +12,7 @@ install:
 
 script:
   - cd tests
-  - pytest --verbose
+  - pytest --verbose --tb=native
   - cd ..
   - pylint asks tests/*.py
 
