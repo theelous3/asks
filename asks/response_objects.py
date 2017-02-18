@@ -82,9 +82,6 @@ class Response:
             pass
         return body
 
-    def encoding(self, new_encoding):
-        self.encoding = new_encoding
-
     def json(self):
         body = self._decompress(self.body)
         try:
