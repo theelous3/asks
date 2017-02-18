@@ -7,8 +7,8 @@ asks aims to have a mostly familiar API, using simple functions like `get()` for
 
 ## Contents
 
-1. [Making requests.](asks#making-requests)
-2. [Using a Session.](asks#using-a-session)
+1. [Making requests.](https://github.com/theelous3/asks#making-requests)
+2. [Using a Session.](https://github.com/theelous3/asks#using-a-session)
 
 ## Making requests
 
@@ -45,8 +45,6 @@ async def main(url_list):
 
 curio.run(main(url_list))
 ```
-
-## Making a request
 
 ### General Methods
 
