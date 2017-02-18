@@ -2,6 +2,10 @@ __pycache__/
 
 # pytest
 /.cache/
+tests/
+
+#env
+env/
 
 # setuptools
 /asks.egg-info/
