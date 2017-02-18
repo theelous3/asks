@@ -39,12 +39,12 @@ async def _build_request(uri,
                          encoding='utf-8',
                          json=None,
                          files=None,
-                         cookies={},
+                         cookies=None,
                          callback=None,
                          sock=None,
                          timeout=9999,
                          max_redirects=float('inf'),
-                         history_objects=[],
+                         history_objects=None,
                          persist_cookies=None):
     '''
     Takes kw args from any of the public api HTTP methods (get, post, etc.)
@@ -55,9 +55,14 @@ async def _build_request(uri,
     Currently a slight disaster of a function. Needs to be broken up a
     little more, especially the section regarding redirects.
     '''
+    if cookies is None:
+        cookies = {}
+    if history_objects is None:
+        history_objects = []
+
     if not uri.startswith('http'):
         uri = 'https://' + uri
-    scheme, netloc, path, parameters, query, fragment = urlparse(uri)
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     try:
         netloc, port = netloc.split(':')
         cnect_to = netloc, int(port)
@@ -99,7 +104,8 @@ async def _build_request(uri,
     # add custom headers, if any
     # note that custom headers take precedence
     if headers is not None:
-        _headers = {**_headers, **headers}
+        for k, v in headers.items():
+            _headers[k] = v
 
     # add all headers to package
     for k, v in _headers.items():
@@ -316,7 +322,7 @@ async def _multipart(files_dict, encoding):
                                 encoding)
             multip_pkg += b'\r\n'*2 + pkg_body
 
-        except (TypeError, FileNotFoundError) as e:
+        except (TypeError, FileNotFoundError):
             pkg_body = bytes(v, encoding) + b'\r\n'
             multip_pkg += bytes(hder_format.format(k) + '\r\n'*2, encoding)
             multip_pkg += pkg_body

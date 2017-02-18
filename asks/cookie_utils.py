@@ -14,8 +14,8 @@ class CookieTracker:
         self.domain_dict = {}
 
     def get_current_endpoint(self, netloc, path):
-            netloc = netloc.replace('www.', '')
-            self.current_epoint = netloc + path
+        netloc = netloc.replace('www.', '')
+        self.current_epoint = netloc + path
 
     def _store_cookies(self, response_obj):
         for cookie in response_obj.cookies:
@@ -33,8 +33,8 @@ class CookieTracker:
                 relevant_domains.append(self.domain_dict[self.current_epoint])
             parts = self.current_epoint.split('/')
 
-            for index, path_chunk in enumerate(parts, start=1):
-                check_domain = '/'.join(parts[:index*-1])
+            for index in range(1, len(parts)):
+                check_domain = '/'.join(parts[:-index])
                 if check_domain in domains:
                     relevant_domains.append(self.domain_dict[check_domain])
         return self._get_cookies_to_send(relevant_domains)

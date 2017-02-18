@@ -7,8 +7,6 @@ TO DO:
     * Connection pooling
 '''
 
-from urllib.parse import urlparse
-
 import asks as asks_
 from .cookie_utils import CookieTracker
 

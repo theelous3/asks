@@ -1,9 +1,6 @@
-import sys
-
 import curio
 import pytest
 
-sys.path.append('..')   # noqa
 import asks
 from asks.errors import TooManyRedirects, RequestTimeout
 
@@ -38,7 +35,12 @@ async def test_http_get():
 @curio_run
 async def test_http_redirect():
     r = await asks.get('http://httpbin.org/redirect/1')
-    assert r.history
+    assert len(r.history) == 1
+
+    # make sure history doesn't persist across responses
+    r.history.append('not a response obj')
+    r = await asks.get('http://httpbin.org/redirect/1')
+    assert len(r.history) == 1
 
 
 @curio_run
@@ -100,6 +102,11 @@ async def test_header_set():
                        headers={'Asks-Header': 'Test Header Value'})
     j = r.json()
     assert 'Asks-Header' in j['headers']
+
+    r = await asks.get('http://httpbin.org/headers',
+                       headers={'content-LENGTH': '0'})
+    j = r.json()
+    assert j['headers']['Content-Length'] == '0'
 
 
 # File send test
