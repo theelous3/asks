@@ -73,12 +73,12 @@ async def _build_request(uri,
             ':'.join(map(str, cnect_to)))
 
     # default header construction
-    _headers = c_i_Dict([('Host', ' ' + host),
-                         ('Connection', ' keep-alive'),
-                         ('Accept-Encoding', ' gzip, deflate'),
-                         ('Accept', ' */*'),
-                         ('Content-Length', ' 0'),
-                         ('User-Agent', ' python-asks/0.0.1')
+    _headers = c_i_Dict([('Host', host),
+                         ('Connection', 'keep-alive'),
+                         ('Accept-Encoding', 'gzip, deflate'),
+                         ('Accept', '*/*'),
+                         ('Content-Length', '0'),
+                         ('User-Agent', 'python-asks/0.0.1')
                          ])
 
     # check for a CookieTracker object, and if it's there inject

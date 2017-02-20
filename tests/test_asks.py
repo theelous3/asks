@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')  # noqa
+
 import curio
 import pytest
 
@@ -102,11 +105,7 @@ async def test_header_set():
                        headers={'Asks-Header': 'Test Header Value'})
     j = r.json()
     assert 'Asks-Header' in j['headers']
-
-    r = await asks.get('http://httpbin.org/headers',
-                       headers={'content-LENGTH': '0'})
-    j = r.json()
-    assert j['headers']['Content-Length'] == '0'
+    assert 'cOntenT-tYPe' in r.headers
 
 
 # File send test

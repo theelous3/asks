@@ -22,7 +22,7 @@ notifications:
     on_failure: change
   irc:
     channels:
-      - "irc.rizon.net#raylu"
+      - "irc.freenode.net#8banana"
     skip_join: true
     on_success: change
     on_failure: always
