@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')  # noqa
-
 import curio
 import pytest
 
