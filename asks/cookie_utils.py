@@ -10,12 +10,11 @@ __all__ = ['CookieTracker']
 class CookieTracker:
 
     def __init__(self):
-        self.current_epoint = None
         self.domain_dict = {}
 
-    def get_current_endpoint(self, netloc, path):
+    def get_additional_cookies(self, netloc, path):
         netloc = netloc.replace('www.', '')
-        self.current_epoint = netloc + path
+        return self._check_cookies(netloc + path)
 
     def _store_cookies(self, response_obj):
         for cookie in response_obj.cookies:
@@ -24,14 +23,14 @@ class CookieTracker:
             except KeyError:
                 self.domain_dict[cookie.host.lstrip()] = [cookie]
 
-    def _check_cookies(self):
+    def _check_cookies(self, endpoint):
         relevant_domains = []
         domains = self.domain_dict.keys()
 
         if domains:
-            if self.current_epoint in domains:
-                relevant_domains.append(self.domain_dict[self.current_epoint])
-            parts = self.current_epoint.split('/')
+            if endpoint in domains:
+                relevant_domains.append(self.domain_dict[endpoint])
+            parts = endpoint.split('/')
 
             for index in range(1, len(parts)):
                 check_domain = '/'.join(parts[:-index])

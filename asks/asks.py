@@ -41,7 +41,6 @@ async def _build_request(uri,
                          files=None,
                          cookies=None,
                          callback=None,
-                         sock=None,
                          timeout=9999,
                          max_redirects=float('inf'),
                          history_objects=None,
@@ -73,20 +72,18 @@ async def _build_request(uri,
             ':'.join(map(str, cnect_to)))
 
     # default header construction
-    _headers = c_i_Dict([('Host', host),
-                         ('Connection', 'keep-alive'),
-                         ('Accept-Encoding', 'gzip, deflate'),
-                         ('Accept', '*/*'),
-                         ('Content-Length', '0'),
-                         ('User-Agent', 'python-asks/0.0.1')
-                         ])
+    asks_headers = c_i_Dict([('Host', host),
+                                ('Connection', 'keep-alive'),
+                                ('Accept-Encoding', 'gzip, deflate'),
+                                ('Accept', '*/*'),
+                                ('Content-Length', '0'),
+                                ('User-Agent', 'python-asks/0.0.1')
+                                ])
 
     # check for a CookieTracker object, and if it's there inject
     # the relevant cookies in to the (next) request.
     if persist_cookies is not None:
-        persist_cookies.get_current_endpoint(netloc, path)  # #
-        additional_cookies = persist_cookies._check_cookies()  # #
-        cookies = {**additional_cookies, **cookies}
+        cookies.update(persist_cookies.get_additional_cookies(netloc, path))
 
     # formulate path / query and intended extra querys for use in uri
     path = _build_path(path, query, params, encoding)
@@ -98,16 +95,16 @@ async def _build_request(uri,
     if any((data, files, json)):
         content_type, content_len, query_data = await _formulate_body(
             encoding, data, files, json)
-        _headers['Content-Type'] = content_type
-        _headers['Content-Length'] = content_len
+        asks_headers['Content-Type'] = content_type
+        asks_headers['Content-Length'] = content_len
 
     # add custom headers, if any
     # note that custom headers take precedence
     if headers is not None:
-        _headers.update(headers)
+        asks_headers.update(headers)
 
     # add all headers to package
-    for k, v in _headers.items():
+    for k, v in asks_headers.items():
         package.append(k + ': ' + v)
 
     # add cookies
@@ -118,25 +115,18 @@ async def _build_request(uri,
         package.append('Cookie: ' + cookie_str[:-1])
 
     # begin interfacing with remote server
-    if sock is None:
-        if scheme == 'http':
-            sock = await _open_connection_http(cnect_to)
-        else:
-            sock = await _open_connection_https(cnect_to)
-
-        async with sock:
-            await _send(sock, package, encoding, query_data)
-
-            # recv and return Response object
-            response_obj = await _catch_response(
-                sock, encoding, timeout, callback)
-        sock = None
+    if scheme == 'http':
+        sock = await _open_connection_http(cnect_to)
     else:
-        await _send(sock, package, encoding, query_data)
-        response_obj = await _catch_response(
-                sock, encoding, timeout, callback)
+        sock = await _open_connection_https(cnect_to)
 
-    response_obj._parse_cookies(_headers['Host'])
+    async with sock:
+        await _send(sock, package, encoding, query_data)
+        # recv and return Response object
+        response_obj = await _catch_response(
+            sock, encoding, timeout, callback)
+
+    response_obj._parse_cookies(asks_headers['Host'])
 
     if persist_cookies is not None:
         persist_cookies._store_cookies(response_obj)
@@ -155,7 +145,6 @@ async def _build_request(uri,
                                        encoding=encoding,
                                        timeout=timeout,
                                        max_redirects=max_redirects,
-                                       sock=sock,
                                        persist_cookies=persist_cookies)
 
     response_obj.history = history_objects
