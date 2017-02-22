@@ -10,6 +10,7 @@ asks aims to have a mostly familiar API, using simple functions like `get()` for
 
 1. [Making requests.](https://github.com/theelous3/asks#making-requests)
 2. [Using a Session.](https://github.com/theelous3/asks#using-a-session)
+3. [The Response](https://github.com/theelous3/asks#response-content)
 
 ## Making requests
 
@@ -299,7 +300,7 @@ You may access the cookies from a response object by using the `.cookies` attrib
 ## TO DO:
 - Path to json for async .json file opens
 - Auth
-- Resend recvd cookies
+- Session connection pooling
 - ???
 - Non-profit
 
