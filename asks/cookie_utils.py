@@ -14,7 +14,8 @@ class CookieTracker:
 
     def get_additional_cookies(self, netloc, path):
         netloc = netloc.replace('www.', '')
-        return self._check_cookies(netloc + path)
+        return _check_cookies(netloc + path)
+
 
     def _store_cookies(self, response_obj):
         for cookie in response_obj.cookies:
