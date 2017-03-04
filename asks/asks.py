@@ -44,15 +44,15 @@ async def _build_request(uri,
                          timeout=9999,
                          max_redirects=float('inf'),
                          history_objects=None,
+                         sock=None,
                          persist_cookies=None):
     '''
-    Takes kw args from any of the public api HTTP methods (get, post, etc.)
-    and acts as a request builder, and center point for sending
-    those requests, recieving the responses, handling any redirects
-    along the way and returning the final response object.
+    Takes keyword args from any of the public HTTP method functions
+    (get, post, etc.) and acts as a request builder, returning the final
+    response object.
 
-    Currently a slight disaster of a function. Needs to be broken up a
-    little more, especially the section regarding redirects.
+    All the network i/o has been moved in to its own func, but this could
+    still be cleaner. More refactors!
     '''
     if cookies is None:
         cookies = {}
@@ -64,21 +64,21 @@ async def _build_request(uri,
     scheme, netloc, path, _, query, _ = urlparse(uri)
     try:
         netloc, port = netloc.split(':')
-        cnect_to = netloc, int(port)
+        target_netloc = (scheme, netloc, int(port))
     except ValueError:
-        cnect_to = (netloc, 80)
+        target_netloc = (scheme, netloc, 80)
 
-    host = (cnect_to[0] if cnect_to[1] == 80 else
-            ':'.join(map(str, cnect_to)))
+    host = (target_netloc[1] if target_netloc[2] == 80 else
+            ':'.join(map(str, target_netloc[1:])))
 
     # default header construction
     asks_headers = c_i_Dict([('Host', host),
-                                ('Connection', 'keep-alive'),
-                                ('Accept-Encoding', 'gzip, deflate'),
-                                ('Accept', '*/*'),
-                                ('Content-Length', '0'),
-                                ('User-Agent', 'python-asks/0.0.1')
-                                ])
+                             ('Connection', 'keep-alive'),
+                             ('Accept-Encoding', 'gzip, deflate'),
+                             ('Accept', '*/*'),
+                             ('Content-Length', '0'),
+                             ('User-Agent', 'python-asks/0.0.1')
+                             ])
 
     # check for a CookieTracker object, and if it's there inject
     # the relevant cookies in to the (next) request.
@@ -91,9 +91,9 @@ async def _build_request(uri,
     package = [' '.join((method, path, 'HTTP/1.1'))]
 
     # handle building the request body, if any
-    query_data = ''
+    body = ''
     if any((data, files, json)):
-        content_type, content_len, query_data = await _formulate_body(
+        content_type, content_len, body = await _formulate_body(
             encoding, data, files, json)
         asks_headers['Content-Type'] = content_type
         asks_headers['Content-Length'] = content_len
@@ -114,19 +114,55 @@ async def _build_request(uri,
             cookie_str += '{}={}; '.format(k, v)
         package.append('Cookie: ' + cookie_str[:-1])
 
-    # begin interfacing with remote server
-    if scheme == 'http':
-        sock = await _open_connection_http(cnect_to)
+    # call i/o handling func
+    return await request_io(method,
+                            encoding,
+                            package,
+                            body,
+                            timeout,
+                            max_redirects,
+                            target_netloc,
+                            history_objects,
+                            sock,
+                            persist_cookies,
+                            callback)
+
+async def request_io(method,
+                     encoding,
+                     package,
+                     body,
+                     timeout,
+                     max_redirects,
+                     target_netloc,
+                     history_objects,
+                     sock,
+                     persist_cookies,
+                     callback):
+    '''
+    Takes care of the i/o side of the request once it's been built,
+    and calls a couple of cleanup functions to check for redirects / store
+    cookies and the likes.
+    '''
+    scheme, netloc, port = target_netloc
+    if sock is None:
+        if scheme == 'http':
+            sock = await _open_connection_http((netloc, port))
+        else:
+            sock = await _open_connection_https((netloc, port))
+
+        async with sock:
+            await _send(sock, package, encoding, body)
+
+            # recv and return Response object
+            response_obj = await _catch_response(
+                sock, encoding, timeout, callback)
+        sock = None
     else:
-        sock = await _open_connection_https(cnect_to)
-
-    async with sock:
-        await _send(sock, package, encoding, query_data)
-        # recv and return Response object
+        await _send(sock, package, encoding, body)
         response_obj = await _catch_response(
-            sock, encoding, timeout, callback)
+                sock, encoding, timeout, callback)
 
-    response_obj._parse_cookies(asks_headers['Host'])
+    response_obj._parse_cookies(target_netloc[1])
 
     if persist_cookies is not None:
         persist_cookies._store_cookies(response_obj)
@@ -140,7 +176,7 @@ async def _build_request(uri,
             max_redirects -= 1
         response_obj = await _redirect(method,
                                        response_obj,
-                                       (scheme, host.strip()),
+                                       target_netloc,
                                        history_objects,
                                        encoding=encoding,
                                        timeout=timeout,
@@ -173,14 +209,14 @@ def _build_path(path, query, params, encoding):
 
 async def _redirect(method,
                     response_obj,
-                    current_netloc,
+                    target_netloc,
                     history_objects,
                     **kwargs):
     '''
     Calls the _check_redirect method of the supplied response object
     in order to determine if the http status code indicates a redirect.
 
-    If it does, it calls the appropriate method with the next request
+    If it does, it calls the appropriate method with the redirect
     location, returning the response object. Furthermore, if there is
     a redirect, this function is recursive in a roundabout way, storing
     the previous response object in history_objects, and passing this
@@ -191,7 +227,7 @@ async def _redirect(method,
         redirect_uri = urlparse(location.strip())
         # relative redirect
         if not redirect_uri.netloc:
-            new_uri = urlunparse((*current_netloc,
+            new_uri = urlunparse((*target_netloc[:2],
                                  *redirect_uri[2:]))
 
         # absolute-redirect
@@ -218,30 +254,30 @@ async def _formulate_body(encoding, data, files, json):
     appropriately, returning the contents type, len,
     and the request body its self.
     '''
-    c_type, query_data = None, ''
+    c_type, body = None, ''
     multipart_ctype = ' multipart/form-data; boundary={}'.format(_BOUNDARY)
     if files and data:
         c_type = multipart_ctype
         wombo_combo = {**files, **data}
-        query_data = await _multipart(wombo_combo, encoding)
+        body = await _multipart(wombo_combo, encoding)
 
     elif files:
         c_type = multipart_ctype
-        query_data = await _multipart(files, encoding)
+        body = await _multipart(files, encoding)
 
     elif data:
         c_type = ' application/x-www-form-urlencoded'
         try:
-            query_data = _dict_to_query(data, encoding, params=False)
+            body = _dict_to_query(data, encoding, params=False)
         except AttributeError:
-            query_data = data
+            body = data
             c_type = ' text/html'
 
     elif json:
         c_type = ' application/json'
-        query_data = _json.dumps(json)
+        body = _json.dumps(json)
 
-    return c_type, str(len(query_data)), query_data
+    return c_type, str(len(body)), body
 
 
 def _dict_to_query(data, encoding, params=True, base_query=False):

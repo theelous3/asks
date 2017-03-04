@@ -2,6 +2,7 @@ import curio
 import pytest
 
 import asks
+from asks.Sessions import Session
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
@@ -15,7 +16,6 @@ def curio_run(func):
 @curio_run
 async def test_https_get():
     r = await asks.get('https://www.reddit.com')
-    print(r.content)
     assert r.status_code == 200
 
 
@@ -110,7 +110,6 @@ async def test_header_set():
 async def test_file_send_single():
     r = await asks.post('http://httpbin.org/post',
                         files={'file_1': 'test_file.txt'})
-    print(r.text)
     j = r.json()
     assert j['files']['file_1'] == 'Compooper'
 
@@ -120,7 +119,6 @@ async def test_file_send_double():
     r = await asks.post('http://httpbin.org/post',
                         files={'file_1': 'test_file.txt',
                                'file_2': 'testr'})
-    print(r.text)
     j = r.json()
     assert j['files']['file_2'] == 'My slug <3'
 
@@ -130,7 +128,6 @@ async def test_file_and_data_send():
     r = await asks.post('http://httpbin.org/post',
                         files={'file_1': 'test_file.txt',
                                'data_1': 'watwatwatwat'})
-    print(r.text)
     j = r.json()
     assert j['form']['data_1'] == 'watwatwatwat'
 
@@ -161,6 +158,34 @@ async def test_deflate():
 
 
 # Test chunked TE
+@curio_run
 async def test_chunked_te():
     r = await asks.get('http://httpbin.org/range/3072')
     assert r.status_code == 200
+
+
+# Test Session with two pooled connections on four get requests.
+async def session_t_smallpool(s):
+    for _ in range(4):
+        r = await s.get(path='/get')
+        assert r.status_code == 200
+
+
+@curio_run
+async def test_session_smallpool():
+    s = await Session('http://httpbin.org')
+    await curio.spawn(session_t_smallpool(s))
+
+# Test stateful session
+async def session_t_stateful(s):
+        r = await s.get()
+        assert r.status_code == 200
+
+
+@curio_run
+async def test_session_stateful():
+    s = await Session(
+        'https://google.ie', connections=1, store_cookies=True)
+    await curio.spawn(session_t_stateful(s))
+    await curio.sleep(1.5)  # Terrible hack, hassle of .join() in test though.
+    assert 'www.google.ie' in s.cookie_tracker_obj.domain_dict.keys()

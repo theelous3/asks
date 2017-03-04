@@ -165,46 +165,54 @@ import curio
 
 param_dict = {'Dict': 'full of params'}
 
-s = Session('www.some-web-api.com', endpoint='/api')
-
-async def worker(param):
-    r = await s.get(params=param)
+async def worker(session, param):
+    r = await session.get(params=param)
     print(r.text)
 
 async def main(things_to_get):
+    s = await Session('www.some-web-api.com', endpoint='/api')
     for k, v in things_to_get.items():
-        await curio.spawn(worker({k: v}))
+        await curio.spawn(worker(s, {k: v}))
 
 curio.run(main(param_dict))
 ```
 
 ```python
 # With cookies. Setting endpoint using attribute and supplying a path
-# to the method with the path argument.
+# to the method with the path argument. Also adding custom max connections.
 import asks
-from asks import Session
+from asks.Sessions import Session
 import curio
 
-cookies_to_set = {'cookie1': 'value1',
-                  'cookie2': 'value2',
-                  'cookie3': 'value3'}
+cookies_to_set = {'A very large dict': 'of params'}
 
-s = Session('http://httpbin.org', store_cookies=True)
-
-async def worker(cookie):
-    r = await s.get(path='/set', params=cookie)
+async def worker(session, cookie):
+    r = await session.get(path='/set', params=cookie)
     print(r.text)
 
 async def main(cookie_stuff):
+    s = await Session(
+        'http://httpbin.org', store_cookies=True, connections=10)
     s.endpoint = '/cookies'
     for k, v in cookie_stuff.items():
-        await curio.spawn(worker({k: v}))
+        await curio.spawn(worker(s, {k: v}))
 
 curio.run(main(cookies_to_set))
 ```
 
-That's pretty much all there is to it. Cookie storage must be set explicitly on instanciation, setting the master endpoint can be done on the fly, additional paths can
-be supplied in the same fashion and all of the methods remain the same as the basic usage seen above.
+Cookie storage must be set explicitly on instantiation, setting the master endpoint attrib can be done on the fly, additional paths can be supplied in the same fashion and all of the methods remain the same as the basic usage seen above.
+
+### Connection pooling
+asks uses connection pooling to speed up repeat requests to the same location. We default to a very friendly `5` pooled connections, meaning that we limit ourselves for the sake of not being blocked by the server we're interacting with.
+
+You can modify the number of pooled connections with the `connections` keyword arg on `Session` instantiation. The connections are created when you instance the `Session`, requiring that instantiation be `await`ed. Example:
+
+```python
+async def example():
+    s = await Session('http://some.url', connections=100)
+```
+
+asks is capable of dishing out quite a few requests quite rapidly, over many connections. It's good to be polite to the server you're interacting with! Limit your application appropriately :)
 
 ## The Response
 
@@ -298,9 +306,7 @@ You may access the cookies from a response object by using the `.cookies` attrib
 #### Note: You may use any of these methods, properties or attributes on any response object in the response history.
 
 ## TO DO:
-- Path to json for async .json file opens
 - Auth
-- Session connection pooling
 - ???
 - Non-profit
 
