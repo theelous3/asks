@@ -96,45 +96,65 @@ class Session(AsyncObject):
 
     async def head(self, path='', *args, **kwargs):
         url = self._make_url() + path
+        sock = await self.grab_connection()
 
-        r = await asks_.get(url,
-                            encoding=self.encoding,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        r = await asks_.head(url,
+                             encoding=self.encoding,
+                             sock=sock,
+                             persist_cookies=self.cookie_tracker_obj,
+                             **kwargs)
+
+        self.connection_pool.appendleft(sock)
         return r
 
     async def post(self, path='', *args, **kwargs):
         url = self._make_url() + path
+        sock = await self.grab_connection()
 
-        r = await asks_.get(url,
-                            encoding=self.encoding,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        r = await asks_.post(url,
+                             encoding=self.encoding,
+                             sock=sock,
+                             persist_cookies=self.cookie_tracker_obj,
+                             **kwargs)
+
+        self.connection_pool.appendleft(sock)
         return r
 
     async def put(self, path='', *args, **kwargs):
         url = self._make_url() + path
+        sock = await self.grab_connection()
 
-        r = await asks_.get(url,
+        r = await asks_.put(url,
                             encoding=self.encoding,
+                            sock=sock,
                             persist_cookies=self.cookie_tracker_obj,
                             **kwargs)
+
+        self.connection_pool.appendleft(sock)
         return r
 
     async def delete(self, path='', *args, **kwargs):
         url = self._make_url() + path
+        sock = await self.grab_connection()
 
-        r = await asks_.get(url,
-                            encoding=self.encoding,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        r = await asks_.delete(url,
+                               encoding=self.encoding,
+                               sock=sock,
+                               persist_cookies=self.cookie_tracker_obj,
+                               **kwargs)
+
+        self.connection_pool.appendleft(sock)
         return r
 
     async def options(self, path='', *args, **kwargs):
         url = self._make_url() + path
+        sock = await self.grab_connection()
 
-        r = await asks_.get(url,
-                            encoding=self.encoding,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        r = await asks_.options(url,
+                                encoding=self.encoding,
+                                sock=sock,
+                                persist_cookies=self.cookie_tracker_obj,
+                                **kwargs)
+
+        self.connection_pool.appendleft(sock)
         return r
