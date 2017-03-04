@@ -77,7 +77,6 @@ class Session(AsyncObject):
                 return self.connection_pool.pop()
             except IndexError:
                 await curio.sleep(0)
-                pass
 
     def _make_url(self):
         return self.host + (self.endpoint or '')
