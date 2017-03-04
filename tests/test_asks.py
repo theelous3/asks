@@ -176,10 +176,11 @@ async def test_session_smallpool():
     s = await Session('http://httpbin.org')
     await curio.spawn(session_t_smallpool(s))
 
+
 # Test stateful session
 async def session_t_stateful(s):
-        r = await s.get()
-        assert r.status_code == 200
+    r = await s.get()
+    assert r.status_code == 200
 
 
 @curio_run
