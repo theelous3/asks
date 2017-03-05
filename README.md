@@ -1,16 +1,24 @@
 [![Build Status](https://travis-ci.org/theelous3/asks.svg?branch=master)](https://travis-ci.org/theelous3/asks)
 # asks
-asks is an async requests-like http lib, currently for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib. The poject's long term goal is to be event loop agnostic, meaning it could be used in any async "framework", be it asyncio, curio<sup>*</sup> or others.
+asks is an async requests-like http lib, currently for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib.
 
-asks aims to have a mostly familiar API, using simple functions like `get()` for getting, `post()` for posting.
+asks aims to have a mostly familiar API, using simple functions like `get()` for getting, `post()` for posting. At the heart of asks is the `Session` class, which makes interacting with servers in a sustained and fluid way fast, efficient, and simple. Check out the examples!
+
+The poject's long term goal is to be event loop agnostic, meaning it could be used in any async "framework", be it asyncio, curio<sup>*</sup> or others.
+
+*Requires:* Python 3.6 and [curio](https://github.com/dabeaz/curio).
 
 <sup>Not a framework :)</sup>
 
 ## Contents
+1. [Installation.](https://github.com/theelous3/asks#installation)
+2. [Making requests.](https://github.com/theelous3/asks#making-requests)
+3. [Using a Session.](https://github.com/theelous3/asks#using-a-session)
+4. [The Response](https://github.com/theelous3/asks#response-content)
 
-1. [Making requests.](https://github.com/theelous3/asks#making-requests)
-2. [Using a Session.](https://github.com/theelous3/asks#using-a-session)
-3. [The Response](https://github.com/theelous3/asks#response-content)
+## Installation
+
+`pip install git+https://github.com/theelous3/asks.git`
 
 ## Making requests
 
@@ -160,7 +168,7 @@ The primary use of sessions really, is to make life easier by suppling a host an
 ```python
 # Without cookies, for bashing away at an API
 import asks
-from asks import Session
+from asks.sessions import Session
 import curio
 
 param_dict = {'Dict': 'full of params'}
@@ -181,29 +189,30 @@ curio.run(main(param_dict))
 # With cookies. Setting endpoint using attribute and supplying a path
 # to the method with the path argument. Also adding custom max connections.
 import asks
-from asks.Sessions import Session
+from asks.sessions import Session
 import curio
 
-cookies_to_set = {'A very large dict': 'of params'}
+params_test = {'A very large dict': 'of params'}
 
-async def worker(session, cookie):
-    r = await session.get(path='/set', params=cookie)
+async def worker(session, item):
+    r = await session.get(path='/api', params=item)
     print(r.text)
 
-async def main(cookie_stuff):
+async def main(stuff_to_send):
     s = await Session(
-        'http://httpbin.org', store_cookies=True, connections=10)
-    s.endpoint = '/cookies'
-    for k, v in cookie_stuff.items():
+        'https://api-stuff.net', store_cookies=True, connections=10)
+    s.endpoint = '/example'
+
+    for k, v in stuff_to_send.items():
         await curio.spawn(worker(s, {k: v}))
 
-curio.run(main(cookies_to_set))
+curio.run(main(params_test))
 ```
 
 Cookie storage must be set explicitly on instantiation, setting the master endpoint attrib can be done on the fly, additional paths can be supplied in the same fashion and all of the methods remain the same as the basic usage seen above.
 
 ### Connection pooling
-asks uses connection pooling to speed up repeat requests to the same location. We default to a very friendly `5` pooled connections, meaning that we limit ourselves for the sake of not being blocked by the server we're interacting with.
+asks uses connection pooling to speed up repeat requests to the same location. We default to a very friendly `1` pooled connection, meaning that we limit ourselves for the sake of not being blocked by the server we're interacting with.
 
 You can modify the number of pooled connections with the `connections` keyword arg on `Session` instantiation. The connections are created when you instance the `Session`, requiring that instantiation be `await`ed. Example:
 
@@ -213,6 +222,36 @@ async def example():
 ```
 
 asks is capable of dishing out quite a few requests quite rapidly, over many connections. It's good to be polite to the server you're interacting with! Limit your application appropriately :)
+
+#### The Session class
+
+**asks.sessions.Session**(_**host**, **port**=443, **endpoint**=None, **encoding**='utf-8', **store_cookies**=None, **connections**=1_)
+
+#### Session \_\_init\_\_ arguments
+
+* **_host_** must be a top-level address. Either an IP or a url. For example 'https://example.com'.
+
+* **_port_** must be of type int.
+
+* **_endpoint_** must be a url path. Examples: '/api' or '/some_api/endpoint'
+
+* **_encoding_** can be any valid encoding string, builtin or custom. [Builtins](https://gist.github.com/theelous3/7d6a3fe20a21966b809468fa336195e3).
+
+* **_store_cookies_** set to bool value `True` to use stateful cookies.
+
+* **_connections_** must be of type int. The upper limit to this value is OS specific, but suffice to say you can make it very large. A larger value does not necessarily give a direct increase in overall performance. Find the balance! If you're making 100 requests and use 100 connections, you will seriously degrade the up front performance of your program.
+
+#### Session attributes
+
+* **_endpoint_** same as in __init__. Can be set at any time to change where your requests go.
+
+* **_encoding_** same deal here.
+
+* **_host_** same again.
+
+* **_port_** you get the picture.
+
+* **_connection_pool_** can be queried if you want to check the current usage of the connection pool. The pool is a collections.deque object.
 
 ## The Response
 

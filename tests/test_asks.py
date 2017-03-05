@@ -2,7 +2,7 @@ import curio
 import pytest
 
 import asks
-from asks.Sessions import Session
+from asks.sessions import Session
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
