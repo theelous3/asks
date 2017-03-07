@@ -111,7 +111,7 @@ async def _build_request(uri,
     if cookies:
         cookie_str = ''
         for k, v in cookies.items():
-            cookie_str += f'{k}={v}; '
+            cookie_str += '{}={}; '.format(k, v)
         package.append('Cookie: ' + cookie_str[:-1])
 
     # call i/o handling func
