@@ -62,7 +62,7 @@ class HttpParser:
                     if header.lower() == 'set-cookie':
                         req_dict['cookies'].append(header_content)
                     else:
-                        req_dict['headers'][header] = header_content
+                        req_dict['headers'][header] = header_content.lstrip()
             else:
                 break
 

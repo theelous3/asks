@@ -111,7 +111,7 @@ async def _build_request(uri,
     if cookies:
         cookie_str = ''
         for k, v in cookies.items():
-            cookie_str += '{}={}; '.format(k, v)
+            cookie_str += f'{k}={v}; '
         package.append('Cookie: ' + cookie_str[:-1])
 
     # call i/o handling func
@@ -181,7 +181,8 @@ async def request_io(method,
                                        encoding=encoding,
                                        timeout=timeout,
                                        max_redirects=max_redirects,
-                                       persist_cookies=persist_cookies)
+                                       persist_cookies=persist_cookies,
+                                       sock=sock)
 
     response_obj.history = history_objects
     return response_obj
