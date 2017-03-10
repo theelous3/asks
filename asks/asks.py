@@ -6,12 +6,12 @@ __all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
 
 
 def _get_schema(uri):
-        '''
-        Figures out the appropriate http type.
-        '''
-        if not uri.startswith('http'):
-            uri = 'https://' + uri
-        return uri
+    '''
+    Figures out the appropriate http type.
+    '''
+    if not uri.startswith('http'):
+        uri = 'https://' + uri
+    return uri
 
 
 async def get(uri, port=443, **kwargs):
