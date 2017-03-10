@@ -10,8 +10,9 @@ from urllib.parse import urlparse
 
 import curio
 from curio.meta import AsyncObject
+from curio import socket, open_connection
 
-import asks.asks as asks_
+from asks.request import Request
 from .cookie_utils import CookieTracker
 
 
@@ -77,14 +78,14 @@ class Session(AsyncObject):
                 pass
             else:
                 raise ValueError('Supplied info beyond scheme, netloc.' +
-                                 ' Host should be top level only.')
+                                 ' Host should be top level only.\n', pa)
         self.netloc = netloc
         if scheme == 'http':
             self.port = 80
-            return await asks_._open_connection_http(
+            return await self._open_connection_http(
                 (self.netloc, self.port))
         else:
-            return await asks_._open_connection_https(
+            return await self._open_connection_https(
                 (self.netloc, self.port))
 
     async def _grab_connection(self):
@@ -99,10 +100,31 @@ class Session(AsyncObject):
             except IndexError:
                 await curio.sleep(0)
 
+    async def _open_connection_http(self, location):
+        '''
+        Creates an async socket, set to stream mode and returns it.
+        '''
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        await sock.connect(location)
+        sock = sock.as_stream()
+        return sock
+
+    async def _open_connection_https(self, location):
+        '''
+        Creates an async SSL socket, set to stream mode and returns it.
+        '''
+        sock = await open_connection(location[0],
+                                     443,
+                                     ssl=True,
+                                     server_hostname=location[0])
+        sock = sock.as_stream()
+        return sock
+
     def _make_url(self):
         return self.host + (self.endpoint or '')
 
-    async def get(self, path='', *args, **kwargs):
+    async def get(self, path='', **kwargs):
         '''
         Public methods for getting / posting and so forth.
         Gets the target location, and begins requesting a
@@ -113,76 +135,94 @@ class Session(AsyncObject):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.get(url,
-                            encoding=self.encoding,
-                            sock=sock,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        req = Request('GET',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
 
-    async def head(self, path='', *args, **kwargs):
+    async def head(self, path='', **kwargs):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.head(url,
-                             encoding=self.encoding,
-                             sock=sock,
-                             persist_cookies=self.cookie_tracker_obj,
-                             **kwargs)
+        req = Request('HEAD',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
 
-    async def post(self, path='', *args, **kwargs):
+    async def post(self, path='', **kwargs):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.post(url,
-                             encoding=self.encoding,
-                             sock=sock,
-                             persist_cookies=self.cookie_tracker_obj,
-                             **kwargs)
+        req = Request('POST',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
 
-    async def put(self, path='', *args, **kwargs):
+    async def put(self, path='', **kwargs):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.put(url,
-                            encoding=self.encoding,
-                            sock=sock,
-                            persist_cookies=self.cookie_tracker_obj,
-                            **kwargs)
+        req = Request('PUT',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
 
-    async def delete(self, path='', *args, **kwargs):
+    async def delete(self, path='', **kwargs):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.delete(url,
-                               encoding=self.encoding,
-                               sock=sock,
-                               persist_cookies=self.cookie_tracker_obj,
-                               **kwargs)
+        req = Request('DELETE',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
 
-    async def options(self, path='', *args, **kwargs):
+    async def options(self, path='', **kwargs):
         url = self._make_url() + path
         sock = await self._grab_connection()
 
-        r = await asks_.options(url,
-                                encoding=self.encoding,
-                                sock=sock,
-                                persist_cookies=self.cookie_tracker_obj,
-                                **kwargs)
+        req = Request('OPTIONS',
+                      url,
+                      port=self.port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req._build_request()
 
         self.connection_pool.appendleft(sock)
         return r
