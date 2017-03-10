@@ -78,7 +78,7 @@ class Session(AsyncObject):
                 pass
             else:
                 raise ValueError('Supplied info beyond scheme, netloc.' +
-                                 ' Host should be top level only.\n', pa)
+                                 ' Host should be top level only:\n', path)
         self.netloc = netloc
         if scheme == 'http':
             self.port = 80

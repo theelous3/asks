@@ -211,7 +211,7 @@ class Request:
         multipart_ctype = ' multipart/form-data; boundary={}'.format(_BOUNDARY)
         if self.files is not None and self.data is not None:
             c_type = multipart_ctype
-            wombo_combo = {**files, **data}
+            wombo_combo = {**self.files, **self.data}
             body = await self._multipart(wombo_combo)
 
         elif self.files is not None:
