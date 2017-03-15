@@ -8,12 +8,10 @@ python:
 
 install:
    - ./setup.py develop
-   # unreleased pylint newer than 1.6.4 (will be 1.7.0, previously to be 2.0)
    - pip3 install git+git://github.com/PyCQA/pylint.git@56daa5c3a0d2d6592c673c2932c354b68679997f
-   # unreleased astroid newer than 1.4.9
    - pip3 install git+git://github.com/PyCQA/astroid.git@313c0c34100118be87164214bd22b226a748166d
 
- script:
+script:
   - cd tests
   - pytest --verbose --tb=native
   - cd ..
