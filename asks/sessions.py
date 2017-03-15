@@ -5,6 +5,8 @@ Has minimal tests, but currently working well!
 TO DO:
     * Write more tests.
 '''
+
+# pylint: disable=no-else-return
 from collections import deque
 from urllib.parse import urlparse
 

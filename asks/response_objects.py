@@ -1,3 +1,4 @@
+# pylint: disable=no-else-return
 import codecs
 from types import SimpleNamespace
 import json as _json

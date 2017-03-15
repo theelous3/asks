@@ -1,3 +1,6 @@
+# pylint: disable=wildcard-import
+# pylint: disable=no-else-return
+# pylint: disable=not-callable
 from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
@@ -7,14 +10,11 @@ import mimetypes
 
 from curio.file import aopen
 
-from .auth import *
+from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
 from .http_req_parser import HttpParser
 from .errors import TooManyRedirects
-
-
-__all__ = ['Request']
 
 
 _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
@@ -41,8 +41,7 @@ class Request:
         self.sock = None
         self.persist_cookies = None
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        self.__dict__.update(kwargs)
 
         self.scheme = None
         self.netloc = None

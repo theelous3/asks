@@ -5,8 +5,6 @@ from hashlib import md5
 from random import choices
 from string import ascii_lowercase, digits
 
-import curio
-
 
 __all__ = ['AuthBase',
            'PreResponseAuth',
