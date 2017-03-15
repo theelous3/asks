@@ -46,7 +46,7 @@ class Response:
         try:
             guess = self.headers['content-type'].split('=')[1]
             codecs.lookup(guess)
-		# pylint: disable=fixme,broad-except
+        # pylint: disable=fixme,broad-except
         # TODO: replace Exception with errors from first line
         except (Exception, LookupError):
             pass

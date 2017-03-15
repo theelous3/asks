@@ -134,7 +134,6 @@ class Session(AsyncObject):
         '''
         url = self._make_url() + path
         sock = await self._grab_connection()
-
         req = Request('GET',
                       url,
                       port=self.port,

@@ -7,6 +7,7 @@ import mimetypes
 
 from curio.file import aopen
 
+from .auth import *
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
 from .http_req_parser import HttpParser
@@ -51,12 +52,9 @@ class Request:
 
     async def _build_request(self):
         '''
-        Takes keyword args from any of the public HTTP method functions
-        (get, post, etc.) and acts as a request builder, returning the final
-        response object.
-
-        All the network i/o has been moved in to its own func, but this could
-        still be cleaner. More refactors!
+        Acts as the central hub for preparing requests to be sent, and
+        returning them upon completion. Generally just pokes through
+        self's attribs and makes decisions about what to do.
         '''
         self.scheme, self.netloc, self.path, _, self.query, _ = urlparse(
             self.uri)
@@ -106,6 +104,11 @@ class Request:
         if self.headers is not None:
             asks_headers.update(self.headers)
 
+        # add auth
+        if self.auth is not None:
+            asks_headers.update(await self.auth_handler_pre())
+            asks_headers.update(await self.auth_handler_post_get_auth())
+
         # add all headers to package
         for k, v in asks_headers.items():
             package.append(k + ': ' + v)
@@ -116,7 +119,6 @@ class Request:
             for k, v in self.cookies.items():
                 cookie_str += '{}={}; '.format(k, v)
             package.append('Cookie: ' + cookie_str[:-1])
-
         # call i/o handling func
         response_obj = await self.request_io(package, body)
 
@@ -133,25 +135,31 @@ class Request:
 
         response_obj._parse_cookies(self.netloc)
 
+        # If there's a cookie tracker object, store any cookies we
+        # might've picked up along our travels.
         if self.persist_cookies is not None:
             self.persist_cookies._store_cookies(response_obj)
 
+        # Have a crack at guessing the encoding of the response.
         response_obj._guess_encoding()
+
+        # Check to see if there's a PostResponseAuth set, and does magic.
+        if self.auth is not None:
+            response_obj = await self.auth_handler_post_check_retry(
+                response_obj)
+
         # check redirects
         if self.method != 'HEAD':
             if self.max_redirects < 0:
                 raise TooManyRedirects
-            else:
-                self.max_redirects -= 1
             response_obj = await self._redirect(response_obj)
-
         response_obj.history = self.history_objects
+
         return response_obj
 
     def _build_path(self):
         '''
-        Constructs from supplied args the actual request URL with
-        accompanying query if any.
+        Constructs the actual request URL with accompanying query if any.
         '''
         if not self.path:
             self.path = '/'
@@ -197,7 +205,7 @@ class Request:
                 self.method = 'GET'
             else:
                 self.history_objects.append(response_obj)
-
+            self.max_redirects -= 1
             response_obj = await self._build_request()
         return response_obj
 
@@ -250,7 +258,7 @@ class Request:
                 query.append(self._queryify(
                     (k + '=' + '+'.join(str(v).split()))))
             elif isinstance(v, dict):
-                for key in v.keys():
+                for key in v:
                     query.append(self._queryify((k + '=' + key)))
             elif hasattr(v, '__iter__'):
                 for elm in v:
@@ -258,7 +266,7 @@ class Request:
                         self._queryify((k + '=' +
                                        '+'.join(str(elm).split()))))
 
-        if params is True and query:
+        if params and query:
             if not base_query:
                 return '?' + '&'.join(query)
             else:
@@ -324,13 +332,9 @@ class Request:
         This function also instances the Response class in which the response
         satus line, headers, cookies, and body is stored.
 
-        Has an optional arg for callbacks passed by _build_request in which
-        the user can supply a function to be called on each chunk of data
-        recieved.
-
         It should be noted that in order to remain preformant, if the user
         wishes to do any file IO it should use async files or risk long wait
-        times and risk connection issues server-side.
+        times and risk connection issues server-side when using callbacks.
 
         If a callback is used, the response's body will be the __name__ of
         the callback function.
@@ -379,3 +383,51 @@ class Request:
                 http_package += bytes(body, self.encoding)
 
         await self.sock.write(http_package)
+
+    async def auth_handler_pre(self):
+        '''
+        If the user supplied auth does not rely on any response
+        (is a PreResponseAuth object) then we call the auth's __call__
+        returning a dict to update the request's headers with.
+        '''
+        if isinstance(self.auth, PreResponseAuth):
+            return await self.auth(self)
+        return {}
+
+    async def auth_handler_post_get_auth(self):
+        '''
+        If the user supplied auth does rely on a response
+        (is a PostResponseAuth object) then we call the auth's __call__
+        returning a dict to update the request's headers with, as long
+        as there is an appropriate 401'd response object to calculate auth
+        details from.
+        '''
+        if isinstance(self.auth, PostResponseAuth):
+            if self.history_objects:
+                authable_resp = self.history_objects[-1]
+                if authable_resp.status_code == 401:
+                    if not self.auth.auth_attempted:
+                        self.auth.auth_attempted = True
+                        return await self.auth(authable_resp, self)
+        return {}
+
+    async def auth_handler_post_check_retry(self, response_obj):
+        '''
+        The other half of auth_handler_post_check_retry (what a mouthfull).
+        If auth has not yet been attempted and the most recent response
+        object is a 401, we store that response object and retry the request
+        in exactly the same manner as before except with the correct auth.
+
+        If it fails a second time, we simply return the failed response.
+        '''
+        if isinstance(self.auth, PostResponseAuth):
+            if response_obj.status_code == 401:
+                if not self.auth.auth_attempted:
+                    self.history_objects.append(response_obj)
+                    r = await self._build_request()
+                    self.auth.auth_attempted = False
+                    return r
+                else:
+                    response_obj.history = self.history_objects
+                    return response_obj
+        return response_obj
