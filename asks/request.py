@@ -23,6 +23,7 @@ _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
 class Request:
 
     def __init__(self, method, uri, **kwargs):
+        # These are kwargsable attribs.
         self.method = method
         self.uri = uri
         self.port = None
@@ -43,6 +44,7 @@ class Request:
 
         self.__dict__.update(kwargs)
 
+        # These are unkwargsable, and set by the code.
         self.scheme = None
         self.netloc = None
         self.path = None

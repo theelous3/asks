@@ -60,8 +60,9 @@ class DigestAuth(PostResponseAuth):
 
     It will work, but be slightly more resource intensive than it should.
     To be completed!
-    '''
 
+    Also, it's 2017. Stop using digest auth.
+    '''
     _HDR_VAL_PARSE = re.compile(r'\b(\w+)=(?:"([^\\"]+)"|(\S+))')
 
     def __init__(self, auth_info, encoding='utf-8'):
@@ -75,8 +76,10 @@ class DigestAuth(PostResponseAuth):
     async def __call__(self, response_obj, req_obj):
 
         usrname, psword = [bytes(x, self.encoding) for x in self.auth_info]
-
-        auth_resp_value = response_obj.headers['www-authenticate']
+        try:
+            auth_resp_value = response_obj.headers['www-authenticate']
+        except KeyError:
+            return {}
         auth_dict = dict()
         value_list = re.findall(self._HDR_VAL_PARSE, auth_resp_value)
         for match in value_list:
@@ -165,5 +168,5 @@ class DigestAuth(PostResponseAuth):
         response_items.extend(['nc={:08x}'.format(self.nonce_count),
                               'cnonce="{}"'.format(str(cnonce,
                                                    self.encoding))])
-
+        print('NC:', self.nonce_count)
         return {'Authorization': "Digest {}".format(', '.join(response_items))}

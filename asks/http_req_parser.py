@@ -2,7 +2,7 @@ import curio
 
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 
-from .errors import RequestTimeout
+from .errors import RequestTimeout, ServerClosedConnectionError
 
 
 class HttpParser:
@@ -34,6 +34,9 @@ class HttpParser:
                 except curio.TaskTimeout:
                     await response_task.cancel()
                     raise RequestTimeout
+                except curio.errors.TaskError:
+                    raise ServerClosedConnectionError(
+                        'The server closed the connection prematurely.')
             else:
                 status_line = await self.stream_obj.__anext__()
         except StopAsyncIteration:

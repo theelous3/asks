@@ -3,9 +3,24 @@ Simple exceptions to be raised in case of errors.
 '''
 
 
-class TooManyRedirects(Exception):
+class AsksException(Exception):
+    '''
+    Base exception for all asks errors.
+    '''
     pass
 
 
-class RequestTimeout(Exception):
+class ConnectivityError(AsksException):
+    pass
+
+
+class TooManyRedirects(AsksException):
+    pass
+
+
+class RequestTimeout(ConnectivityError):
+    pass
+
+
+class ServerClosedConnectionError(ConnectivityError):
     pass
