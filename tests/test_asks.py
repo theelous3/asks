@@ -21,7 +21,7 @@ async def test_https_get():
 
 @curio_run
 async def test_https_get_alt():
-    r = await asks.get('www.google.ie')
+    r = await asks.get('https://www.google.ie')
     assert r.status_code == 200
 
 

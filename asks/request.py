@@ -36,7 +36,7 @@ class Request:
         self.files = None
         self.cookies = {}
         self.callback = None
-        self.timeout = 999999
+        self.timeout = None
         self.max_redirects = float('inf')
         self.history_objects = []
         self.sock = None
@@ -63,7 +63,7 @@ class Request:
             self.netloc, self.port = self.netloc.split(':')
             self.port = self.port
         except ValueError:
-            if self.uri.startswith('https'):
+            if self.scheme == 'https':
                 self.port = '443'
             else:
                 self.port = '80'

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to asks’s documentation! &#8212; asks 0.0.1 documentation</title>
+    <title>asks &#8212; asks 0.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,6 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="asks - An overview of the functions and kw/argumetns." href="overview-of-funcs-and-args.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -41,18 +42,110 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-asks-s-documentation">
-<h1>Welcome to asks&#8217;s documentation!<a class="headerlink" href="#welcome-to-asks-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="asks">
+<h1>asks<a class="headerlink" href="#asks" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview-of-funcs-and-args.html">asks - An overview of the functions and kw/argumetns.</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#general-http-methods">General HTTP methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#passing-queries">Passing Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#custom-headers">Custom Headers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#sending-json">Sending JSON</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#sending-cookies">Sending Cookies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#storing-cookies">Storing Cookies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#set-encoding">Set Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#limiting-redirects">Limiting Redirects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#set-timeout">Set Timeout</a></li>
 </ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="a-look-at-sessions.html">asks - A Look at Sessions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#creating-a-session">Creating a <code class="docutils literal"><span class="pre">Session</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#many-connections-and-connection-pooling">Many Connections and Connection Pooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#stateful-sessions">Stateful Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#creating-a-dsession">Creating a <code class="docutils literal"><span class="pre">DSession</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation:<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>asks requires <a class="reference external" href="www.python.org">Python 3.6</a>. and <a class="reference external" href="https://github.com/dabeaz/curio">Curio</a>.</p>
+<p>The easiest way to install asks, is to pip the master git repo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">theelous3</span><span class="o">/</span><span class="n">asks</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>To install curio:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">dabeaz</span><span class="o">/</span><span class="n">curio</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="a-dirty-little-example">
+<h2>A dirty little example:<a class="headerlink" href="#a-dirty-little-example" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s how to grab a single request and print it&#8217;s content:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># single_get.py</span>
+
+<span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="s1">&#39;https://example.com&#39;</span><span class="p">))</span>
+
+<span class="c1"># Results in:</span>
+<span class="c1"># b&#39;&lt;!doctype html&gt;\n&lt;html&gt;\n&lt;head&gt;\n    &lt;title&gt;Example Domain&lt;/title&gt;\n\n</span>
+</pre></div>
+</div>
+<p>Making one request in an async program is a little weird, but not without its use. This sort of basic <code class="docutils literal"><span class="pre">asks.get()</span></code> would slot in quite nicely in a greater program that makes some calls here and there.</p>
+</div>
+<div class="section" id="a-far-finer-example">
+<h2>A far finer example:<a class="headerlink" href="#a-far-finer-example" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s an example of making 1000 calls to an api and storing the results in a list:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># many_get.py</span>
+<span class="c1"># make a whole pile of api calls and store</span>
+<span class="c1"># their response objects in a list.</span>
+
+<span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="n">path_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;1000&#39;</span><span class="p">,</span> <span class="s1">&#39;paths&#39;</span><span class="p">]</span>
+
+<span class="n">retrieved_pages</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">some_path</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">retrieved_pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
+                           <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
+        <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Now we&#8217;re talkin&#8217;.</p>
+<p>A thousand requests running async at the drop of a hat, using clean burning connection pooling to play nicely with the target server.</p>
+</div>
+<div class="section" id="why-asks">
+<h2>Why asks?<a class="headerlink" href="#why-asks" title="Permalink to this headline">¶</a></h2>
+<p>If you like async, but don&#8217;t like the spaghetti-docs furture-laden many-looped asyncio lib, you&#8217;ll probably love curio. If you wish you could marry curio and requests, you&#8217;ll probably love asks.</p>
+<p>Nice libs like aiohttp suffer the side effect of uglyness due to being specifically for asyncio. Inspired by requests and curio, I wanted to take that lovely ultra abstraction and apply it to an async http lib to eleviate some of the pain in dealing with async http.</p>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>asks packs most if not all of the features requests does. The usual <code class="docutils literal"><span class="pre">.json()</span></code> ing of responses and such. You can take a more in depth look here <code class="docutils literal"><span class="pre">!!!!</span></code></p>
+<p>However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus, and they have a general bias towards dealing with large repeat requests to single hosts. More detail can be found here <code class="docutils literal"><span class="pre">!!!!</span></code></p>
+</div>
+<div class="section" id="about">
+<h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
+<p>asks was created by Mark Jameson</p>
+<p><a class="reference external" href="http://theelous3.net">http://theelous3.net</a></p>
+<p>Shoutout to the fine folks of <a class="reference external" href="https://github.com/8Banana">8banana</a> and co.</p>
+</div>
 </div>
 
 
@@ -63,13 +156,22 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to asks&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#">asks</a><ul>
+<li><a class="reference internal" href="#contents">Contents:</a></li>
+<li><a class="reference internal" href="#installation">Installation:</a></li>
+<li><a class="reference internal" href="#a-dirty-little-example">A dirty little example:</a></li>
+<li><a class="reference internal" href="#a-far-finer-example">A far finer example:</a></li>
+<li><a class="reference internal" href="#why-asks">Why asks?</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#about">About</a></li>
+</ul>
+</li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="overview-of-funcs-and-args.html" title="next chapter">asks - An overview of the functions and kw/argumetns.</a></li>
   </ul></li>
 </ul>
 </div>

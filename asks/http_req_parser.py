@@ -9,8 +9,8 @@ class HttpParser:
     '''
     A class which parses request responses.
     '''
-    def __init__(self, stream_obj):
-        self.stream_obj = stream_obj
+    def __init__(self, sock):
+        self.sock = sock
 
     async def parse_stream_headers(self, timeout=None):
         '''
@@ -21,26 +21,23 @@ class HttpParser:
                     'status_code': '',
                     'http_version': None,
                     'headers': c_i_Dict(),
-                    'errors': {},
+                    'errors': [],
                     'cookies': []
                     }
 
         try:
-            if timeout:
-                response_task = await curio.spawn(self.stream_obj.__anext__())
+            if timeout is not None:
+                response_task = await curio.spawn(self.sock.__anext__())
                 try:
                     status_line = await curio.timeout_after(
                         timeout, response_task.join())
                 except curio.TaskTimeout:
                     await response_task.cancel()
                     raise RequestTimeout
-                except curio.errors.TaskError:
-                    raise ServerClosedConnectionError(
-                        'The server closed the connection prematurely.')
             else:
-                status_line = await self.stream_obj.__anext__()
+                status_line = await self.sock.__anext__()
         except StopAsyncIteration:
-            req_dict['errors']['ClosedEarly'] = 'Server closed the connection.'
+            req_dict['errors'].append(ServerClosedConnectionError)
             return req_dict
         status_line = status_line.decode('utf-8',
                                          errors='replace').strip().split(' ',
@@ -50,10 +47,9 @@ class HttpParser:
              req_dict['status_code'], \
              req_dict['reason_phrase'] = status_line
         except ValueError:
-            req_dict['errors']['InvalidFirstLine'] = status_line
-            return req_dict
+            req_dict['errors'].append(ServerClosedConnectionError)
 
-        async for hder_field in self.stream_obj:
+        async for hder_field in self.sock:
             if not any(hder_field == x for x in (b'\r\n', b'\n')):
                 hder_field = hder_field.decode('utf-8').strip().split(':', 1)
 
@@ -87,7 +83,7 @@ class HttpParser:
         if chunked:
             inside_chunk = False
             while True:
-                chunk = await self.stream_obj.readline()
+                chunk = await self.sock.readline()
                 if not chunk.strip():
                     break
                 else:
@@ -107,7 +103,7 @@ class HttpParser:
             while redd != length:
                 if (length - redd) < readsize:
                     readsize = length - redd
-                current_chunk = await self.stream_obj.read(readsize)
+                current_chunk = await self.sock.read(readsize)
                 body_total += current_chunk
                 redd += len(current_chunk)
 
@@ -121,7 +117,7 @@ class HttpParser:
         UNTESTED! Gut feeling says this will hang indefinitely. Do test!
         '''
         while True:
-            bytechunk = await self.stream_obj.read(2048)
+            bytechunk = await self.sock.read(2048)
             if not bytechunk:
                 break
             else:

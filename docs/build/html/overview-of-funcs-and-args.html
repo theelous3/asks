@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>asks - An overview of the functions and kw/argumetns. &#8212; asks 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="asks - A Look at Sessions" href="a-look-at-sessions.html" />
+    <link rel="prev" title="asks" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="asks-an-overview-of-the-functions-and-kw-argumetns">
+<h1>asks - An overview of the functions and kw/argumetns.<a class="headerlink" href="#asks-an-overview-of-the-functions-and-kw-argumetns" title="Permalink to this headline">¶</a></h1>
+<p>asks is <em>heavily</em> influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you&#8217;re familiar with the format you can pretty much skip to the distinctions regarding sessions. <code class="docutils literal"><span class="pre">!!!!</span></code></p>
+<p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">Session</span></code> class as methods.</p>
+<div class="section" id="general-http-methods">
+<h2>General HTTP methods<a class="headerlink" href="#general-http-methods" title="Permalink to this headline">¶</a></h2>
+<p>asks supports <code class="docutils literal"><span class="pre">get()</span></code>, <code class="docutils literal"><span class="pre">head()</span></code>, <code class="docutils literal"><span class="pre">post()</span></code>, <code class="docutils literal"><span class="pre">put()</span></code>, <code class="docutils literal"><span class="pre">delete()</span></code> and <code class="docutils literal"><span class="pre">options()</span></code>.</p>
+<p>When using the basic functions they each require a uri:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">blah</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://example.com&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org&#39;</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://localhost:25000&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;www.your-coat-on.net&#39;</span><span class="p">)</span>
+    <span class="c1"># etc.</span>
+</pre></div>
+</div>
+<p>If a scheme is not supplied, asks will default to https.</p>
+<p>All functions / methods share the same set of args / keyword args, though not all are appropriate for every http method.</p>
+</div>
+<div class="section" id="passing-queries">
+<h2>Passing Queries<a class="headerlink" href="#passing-queries" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">params</span></code> and <code class="docutils literal"><span class="pre">data</span></code> args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Elmo&#39;</span><span class="p">:</span> <span class="s1">&#39;wants data&#39;</span><span class="p">}))</span>
+
+<span class="c1"># sends as request path:</span>
+<span class="sa">b</span><span class="s1">&#39;/?Elmo=wants+data&#39;</span>
+</pre></div>
+</div>
+<p>You may also pass strings and asks will attempt to format them correctly.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;Elmo wants data&#39;</span><span class="p">))</span>
+
+<span class="c1"># sends in request body:</span>
+<span class="sa">b</span><span class="s1">&#39;/?Elmo+wants+data&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-headers">
+<h2>Custom Headers<a class="headerlink" href="#custom-headers" title="Permalink to this headline">¶</a></h2>
+<p>Add your own custom headers or overwrite the default headers by supplying your own dict to the <code class="docutils literal"><span class="pre">headers</span></code> argument. Note that user headers set in this way will, if conflicting, take precedence.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span>
+                       <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Custom-Header&#39;</span><span class="p">:</span> <span class="s1">&#39;My value&#39;</span><span class="p">}))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sending-json">
+<h2>Sending JSON<a class="headerlink" href="#sending-json" title="Permalink to this headline">¶</a></h2>
+<p>Pass python dict objects to the <code class="docutils literal"><span class="pre">json</span></code> argument to send them as json in your request.
+Note that if your workflow here involves opening a json file, you should use curio&#8217;s <code class="docutils literal"><span class="pre">aopen()</span></code> to avoid stalling the program on disk reads.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dict_to_send</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Data_1&#39;</span><span class="p">:</span> <span class="s1">&#39;Important thing&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Data_2&#39;</span><span class="p">:</span> <span class="s1">&#39;Really important thing&#39;</span><span class="p">}</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">dict_to_send</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sending-cookies">
+<h2>Sending Cookies<a class="headerlink" href="#sending-cookies" title="Permalink to this headline">¶</a></h2>
+<p>Pass a dict of cookie name(key) / value pairs to the <code class="docutils literal"><span class="pre">cookies</span></code> arg to ship &#8216;em off.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span>
+                       <span class="n">cookies</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Cookie Monster&#39;</span><span class="p">:</span> <span class="s1">&#39;Yum&#39;</span><span class="p">}))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="storing-cookies">
+<h2>Storing Cookies<a class="headerlink" href="#storing-cookies" title="Permalink to this headline">¶</a></h2>
+<p>By default asks does not store cookies. To enable cookie storage, just pass <code class="docutils literal"><span class="pre">store_cookies=True</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">store_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="set-encoding">
+<h2>Set Encoding<a class="headerlink" href="#set-encoding" title="Permalink to this headline">¶</a></h2>
+<p>The default encoding is <code class="docutils literal"><span class="pre">utf-8</span></code>. You may override this by supplying a different encoding, be it a standard encoding or a custom one you&#8217;ve registered locally.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;Latin-1&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Handy list of builtin encodings: <a class="reference external" href="https://gist.github.com/theelous3/7d6a3fe20a21966b809468fa336195e3">https://gist.github.com/theelous3/7d6a3fe20a21966b809468fa336195e3</a></p>
+</div>
+<div class="section" id="limiting-redirects">
+<h2>Limiting Redirects<a class="headerlink" href="#limiting-redirects" title="Permalink to this headline">¶</a></h2>
+<p>You can limit the number of redirects by setting <code class="docutils literal"><span class="pre">max_redirects</span></code>. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">max_redirects</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="set-timeout">
+<h2>Set Timeout<a class="headerlink" href="#set-timeout" title="Permalink to this headline">¶</a></h2>
+<p>Don&#8217;t want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+<span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">asks - An overview of the functions and kw/argumetns.</a><ul>
+<li><a class="reference internal" href="#general-http-methods">General HTTP methods</a></li>
+<li><a class="reference internal" href="#passing-queries">Passing Queries</a></li>
+<li><a class="reference internal" href="#custom-headers">Custom Headers</a></li>
+<li><a class="reference internal" href="#sending-json">Sending JSON</a></li>
+<li><a class="reference internal" href="#sending-cookies">Sending Cookies</a></li>
+<li><a class="reference internal" href="#storing-cookies">Storing Cookies</a></li>
+<li><a class="reference internal" href="#set-encoding">Set Encoding</a></li>
+<li><a class="reference internal" href="#limiting-redirects">Limiting Redirects</a></li>
+<li><a class="reference internal" href="#set-timeout">Set Timeout</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">asks</a></li>
+      <li>Next: <a href="a-look-at-sessions.html" title="next chapter">asks - A Look at Sessions</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/overview-of-funcs-and-args.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Mark Jameson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/overview-of-funcs-and-args.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

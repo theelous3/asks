@@ -1,5 +1,36 @@
+from collections import OrderedDict, MutableMapping, Mapping, deque
+
+
+class SocketQ(deque):
+    '''
+    A funky little subclass of deque built for the DSession class.
+    Allows for connection pooling of sockets to different remote hosts.
+    '''
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+    def index(self, host_loc):
+        count = 0
+        for i in self:
+            if i.host == host_loc:
+                return count
+            else:
+                count += 1
+        raise ValueError(f'{host_loc} not in SocketQ')
+
+    def pull(self, index):
+        x = self[index]
+        del self[index]
+        return x
+
+    def __contains__(self, host_loc):
+        for i in self:
+            if i.host == host_loc:
+                return True
+        return False
+
 '''
-This file's contents are from request's source.
+The rest of this file's contents are from request's source.
 
 requests is licenced under the Apache 2.0 licence, which can be found here:
 
@@ -8,8 +39,6 @@ requests is licenced under the Apache 2.0 licence, which can be found here:
 requests can be found here:
     https://github.com/kennethreitz/requests
 '''
-
-from collections import OrderedDict, MutableMapping, Mapping
 
 
 class CaseInsensitiveDict(MutableMapping):

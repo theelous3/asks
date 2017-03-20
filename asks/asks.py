@@ -5,18 +5,9 @@ from asks.sessions import Session
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
 
 
-def _get_schema(uri):
-    '''
-    Figures out the appropriate http type.
-    '''
-    if not uri.startswith('http'):
-        uri = 'https://' + uri
-    return uri
-
-
 async def get(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),
@@ -27,7 +18,7 @@ async def get(uri, port=443, **kwargs):
 
 async def head(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),
@@ -38,7 +29,7 @@ async def head(uri, port=443, **kwargs):
 
 async def post(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),
@@ -49,7 +40,7 @@ async def post(uri, port=443, **kwargs):
 
 async def put(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),
@@ -60,7 +51,7 @@ async def put(uri, port=443, **kwargs):
 
 async def delete(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),
@@ -71,7 +62,7 @@ async def delete(uri, port=443, **kwargs):
 
 async def options(uri, port=443, **kwargs):
     s_cookie = kwargs.pop('store_cookies', None)
-    scheme, netloc, path, _, query, _ = urlparse(_get_schema(uri))
+    scheme, netloc, path, _, query, _ = urlparse(uri)
     s = await Session((scheme + '://' + netloc),
                       port=port,
                       endpoint=urlunparse(('', '', path, '', query, '')),

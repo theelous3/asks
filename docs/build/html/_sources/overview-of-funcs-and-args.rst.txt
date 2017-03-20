@@ -1,0 +1,121 @@
+asks - An overview of the functions and kw/argumetns.
+=====================================================
+
+asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding sessions. ``!!!!``
+
+The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
+
+
+General HTTP methods
+____________________
+
+asks supports ``get()``, ``head()``, ``post()``, ``put()``, ``delete()`` and ``options()``.
+
+When using the basic functions they each require a uri::
+
+    import asks
+
+    async def blah():
+        a = asks.get('https://example.com')
+        s = asks.head('http://httpbin.org')
+        k = asks.post('https://localhost:25000')
+        s = asks.put('www.your-coat-on.net')
+        # etc.
+
+If a scheme is not supplied, asks will default to https.
+
+All functions / methods share the same set of args / keyword args, though not all are appropriate for every http method.
+
+
+Passing Queries
+_______________
+
+The ``params`` and ``data`` args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.::
+
+    async def example():
+        r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
+
+    # sends as request path:
+    b'/?Elmo=wants+data'
+
+You may also pass strings and asks will attempt to format them correctly.::
+
+    async def example():
+        r = await asks.get('www.example.com', data='Elmo wants data'))
+
+    # sends in request body:
+    b'/?Elmo+wants+data'
+
+
+Custom Headers
+______________
+
+Add your own custom headers or overwrite the default headers by supplying your own dict to the ``headers`` argument. Note that user headers set in this way will, if conflicting, take precedence.::
+
+    async def example():
+        r = await asks.get('www.example.com',
+                           headers={'Custom-Header': 'My value'}))
+
+
+Sending JSON
+____________
+
+Pass python dict objects to the ``json`` argument to send them as json in your request.
+Note that if your workflow here involves opening a json file, you should use curio's ``aopen()`` to avoid stalling the program on disk reads.::
+
+    dict_to_send = {'Data_1': 'Important thing',
+                    'Data_2': 'Really important thing'}
+
+    async def example():
+        r = await asks.post('www.example.com', json=dict_to_send))
+
+
+Sending Cookies
+_______________
+
+Pass a dict of cookie name(key) / value pairs to the ``cookies`` arg to ship 'em off.::
+
+    async def example():
+        r = await asks.get('www.example.com',
+                           cookies={'Cookie Monster': 'Yum'}))
+
+
+Storing Cookies
+_______________
+
+By default asks does not store cookies. To enable cookie storage, just pass ``store_cookies=True``. ::
+
+    async def example():
+        r = await asks.get('www.example.com', store_cookies=True)
+
+
+Set Encoding
+____________
+
+The default encoding is ``utf-8``. You may override this by supplying a different encoding, be it a standard encoding or a custom one you've registered locally.::
+
+    async def example():
+        r = await asks.get('www.example.com', encoding='Latin-1'))
+
+Handy list of builtin encodings: https://gist.github.com/theelous3/7d6a3fe20a21966b809468fa336195e3
+
+
+Limiting Redirects
+__________________
+
+You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.::
+
+    async def example():
+        r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
+
+
+
+Set Timeout
+___________
+
+Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.::
+
+    async def example():
+    r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
+
+
