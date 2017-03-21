@@ -45,7 +45,7 @@
             
   <div class="section" id="asks-an-overview-of-the-functions-and-kw-argumetns">
 <h1>asks - An overview of the functions and kw/argumetns.<a class="headerlink" href="#asks-an-overview-of-the-functions-and-kw-argumetns" title="Permalink to this headline">¶</a></h1>
-<p>asks is <em>heavily</em> influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you&#8217;re familiar with the format you can pretty much skip to the distinctions regarding sessions. <code class="docutils literal"><span class="pre">!!!!</span></code></p>
+<p>asks is <em>heavily</em> influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you&#8217;re familiar with the format you can pretty much skip to the distinctions regarding <a class="reference external" href="https://asks.readthedocs.io/en/latest/a-look-at-sessions.html">sessions</a></p>
 <p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">Session</span></code> class as methods.</p>
 <div class="section" id="general-http-methods">
 <h2>General HTTP methods<a class="headerlink" href="#general-http-methods" title="Permalink to this headline">¶</a></h2>
@@ -146,6 +146,23 @@ Note that if your workflow here involves opening a json file, you should use cur
 </pre></div>
 </div>
 </div>
+<div class="section" id="authing">
+<h2>Authing<a class="headerlink" href="#authing" title="Permalink to this headline">¶</a></h2>
+<p>Available off the bat, we have http basic auth and http digest auth. These are both crappy and next on the agenda is adding support for good auth.</p>
+<p>To add auth in asks, you pass a tuple of <code class="docutils literal"><span class="pre">('username',</span> <span class="pre">'password')</span></code> to the <code class="docutils literal"><span class="pre">__init__</span></code> of an auth class. For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">BasicAuth</span><span class="p">,</span> <span class="n">DigestAuth</span>
+
+<span class="n">usr_pw</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;AzureDiamond&#39;</span><span class="p">,</span> <span class="s1">&#39;hunter2&#39;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://some_protected.resource&#39;</span><span class="p">,</span>
+                       <span class="n">auth</span><span class="o">=</span><span class="n">BasicAuth</span><span class="p">(</span><span class="n">usr_pw</span><span class="p">))</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://other_protected.thingy&#39;</span><span class="p">,</span>
+                       <span class="n">auth</span><span class="o">=</span><span class="n">DigestAuth</span><span class="p">(</span><span class="n">usr_pw</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -166,6 +183,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <li><a class="reference internal" href="#set-encoding">Set Encoding</a></li>
 <li><a class="reference internal" href="#limiting-redirects">Limiting Redirects</a></li>
 <li><a class="reference internal" href="#set-timeout">Set Timeout</a></li>
+<li><a class="reference internal" href="#authing">Authing</a></li>
 </ul>
 </li>
 </ul>

@@ -1,7 +1,7 @@
 asks - An overview of the functions and kw/argumetns.
 =====================================================
 
-asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding sessions. ``!!!!``
+asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
 The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
 
@@ -118,4 +118,22 @@ Don't want to wait forever? Me neither. You may set a timeout with the timeout a
     async def example():
     r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
 
+
+Authing
+_______
+
+Available off the bat, we have http basic auth and http digest auth. These are both crappy and next on the agenda is adding support for good auth.
+
+To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``__init__`` of an auth class. For example::
+
+    import asks
+    from asks import BasicAuth, DigestAuth
+
+    usr_pw = ('AzureDiamond', 'hunter2')
+
+    async def main():
+        r = await asks.get('https://some_protected.resource',
+                           auth=BasicAuth(usr_pw))
+        r2 = await asks.get('https://other_protected.thingy',
+                           auth=DigestAuth(usr_pw))
 

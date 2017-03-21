@@ -12,7 +12,6 @@ _________
 
    overview-of-funcs-and-args
    a-look-at-sessions
-   howtos
    refrence-manual
 
 Installation:
@@ -91,9 +90,9 @@ Nice libs like aiohttp suffer the side effect of uglyness due to being specifica
 Features
 ________
 
-asks packs most if not all of the features requests does. The usual ``.json()`` ing of responses and such. You can take a more in depth look here ``!!!!``
+asks packs most if not all of the features requests does. The usual ``.json()`` ing of responses and such. You can take a more in depth look `here <https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html>`_.
 
-However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus, and they have a general bias towards dealing with large repeat requests to single hosts. More detail can be found here ``!!!!``
+However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus. More detail can be found `here <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
 About
 _____

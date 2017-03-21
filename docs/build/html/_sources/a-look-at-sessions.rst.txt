@@ -5,7 +5,7 @@ While something like requests makes grabbing a single request very simple (and a
 
 asks' sessions' methods are the same as the base asks functions, supporting ``get()``, ``head()``, ``post()``, ``put()``, ``delete()`` and ``options()``.
 
-For more info on how to use these methods, looke here ``!!!!``.
+For more info on how to use these methods, take a `look-see <https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html>`_.
 
 **There are two kinds of session in asks. The** ``Session`` **and the disparate session(** ``DSession`` **).**
 
@@ -80,7 +80,7 @@ HTTP is stateless, and by default asks is too. You can turn stateful cookie retu
 Creating a ``DSession``
 _______________________
 
-The ``DSession`` does not have to be ``await`` ed, as it unfortunately cannot see in to the future...yet.::
+The ``DSession`` does not have to be ``await`` ed, as it unfortunately cannot see in to the future...yet. (we can't prepare the connection pool right away as we don't know where we're connecting yet!)::
 
     from asks import DSession
     import curio

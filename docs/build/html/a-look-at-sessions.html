@@ -46,7 +46,7 @@
 <h1>asks - A Look at Sessions<a class="headerlink" href="#asks-a-look-at-sessions" title="Permalink to this headline">¶</a></h1>
 <p>While something like requests makes grabbing a single request very simple (and asks does too!); the sessions in asks aim to make getting a great many things simple as well.</p>
 <p>asks&#8217; sessions&#8217; methods are the same as the base asks functions, supporting <code class="docutils literal"><span class="pre">get()</span></code>, <code class="docutils literal"><span class="pre">head()</span></code>, <code class="docutils literal"><span class="pre">post()</span></code>, <code class="docutils literal"><span class="pre">put()</span></code>, <code class="docutils literal"><span class="pre">delete()</span></code> and <code class="docutils literal"><span class="pre">options()</span></code>.</p>
-<p>For more info on how to use these methods, looke here <code class="docutils literal"><span class="pre">!!!!</span></code>.</p>
+<p>For more info on how to use these methods, take a <a class="reference external" href="https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html">look-see</a>.</p>
 <p><strong>There are two kinds of session in asks. The</strong> <code class="docutils literal"><span class="pre">Session</span></code> <strong>and the disparate session(</strong> <code class="docutils literal"><span class="pre">DSession</span></code> <strong>).</strong></p>
 <p>The <code class="docutils literal"><span class="pre">Session</span></code> class is aimed at working with many requests to a single host. Dealing with an API is a great example of this.</p>
 <p>The <code class="docutils literal"><span class="pre">DSession</span></code> class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this.</p>
@@ -107,7 +107,7 @@ You <em>will</em> want to change the number of connections to a value that suits
 </div>
 <div class="section" id="creating-a-dsession">
 <h2>Creating a <code class="docutils literal"><span class="pre">DSession</span></code><a class="headerlink" href="#creating-a-dsession" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">DSession</span></code> does not have to be <code class="docutils literal"><span class="pre">await</span></code> ed, as it unfortunately cannot see in to the future...yet.:</p>
+<p>The <code class="docutils literal"><span class="pre">DSession</span></code> does not have to be <code class="docutils literal"><span class="pre">await</span></code> ed, as it unfortunately cannot see in to the future...yet. (we can&#8217;t prepare the connection pool right away as we don&#8217;t know where we&#8217;re connecting yet!):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">DSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
