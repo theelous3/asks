@@ -8,6 +8,7 @@ TO DO:
 '''
 
 # pylint: disable=no-else-return
+# pylint: disable=no-member
 from collections import deque
 from urllib.parse import urlparse, urlunparse
 
@@ -270,7 +271,7 @@ class DSession(BaseSession):
         return sock
 
     async def _grab_connection(self, url):
-        scheme, netloc, path, parameters, query, fragment = urlparse(url)
+        scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
         if host_loc in self.connection_pool:
             sock = self._checkout_connection(host_loc)
