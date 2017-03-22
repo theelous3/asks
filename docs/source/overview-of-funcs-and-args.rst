@@ -19,10 +19,10 @@ When using the basic functions they each require a uri::
         a = asks.get('https://example.com')
         s = asks.head('http://httpbin.org')
         k = asks.post('https://localhost:25000')
-        s = asks.put('www.your-coat-on.net')
+        s = asks.put('www.your-coat-on.net') # <- no scheme! Will fail!
         # etc.
 
-If a scheme is not supplied, asks will default to https.
+A scheme *must* be supplied.
 
 All functions / methods share the same set of args / keyword args, though not all are appropriate for every http method.
 
@@ -116,7 +116,7 @@ ___________
 Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.::
 
     async def example():
-    r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
+        r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
 
 
 Authing

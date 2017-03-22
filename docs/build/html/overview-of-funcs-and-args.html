@@ -57,11 +57,11 @@
     <span class="n">a</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://example.com&#39;</span><span class="p">)</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org&#39;</span><span class="p">)</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://localhost:25000&#39;</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;www.your-coat-on.net&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;www.your-coat-on.net&#39;</span><span class="p">)</span> <span class="c1"># &lt;- no scheme! Will fail!</span>
     <span class="c1"># etc.</span>
 </pre></div>
 </div>
-<p>If a scheme is not supplied, asks will default to https.</p>
+<p>A scheme <em>must</em> be supplied.</p>
 <p>All functions / methods share the same set of args / keyword args, though not all are appropriate for every http method.</p>
 </div>
 <div class="section" id="passing-queries">
@@ -142,7 +142,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <h2>Set Timeout<a class="headerlink" href="#set-timeout" title="Permalink to this headline">¶</a></h2>
 <p>Don&#8217;t want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
-<span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>

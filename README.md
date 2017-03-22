@@ -1,15 +1,13 @@
 [![Build Status](https://travis-ci.org/theelous3/asks.svg?branch=master)](https://travis-ci.org/theelous3/asks) [![Docs Status](https://readthedocs.org/projects/asks/badge/?version=latest)](http://asks.readthedocs.io/en/latest/)
 
 # asks
-asks is an async requests-like http lib, currently for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib.
+asks is an async requests-like http lib, for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib.
 
 asks aims to have a mostly familiar API, using simple functions like `get()` for getting, `post()` for posting. At the heart of asks is the `Session` class, which makes interacting with servers in a sustained and fluid way fast, efficient, and simple. Check out the examples!
 
-The poject's long term goal is to be event loop agnostic, meaning it could be used in any async "framework", be it asyncio, curio<sup>*</sup> or others.
 
 *Requires:* Python 3.6 and [curio](https://github.com/dabeaz/curio).
 
-<sup>Not a framework :)</sup>
 
 ## Check the docs!
 

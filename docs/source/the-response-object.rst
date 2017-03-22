@@ -105,5 +105,5 @@ If any redirects or 401-requiring auth attempts were handled during the request,
 
         # Results in:
         # [<Response 302 at 0xb6a807cc>, <Response 302 at 0xb...
-        # 200
+        # 302
 
