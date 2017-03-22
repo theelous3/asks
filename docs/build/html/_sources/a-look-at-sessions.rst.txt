@@ -16,8 +16,10 @@ The ``DSession`` class is aimed at working with many requests, to many hosts! We
 The reason for two classes, is that they each have their own streamlined connection pooling, and the ``Session`` methods do not require a url or path to facilitate many similar / slightly different calls.
 
 
-Creating a ``Session``
-______________________
+Creating a Session
+__________________
+
+(Specifically a ``Session`` and not a ``DSession``)
 
 The asks ``Session`` class builds a connection pool on instanciation. This means it must be ``await`` ed, and as with all ``awaits`` it must be in an ``async def``.
 
@@ -77,8 +79,8 @@ HTTP is stateless, and by default asks is too. You can turn stateful cookie retu
         s = await Session('https://jsontest.com', store_cookies=True)
         r = await s.get()
 
-Creating a ``DSession``
-_______________________
+Creating a DSession
+___________________
 
 The ``DSession`` does not have to be ``await`` ed, as it unfortunately cannot see in to the future...yet. (we can't prepare the connection pool right away as we don't know where we're connecting yet!)::
 

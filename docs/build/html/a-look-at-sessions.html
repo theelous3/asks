@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="asks - refrence manual" href="refrence-manual.html" />
+    <link rel="next" title="asks - The Response Object" href="the-response-object.html" />
     <link rel="prev" title="asks - An overview of the functions and kw/argumetns." href="overview-of-funcs-and-args.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -53,7 +53,8 @@
 <p>The <code class="docutils literal"><span class="pre">DSession</span></code> class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this.</p>
 <p>The reason for two classes, is that they each have their own streamlined connection pooling, and the <code class="docutils literal"><span class="pre">Session</span></code> methods do not require a url or path to facilitate many similar / slightly different calls.</p>
 <div class="section" id="creating-a-session">
-<h2>Creating a <code class="docutils literal"><span class="pre">Session</span></code><a class="headerlink" href="#creating-a-session" title="Permalink to this headline">¶</a></h2>
+<h2>Creating a Session<a class="headerlink" href="#creating-a-session" title="Permalink to this headline">¶</a></h2>
+<p>(Specifically a <code class="docutils literal"><span class="pre">Session</span></code> and not a <code class="docutils literal"><span class="pre">DSession</span></code>)</p>
 <p>The asks <code class="docutils literal"><span class="pre">Session</span></code> class builds a connection pool on instanciation. This means it must be <code class="docutils literal"><span class="pre">await</span></code> ed, and as with all <code class="docutils literal"><span class="pre">awaits</span></code> it must be in an <code class="docutils literal"><span class="pre">async</span> <span class="pre">def</span></code>.</p>
 <p>The only required argument to the session&#8217;s <code class="docutils literal"><span class="pre">__init__</span></code> is a top level host name, like <code class="docutils literal"><span class="pre">https://example.org</span></code> .:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
@@ -107,7 +108,7 @@ You <em>will</em> want to change the number of connections to a value that suits
 </div>
 </div>
 <div class="section" id="creating-a-dsession">
-<h2>Creating a <code class="docutils literal"><span class="pre">DSession</span></code><a class="headerlink" href="#creating-a-dsession" title="Permalink to this headline">¶</a></h2>
+<h2>Creating a DSession<a class="headerlink" href="#creating-a-dsession" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">DSession</span></code> does not have to be <code class="docutils literal"><span class="pre">await</span></code> ed, as it unfortunately cannot see in to the future...yet. (we can&#8217;t prepare the connection pool right away as we don&#8217;t know where we&#8217;re connecting yet!):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">DSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
@@ -139,10 +140,10 @@ You <em>will</em> want to change the number of connections to a value that suits
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">asks - A Look at Sessions</a><ul>
-<li><a class="reference internal" href="#creating-a-session">Creating a <code class="docutils literal"><span class="pre">Session</span></code></a></li>
+<li><a class="reference internal" href="#creating-a-session">Creating a Session</a></li>
 <li><a class="reference internal" href="#many-connections-and-connection-pooling">Many Connections and Connection Pooling</a></li>
 <li><a class="reference internal" href="#stateful-sessions">Stateful Sessions</a></li>
-<li><a class="reference internal" href="#creating-a-dsession">Creating a <code class="docutils literal"><span class="pre">DSession</span></code></a></li>
+<li><a class="reference internal" href="#creating-a-dsession">Creating a DSession</a></li>
 </ul>
 </li>
 </ul>
@@ -151,7 +152,7 @@ You <em>will</em> want to change the number of connections to a value that suits
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="overview-of-funcs-and-args.html" title="previous chapter">asks - An overview of the functions and kw/argumetns.</a></li>
-      <li>Next: <a href="refrence-manual.html" title="next chapter">asks - refrence manual</a></li>
+      <li>Next: <a href="the-response-object.html" title="next chapter">asks - The Response Object</a></li>
   </ul></li>
 </ul>
 </div>

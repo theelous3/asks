@@ -119,8 +119,9 @@ class Cookie(SimpleNamespace):
         self.secure = False
         self.expires = None
         self.comment = None
-        for k, v in data.items():
-            setattr(self, k, v)
+
+        self.__dict__.update(data)
+
         super().__init__(**self.__dict__)
         self.host = host
 
