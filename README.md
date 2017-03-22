@@ -38,21 +38,26 @@ async def example():
 curio.run(example())
 ```
 ```python
-# many requests
+# many_get.py
+# make 1k api calls and store their response objects
+# in a list.
+
 from asks import Session
 import curio
 
-async def worker(session, num):
-    r = await session.get(path='/' + str(num))
-    print(r.text)
+path_list = ['a', 'list', 'of', '1000', 'paths']
 
-async def main():
-    s = await Session('http://echo.jsontest.com', connections=50)
-    s.endpoint = '/asks/test'
-    for i in range(1, 10001):
-        await curio.spawn(worker(s, i))
+retrieved_responses = []
 
-curio.run(main())
+async def grabber(session, a_path):
+    r = await session.get(path=a_path)
+    retrieved_responses.append(r)
+
+async def main(path_list):
+    s = await Session('https://some-web-service.com',
+                      connections=20)
+    for path in path_list:
+        curio.spawn(grabber(s, path))
 ```
 
 
