@@ -67,8 +67,8 @@ Here's an example of making 1000 calls to an api and storing the results in a li
 
     retrieved_pages = []
 
-    async def grabber(session, some_path):
-        r = await session.get(path=url)
+    async def grabber(session, a_path):
+        r = await session.get(path=a_path)
         retrieved_pages.append(r)
 
     async def main(path_list):

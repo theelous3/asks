@@ -131,8 +131,8 @@
 
 <span class="n">retrieved_pages</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">some_path</span><span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">a_path</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">a_path</span><span class="p">)</span>
     <span class="n">retrieved_pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
