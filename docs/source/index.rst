@@ -15,6 +15,12 @@ _________
    the-response-object
    refrence-manual
 
+What is asks?
+_____________
+
+asks is an async http lib that can best be described as an effort to bring the same level of usable abstraction that requests offers synchronous python, to asynchronous python programming. Ideal for api interactions, webscraping etc.
+
+
 Installation:
 _____________
 
