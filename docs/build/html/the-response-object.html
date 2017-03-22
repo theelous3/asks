@@ -51,7 +51,7 @@
 <h2>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
 <p>By default the <code class="docutils literal"><span class="pre">Response</span></code> object tries to use <code class="docutils literal"><span class="pre">utf-8</span></code>.</p>
 <p>The response object will try to guess its own encoding before it&#8217;s returned, given the appropriate headers in the response.</p>
-<p>You can override the guessed or default encoding with either a builtin encoding or one you&#8217;ve registered locally with your codecs module by accessing <code class="docutils literal"><span class="pre">Response.encoding</span></code>.:</p>
+<p>You can override the guessed or default encoding with either a builtin encoding or one you&#8217;ve registered locally with your codecs module by accessing <code class="docutils literal"><span class="pre">Response.encoding</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">)</span>
 
@@ -86,7 +86,7 @@
 <div class="section" id="json">
 <h2>JSON<a class="headerlink" href="#json" title="Permalink to this headline">¶</a></h2>
 <p>If the response body is valid JSON you can load it as a python dict by calling the response object&#8217;s <code class="docutils literal"><span class="pre">.json()</span></code> method.</p>
-<p>If the response was compressed, it will be decompressed.:</p>
+<p>If the response was compressed, it will be decompressed.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/get&#39;</span><span class="p">)</span>
     <span class="n">j</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
@@ -97,11 +97,11 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="view-body-text-decoded-content-as-sent">
-<h2>View Body (text decoded, content, as sent)<a class="headerlink" href="#view-body-text-decoded-content-as-sent" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="view-body-text-decoded-content-barebones">
+<h2>View Body (text decoded, content, barebones)<a class="headerlink" href="#view-body-text-decoded-content-barebones" title="Permalink to this headline">¶</a></h2>
 <p>Generally the way to see the body as it was intended is to use the <code class="docutils literal"><span class="pre">.content</span></code> property. This will return the content as is, after decompression if there was any.</p>
 <p>For something slightly more human readable, you may want to try the <code class="docutils literal"><span class="pre">.text</span></code> property. This will attempt to decompress (if needed) and decode the content (with <code class="docutils literal"><span class="pre">.encoding</span></code>). This for example, makes html and json etc. quite readable in your shell.</p>
-<p>To view the body exactly as it was sent, just use the <code class="docutils literal"><span class="pre">.body</span></code> attribute. Note that this may be compressed madness, so don&#8217;t worry if you can&#8217;t read it with your poor wee eyes.:</p>
+<p>To view the body exactly as it was sent, just use the <code class="docutils literal"><span class="pre">.body</span></code> attribute. Note that this may be compressed madness, so don&#8217;t worry if you can&#8217;t read it with your poor wee eyes.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">)</span>
 
@@ -128,7 +128,7 @@
 </div>
 <div class="section" id="response-history">
 <h2>Response History<a class="headerlink" href="#response-history" title="Permalink to this headline">¶</a></h2>
-<p>If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object&#8217;s <code class="docutils literal"><span class="pre">.history</span></code> attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes.:</p>
+<p>If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object&#8217;s <code class="docutils literal"><span class="pre">.history</span></code> attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/redirect/3&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
@@ -155,7 +155,7 @@
 <li><a class="reference internal" href="#status-line">Status Line</a></li>
 <li><a class="reference internal" href="#headers">Headers</a></li>
 <li><a class="reference internal" href="#json">JSON</a></li>
-<li><a class="reference internal" href="#view-body-text-decoded-content-as-sent">View Body (text decoded, content, as sent)</a></li>
+<li><a class="reference internal" href="#view-body-text-decoded-content-barebones">View Body (text decoded, content, barebones)</a></li>
 <li><a class="reference internal" href="#cookies">Cookies</a></li>
 <li><a class="reference internal" href="#response-history">Response History</a></li>
 </ul>

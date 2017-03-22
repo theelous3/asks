@@ -35,7 +35,6 @@ _______________________
 Here's how to grab a single request and print it's content::
 
     # single_get.py
-
     import asks
     import curio
 
@@ -65,15 +64,15 @@ Here's an example of making 1000 calls to an api and storing the results in a li
 
     path_list = ['a', 'list', 'of', '1000', 'paths']
 
-    retrieved_pages = []
+    retrieved_responses = []
 
     async def grabber(session, a_path):
         r = await session.get(path=a_path)
-        retrieved_pages.append(r)
+        retrieved_responses.append(r)
 
     async def main(path_list):
-        s = await asks.Session('https://some-web-service.com',
-                               connections=20)
+        s = await Session('https://some-web-service.com',
+                          connections=20)
         for path in path_list:
             curio.spawn(grabber(s, path))
 

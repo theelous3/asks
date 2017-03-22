@@ -54,7 +54,7 @@
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#custom-headers">Custom Headers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#sending-json">Sending JSON</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#sending-cookies">Sending Cookies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#storing-cookies">Storing Cookies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#cookie-interactions">Cookie Interactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#set-encoding">Set Encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#limiting-redirects">Limiting Redirects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview-of-funcs-and-args.html#set-timeout">Set Timeout</a></li>
@@ -73,7 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="the-response-object.html#status-line">Status Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="the-response-object.html#headers">Headers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="the-response-object.html#json">JSON</a></li>
-<li class="toctree-l2"><a class="reference internal" href="the-response-object.html#view-body-text-decoded-content-as-sent">View Body (text decoded, content, as sent)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="the-response-object.html#view-body-text-decoded-content-barebones">View Body (text decoded, content, barebones)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="the-response-object.html#cookies">Cookies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="the-response-object.html#response-history">Response History</a></li>
 </ul>
@@ -101,7 +101,6 @@
 <h2>A dirty little example:<a class="headerlink" href="#a-dirty-little-example" title="Permalink to this headline">¶</a></h2>
 <p>Here&#8217;s how to grab a single request and print it&#8217;s content:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># single_get.py</span>
-
 <span class="kn">import</span> <span class="nn">asks</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
@@ -129,15 +128,15 @@
 
 <span class="n">path_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;1000&#39;</span><span class="p">,</span> <span class="s1">&#39;paths&#39;</span><span class="p">]</span>
 
-<span class="n">retrieved_pages</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">retrieved_responses</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">a_path</span><span class="p">):</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">a_path</span><span class="p">)</span>
-    <span class="n">retrieved_pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">retrieved_responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
-                           <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
+                      <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
         <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
 </pre></div>

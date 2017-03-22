@@ -23,7 +23,7 @@ __________________
 
 The asks ``Session`` class builds a connection pool on instanciation. This means it must be ``await`` ed, and as with all ``awaits`` it must be in an ``async def``.
 
-The only required argument to the session's ``__init__`` is a top level host name, like ``https://example.org`` .::
+The only required argument to the session's ``__init__`` is a top level host name, like ``https://example.org`` . ::
 
     from asks import Session
 
@@ -45,7 +45,7 @@ The result will be a bunch of calls that look like
 * ``http://echo.jsontest.com/asks/test/2``
 * ``http://echo.jsontest.com/asks/test/etc.``
 
-Note that actually doing this will probably get you timed out or banned by that website.::
+Note that actually doing this will probably get you timed out or banned by that website. ::
 
     from asks import Session
     import curio
@@ -71,12 +71,12 @@ Now whilst we have all of this sweet sweet async speed, we must talk about our g
 Stateful Sessions
 _________________
 
-HTTP is stateless, and by default asks is too. You can turn stateful cookie returning and storage on by supplying the ``store_cookies=True`` kwarg on session instanciation.::
+HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the ``cookie_interactions=True`` kwarg on session instanciation. ::
 
     from asks import Session
 
     async def main():
-        s = await Session('https://jsontest.com', store_cookies=True)
+        s = await Session('https://jsontest.com', cookie_interactions=True)
         r = await s.get()
 
 Creating a DSession
@@ -100,4 +100,4 @@ The ``DSession`` does not have to be ``await`` ed, as it unfortunately cannot se
     s = DSession(connections=20)
     curio.run(main())
 
-The main difference between the ``DSession`` and the ``Session`` is that you must supply a url to the ``DSession`` methods. Aside from that, the usual stuff applies. You can add ``params`` , ``store_cookies=True`` and do all of that other good stuff that you can do with the ``Session`` class and base functions.
+The main difference between the ``DSession`` and the ``Session`` is that you must supply a url to the ``DSession`` methods. Aside from that, the usual stuff applies. You can add ``params`` , ``cookie_interactions=True`` and do all of that other good stuff that you can do with the ``Session`` class and base functions.

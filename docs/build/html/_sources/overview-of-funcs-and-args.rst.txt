@@ -30,7 +30,7 @@ All functions / methods share the same set of args / keyword args, though not al
 Passing Queries
 _______________
 
-The ``params`` and ``data`` args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.::
+The ``params`` and ``data`` args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively. ::
 
     async def example():
         r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
@@ -38,7 +38,7 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a valid 
     # sends as request path:
     b'/?Elmo=wants+data'
 
-You may also pass strings and asks will attempt to format them correctly.::
+You may also pass strings and asks will attempt to format them correctly. ::
 
     async def example():
         r = await asks.get('www.example.com', data='Elmo wants data'))
@@ -50,7 +50,7 @@ You may also pass strings and asks will attempt to format them correctly.::
 Custom Headers
 ______________
 
-Add your own custom headers or overwrite the default headers by supplying your own dict to the ``headers`` argument. Note that user headers set in this way will, if conflicting, take precedence.::
+Add your own custom headers or overwrite the default headers by supplying your own dict to the ``headers`` argument. Note that user headers set in this way will, if conflicting, take precedence. ::
 
     async def example():
         r = await asks.get('www.example.com',
@@ -61,7 +61,7 @@ Sending JSON
 ____________
 
 Pass python dict objects to the ``json`` argument to send them as json in your request.
-Note that if your workflow here involves opening a json file, you should use curio's ``aopen()`` to avoid stalling the program on disk reads.::
+Note that if your workflow here involves opening a json file, you should use curio's ``aopen()`` to avoid stalling the program on disk reads. ::
 
     dict_to_send = {'Data_1': 'Important thing',
                     'Data_2': 'Really important thing'}
@@ -73,26 +73,26 @@ Note that if your workflow here involves opening a json file, you should use cur
 Sending Cookies
 _______________
 
-Pass a dict of cookie name(key) / value pairs to the ``cookies`` arg to ship 'em off.::
+Pass a dict of cookie name(key) / value pairs to the ``cookies`` arg to ship 'em off. ::
 
     async def example():
         r = await asks.get('www.example.com',
                            cookies={'Cookie Monster': 'Yum'}))
 
 
-Storing Cookies
-_______________
+Cookie Interactions
+___________________
 
-By default asks does not store cookies. To enable cookie storage, just pass ``store_cookies=True``. ::
+By default asks does not return sent cookies. To enable two way cookie interactions, just pass ``cookie_interactions=True``. ::
 
     async def example():
-        r = await asks.get('www.example.com', store_cookies=True)
+        r = await asks.get('www.example.com', cookie_interactions=True)
 
 
 Set Encoding
 ____________
 
-The default encoding is ``utf-8``. You may override this by supplying a different encoding, be it a standard encoding or a custom one you've registered locally.::
+The default encoding is ``utf-8``. You may override this by supplying a different encoding, be it a standard encoding or a custom one you've registered locally. ::
 
     async def example():
         r = await asks.get('www.example.com', encoding='Latin-1'))
@@ -103,7 +103,7 @@ Handy list of builtin encodings: https://gist.github.com/theelous3/7d6a3fe20a219
 Limiting Redirects
 __________________
 
-You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.::
+You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests. ::
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
@@ -113,7 +113,7 @@ You can limit the number of redirects by setting ``max_redirects``. By default, 
 Set Timeout
 ___________
 
-Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.::
+Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received. ::
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', timeout=1))

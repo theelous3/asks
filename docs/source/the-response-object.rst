@@ -12,7 +12,7 @@ By default the ``Response`` object tries to use ``utf-8``.
 
 The response object will try to guess its own encoding before it's returned, given the appropriate headers in the response.
 
-You can override the guessed or default encoding with either a builtin encoding or one you've registered locally with your codecs module by accessing ``Response.encoding``.::
+You can override the guessed or default encoding with either a builtin encoding or one you've registered locally with your codecs module by accessing ``Response.encoding``. ::
 
     async def main():
         r = asks.get('http://example.com')
@@ -49,7 +49,7 @@ ____
 
 If the response body is valid JSON you can load it as a python dict by calling the response object's ``.json()`` method.
 
-If the response was compressed, it will be decompressed.::
+If the response was compressed, it will be decompressed. ::
 
     async def main():
         r = asks.get('http://httpbin.org/get')
@@ -60,14 +60,14 @@ If the response was compressed, it will be decompressed.::
     # {'args': {}, 'headers': {'Accept': '*/*', 'Accept-Encoding', ...
 
 
-View Body (text decoded, content, as sent)
-__________________________________________
+View Body (text decoded, content, barebones)
+____________________________________________
 
 Generally the way to see the body as it was intended is to use the ``.content`` property. This will return the content as is, after decompression if there was any.
 
 For something slightly more human readable, you may want to try the ``.text`` property. This will attempt to decompress (if needed) and decode the content (with ``.encoding``). This for example, makes html and json etc. quite readable in your shell.
 
-To view the body exactly as it was sent, just use the ``.body`` attribute. Note that this may be compressed madness, so don't worry if you can't read it with your poor wee eyes.::
+To view the body exactly as it was sent, just use the ``.body`` attribute. Note that this may be compressed madness, so don't worry if you can't read it with your poor wee eyes. ::
 
     async def main():
             r = asks.get('http://example.com')
@@ -96,7 +96,7 @@ There may be more values set by the response.
 Response History
 ________________
 
-If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object's ``.history`` attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes.::
+If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object's ``.history`` attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes. ::
 
     async def main():
             r = asks.get('http://httpbin.org/redirect/3')

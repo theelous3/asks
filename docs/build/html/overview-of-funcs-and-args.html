@@ -66,7 +66,7 @@
 </div>
 <div class="section" id="passing-queries">
 <h2>Passing Queries<a class="headerlink" href="#passing-queries" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">params</span></code> and <code class="docutils literal"><span class="pre">data</span></code> args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.:</p>
+<p>The <code class="docutils literal"><span class="pre">params</span></code> and <code class="docutils literal"><span class="pre">data</span></code> args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Elmo&#39;</span><span class="p">:</span> <span class="s1">&#39;wants data&#39;</span><span class="p">}))</span>
 
@@ -74,7 +74,7 @@
 <span class="sa">b</span><span class="s1">&#39;/?Elmo=wants+data&#39;</span>
 </pre></div>
 </div>
-<p>You may also pass strings and asks will attempt to format them correctly.:</p>
+<p>You may also pass strings and asks will attempt to format them correctly.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;Elmo wants data&#39;</span><span class="p">))</span>
 
@@ -85,7 +85,7 @@
 </div>
 <div class="section" id="custom-headers">
 <h2>Custom Headers<a class="headerlink" href="#custom-headers" title="Permalink to this headline">¶</a></h2>
-<p>Add your own custom headers or overwrite the default headers by supplying your own dict to the <code class="docutils literal"><span class="pre">headers</span></code> argument. Note that user headers set in this way will, if conflicting, take precedence.:</p>
+<p>Add your own custom headers or overwrite the default headers by supplying your own dict to the <code class="docutils literal"><span class="pre">headers</span></code> argument. Note that user headers set in this way will, if conflicting, take precedence.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span>
                        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Custom-Header&#39;</span><span class="p">:</span> <span class="s1">&#39;My value&#39;</span><span class="p">}))</span>
@@ -95,7 +95,7 @@
 <div class="section" id="sending-json">
 <h2>Sending JSON<a class="headerlink" href="#sending-json" title="Permalink to this headline">¶</a></h2>
 <p>Pass python dict objects to the <code class="docutils literal"><span class="pre">json</span></code> argument to send them as json in your request.
-Note that if your workflow here involves opening a json file, you should use curio&#8217;s <code class="docutils literal"><span class="pre">aopen()</span></code> to avoid stalling the program on disk reads.:</p>
+Note that if your workflow here involves opening a json file, you should use curio&#8217;s <code class="docutils literal"><span class="pre">aopen()</span></code> to avoid stalling the program on disk reads.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dict_to_send</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Data_1&#39;</span><span class="p">:</span> <span class="s1">&#39;Important thing&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;Data_2&#39;</span><span class="p">:</span> <span class="s1">&#39;Really important thing&#39;</span><span class="p">}</span>
 
@@ -106,24 +106,24 @@ Note that if your workflow here involves opening a json file, you should use cur
 </div>
 <div class="section" id="sending-cookies">
 <h2>Sending Cookies<a class="headerlink" href="#sending-cookies" title="Permalink to this headline">¶</a></h2>
-<p>Pass a dict of cookie name(key) / value pairs to the <code class="docutils literal"><span class="pre">cookies</span></code> arg to ship &#8216;em off.:</p>
+<p>Pass a dict of cookie name(key) / value pairs to the <code class="docutils literal"><span class="pre">cookies</span></code> arg to ship &#8216;em off.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span>
                        <span class="n">cookies</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Cookie Monster&#39;</span><span class="p">:</span> <span class="s1">&#39;Yum&#39;</span><span class="p">}))</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="storing-cookies">
-<h2>Storing Cookies<a class="headerlink" href="#storing-cookies" title="Permalink to this headline">¶</a></h2>
-<p>By default asks does not store cookies. To enable cookie storage, just pass <code class="docutils literal"><span class="pre">store_cookies=True</span></code>.</p>
+<div class="section" id="cookie-interactions">
+<h2>Cookie Interactions<a class="headerlink" href="#cookie-interactions" title="Permalink to this headline">¶</a></h2>
+<p>By default asks does not return sent cookies. To enable two way cookie interactions, just pass <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">store_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">cookie_interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="set-encoding">
 <h2>Set Encoding<a class="headerlink" href="#set-encoding" title="Permalink to this headline">¶</a></h2>
-<p>The default encoding is <code class="docutils literal"><span class="pre">utf-8</span></code>. You may override this by supplying a different encoding, be it a standard encoding or a custom one you&#8217;ve registered locally.:</p>
+<p>The default encoding is <code class="docutils literal"><span class="pre">utf-8</span></code>. You may override this by supplying a different encoding, be it a standard encoding or a custom one you&#8217;ve registered locally.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;Latin-1&#39;</span><span class="p">))</span>
 </pre></div>
@@ -132,7 +132,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 </div>
 <div class="section" id="limiting-redirects">
 <h2>Limiting Redirects<a class="headerlink" href="#limiting-redirects" title="Permalink to this headline">¶</a></h2>
-<p>You can limit the number of redirects by setting <code class="docutils literal"><span class="pre">max_redirects</span></code>. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.:</p>
+<p>You can limit the number of redirects by setting <code class="docutils literal"><span class="pre">max_redirects</span></code>. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">max_redirects</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
@@ -140,7 +140,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 </div>
 <div class="section" id="set-timeout">
 <h2>Set Timeout<a class="headerlink" href="#set-timeout" title="Permalink to this headline">¶</a></h2>
-<p>Don&#8217;t want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.:</p>
+<p>Don&#8217;t want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
@@ -179,7 +179,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <li><a class="reference internal" href="#custom-headers">Custom Headers</a></li>
 <li><a class="reference internal" href="#sending-json">Sending JSON</a></li>
 <li><a class="reference internal" href="#sending-cookies">Sending Cookies</a></li>
-<li><a class="reference internal" href="#storing-cookies">Storing Cookies</a></li>
+<li><a class="reference internal" href="#cookie-interactions">Cookie Interactions</a></li>
 <li><a class="reference internal" href="#set-encoding">Set Encoding</a></li>
 <li><a class="reference internal" href="#limiting-redirects">Limiting Redirects</a></li>
 <li><a class="reference internal" href="#set-timeout">Set Timeout</a></li>

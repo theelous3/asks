@@ -95,7 +95,7 @@ class Session(BaseSession, AsyncObject):
                        port=443,
                        endpoint=None,
                        encoding='utf-8',
-                       store_cookies=None,
+                       cookie_interactions=None,
                        connections=1):
 
         self.encoding = encoding
@@ -103,10 +103,10 @@ class Session(BaseSession, AsyncObject):
         self.host = host
         self.port = port
 
-        if store_cookies is True:
+        if cookie_interactions is True:
             self.cookie_tracker_obj = CookieTracker()
         else:
-            self.cookie_tracker_obj = store_cookies
+            self.cookie_tracker_obj = cookie_interactions
 
         self.connection_pool = deque(maxlen=connections)
 
@@ -247,13 +247,16 @@ class DSession(BaseSession):
     '''
     The disparate session class, for handling piles of unrelated requests.
     '''
-    def __init__(self, encoding='utf-8', store_cookies=None, connections=20):
+    def __init__(self,
+                 encoding='utf-8',
+                 cookie_interactions=None,
+                 connections=20):
         self.encoding = encoding
 
-        if store_cookies is True:
+        if cookie_interactions is True:
             self.cookie_tracker_obj = CookieTracker()
         else:
-            self.cookie_tracker_obj = store_cookies
+            self.cookie_tracker_obj = cookie_interactions
 
         self.connection_pool = SocketQ(maxlen=connections)
 

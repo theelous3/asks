@@ -186,7 +186,7 @@ async def session_t_stateful(s):
 @curio_run
 async def test_session_stateful():
     s = await Session(
-        'https://google.ie', connections=1, store_cookies=True)
+        'https://google.ie', connections=1, cookie_interactions=True)
     await curio.spawn(session_t_stateful(s))
     await curio.sleep(1.5)  # Terrible hack, hassle of .join() in test though.
     assert 'www.google.ie' in s.cookie_tracker_obj.domain_dict.keys()
