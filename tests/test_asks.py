@@ -173,7 +173,7 @@ async def session_t_smallpool(s):
 
 @curio_run
 async def test_session_smallpool():
-    s = await Session('http://httpbin.org')
+    s = Session('http://httpbin.org')
     await curio.spawn(session_t_smallpool(s))
 
 
@@ -185,7 +185,7 @@ async def session_t_stateful(s):
 
 @curio_run
 async def test_session_stateful():
-    s = await Session(
+    s = Session(
         'https://google.ie', connections=1, cookie_interactions=True)
     await curio.spawn(session_t_stateful(s))
     await curio.sleep(1.5)  # Terrible hack, hassle of .join() in test though.

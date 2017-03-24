@@ -14,6 +14,7 @@ from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
 from .http_req_parser import HttpParser
+from .utils import get_netloc_port
 from .errors import TooManyRedirects
 
 
@@ -22,11 +23,11 @@ _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
 
 class Request:
 
-    def __init__(self, method, uri, **kwargs):
+    def __init__(self, method, uri, port, **kwargs):
         # These are kwargsable attribs.
         self.method = method
         self.uri = uri
-        self.port = None
+        self.port = port
         self.auth = None
         self.data = None
         self.params = None
@@ -51,7 +52,7 @@ class Request:
         self.query = None
         self.target_netloc = None
 
-    async def _build_request(self):
+    async def make_request(self):
         '''
         Acts as the central hub for preparing requests to be sent, and
         returning them upon completion. Generally just pokes through
@@ -59,14 +60,6 @@ class Request:
         '''
         self.scheme, self.netloc, self.path, _, self.query, _ = urlparse(
             self.uri)
-        try:
-            self.netloc, self.port = self.netloc.split(':')
-            self.port = self.port
-        except ValueError:
-            if self.scheme == 'https':
-                self.port = '443'
-            else:
-                self.port = '80'
 
         host = (self.netloc if (self.port == '80' or
                                 self.port == '443')
@@ -207,7 +200,7 @@ class Request:
             else:
                 self.history_objects.append(response_obj)
             self.max_redirects -= 1
-            response_obj = await self._build_request()
+            response_obj = await self.make_request()
         return response_obj
 
     async def _formulate_body(self):
@@ -425,7 +418,7 @@ class Request:
             if response_obj.status_code == 401:
                 if not self.auth.auth_attempted:
                     self.history_objects.append(response_obj)
-                    r = await self._build_request()
+                    r = await self.make_request()
                     self.auth.auth_attempted = False
                     return r
                 else:

@@ -13,7 +13,7 @@ The ``Session`` class is aimed at working with many requests to a single host. D
 
 The ``DSession`` class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this.
 
-The reason for two classes, is that they each have their own streamlined connection pooling, and the ``Session`` methods do not require a url or path to facilitate many similar / slightly different calls.
+The reason for two classes, is that they each have their own streamlined connection pooling, and the ``Session`` methods do not require a url or path in order to facilitate many similar / slightly different calls.
 
 
 Creating a Session
