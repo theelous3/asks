@@ -14,7 +14,6 @@ from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 from .response_objects import Response
 from .http_req_parser import HttpParser
-from .utils import get_netloc_port
 from .errors import TooManyRedirects
 
 

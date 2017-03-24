@@ -9,12 +9,10 @@ TO DO:
 
 # pylint: disable=no-else-return
 # pylint: disable=no-member
-from collections import deque
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
 import curio
-from curio.meta import AsyncObject
 from curio import socket, open_connection
 
 from asks.request import Request
