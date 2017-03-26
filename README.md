@@ -49,15 +49,16 @@ path_list = ['a', 'list', 'of', '1000', 'paths']
 
 retrieved_responses = []
 
-async def grabber(session, a_path):
-    r = await session.get(path=a_path)
+async def grabber(a_path):
+    r = s.get(path=a_path)
     retrieved_responses.append(r)
 
 async def main(path_list):
-    s = await Session('https://some-web-service.com',
-                      connections=20)
     for path in path_list:
-        curio.spawn(grabber(s, path))
+        curio.spawn(grabber(path))
+
+s = Session('https://some-web-service.com', connections=20)
+curio.run(main(path_list))
 ```
 
 
