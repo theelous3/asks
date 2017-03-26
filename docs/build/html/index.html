@@ -134,15 +134,16 @@
 
 <span class="n">retrieved_responses</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">a_path</span><span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">a_path</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
+             <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">a_path</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">a_path</span><span class="p">)</span>
     <span class="n">retrieved_responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
-                      <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
-        <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+        <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Now we&#8217;re talkin&#8217;.</p>

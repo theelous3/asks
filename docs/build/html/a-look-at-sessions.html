@@ -51,20 +51,19 @@
 <p><strong>There are two kinds of session in asks. The</strong> <code class="docutils literal"><span class="pre">Session</span></code> <strong>and the disparate session(</strong> <code class="docutils literal"><span class="pre">DSession</span></code> <strong>).</strong></p>
 <p>The <code class="docutils literal"><span class="pre">Session</span></code> class is aimed at working with many requests to a single host. Dealing with an API is a great example of this.</p>
 <p>The <code class="docutils literal"><span class="pre">DSession</span></code> class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this.</p>
-<p>The reason for two classes, is that they each have their own streamlined connection pooling, and the <code class="docutils literal"><span class="pre">Session</span></code> methods do not require a url or path to facilitate many similar / slightly different calls.</p>
+<p>The reason for two classes, is that they each have their own streamlined connection pooling, and the <code class="docutils literal"><span class="pre">Session</span></code> methods do not require a url or path in order to facilitate many similar / slightly different calls.</p>
 <div class="section" id="creating-a-session">
 <h2>Creating a Session<a class="headerlink" href="#creating-a-session" title="Permalink to this headline">¶</a></h2>
 <p>(Specifically a <code class="docutils literal"><span class="pre">Session</span></code> and not a <code class="docutils literal"><span class="pre">DSession</span></code>)</p>
-<p>The asks <code class="docutils literal"><span class="pre">Session</span></code> class builds a connection pool on instanciation. This means it must be <code class="docutils literal"><span class="pre">await</span></code> ed, and as with all <code class="docutils literal"><span class="pre">awaits</span></code> it must be in an <code class="docutils literal"><span class="pre">async</span> <span class="pre">def</span></code>.</p>
 <p>The only required argument to the session&#8217;s <code class="docutils literal"><span class="pre">__init__</span></code> is a top level host name, like <code class="docutils literal"><span class="pre">https://example.org</span></code> .</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>As you can see, unlike requests&#8217; session, we don&#8217;t need to give any arguments at all to a sessions <code class="docutils literal"><span class="pre">get()</span></code> method. Pretty weird right? But, very convenient.</p>
+<p>As you can see, unlike requests&#8217; session, we don&#8217;t need to give any arguments at all to a sessions <code class="docutils literal"><span class="pre">get()</span></code> method. Pretty weird right? But, very convenient. This means we can do things like set an endpoint, and just feed querys in to our <code class="docutils literal"><span class="pre">.get()</span></code> though the <code class="docutils literal"><span class="pre">params</span></code> kw-arg without rebuilding the path for the request each time.</p>
 </div>
 <div class="section" id="many-connections-and-connection-pooling">
 <h2>Many Connections and Connection Pooling<a class="headerlink" href="#many-connections-and-connection-pooling" title="Permalink to this headline">¶</a></h2>
@@ -79,21 +78,21 @@
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
-<span class="k">async</span> <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;http://echo.jsontest.com&#39;</span><span class="p">,</span> <span class="n">connections</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
     <span class="n">s</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="s1">&#39;/asks/test&#39;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10001</span><span class="p">):</span>
-        <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
 
+<span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;http://echo.jsontest.com&#39;</span><span class="p">,</span> <span class="n">connections</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
 <p><strong>The default number of connections in the pool is a measly ONE.</strong> If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%.
-You <em>will</em> want to change the number of connections to a value that suits you and your target server.</p>
+This number dictates the maximum number of concurrent connections asks will be allowed to make at any point of the sessions lifespan. You <em>will</em> want to change the number of connections to a value that suits you and your target server.</p>
 <p>Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is <strong>selfish</strong>. Don&#8217;t be that guy / gal. Rate limit yourself by placing <code class="docutils literal"><span class="pre">curio.sleep(n)</span></code>&#8216;s in appropriate the place(s).</p>
 </div>
 <div class="section" id="stateful-sessions">
@@ -102,14 +101,14 @@ You <em>will</em> want to change the number of connections to a value that suits
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">,</span> <span class="n">cookie_interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">,</span> <span class="n">cookie_interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="creating-a-dsession">
 <h2>Creating a DSession<a class="headerlink" href="#creating-a-dsession" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">DSession</span></code> does not have to be <code class="docutils literal"><span class="pre">await</span></code> ed, as it unfortunately cannot see in to the future...yet. (we can&#8217;t prepare the connection pool right away as we don&#8217;t know where we&#8217;re connecting yet!):</p>
+<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">Session</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods. Aside from that, the usual stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">Session</span></code> class and base functions.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">DSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
@@ -127,7 +126,6 @@ You <em>will</em> want to change the number of connections to a value that suits
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">Session</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods. Aside from that, the usual stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">Session</span></code> class and base functions.</p>
 </div>
 </div>
 

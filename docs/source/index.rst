@@ -72,15 +72,16 @@ Here's an example of making 1000 calls to an api and storing the results in a li
 
     retrieved_responses = []
 
-    async def grabber(session, a_path):
-        r = await session.get(path=a_path)
+    s = Session('https://some-web-service.com',
+                 connections=20)
+
+    async def grabber(a_path):
+        r = await s.get(path=a_path)
         retrieved_responses.append(r)
 
     async def main(path_list):
-        s = await Session('https://some-web-service.com',
-                          connections=20)
         for path in path_list:
-            curio.spawn(grabber(s, path))
+            curio.spawn(grabber(path))
 
 Now we're talkin'.
 

@@ -9,20 +9,23 @@ The examples here use the base one-request-functions for verbosities sake, but a
 General HTTP methods
 ____________________
 
-asks supports ``get()``, ``head()``, ``post()``, ``put()``, ``delete()`` and ``options()``.
+asks supports ``get()``, ``head()``, ``post()``, ``put()``, ``delete()``, ``options()`` and ``request()``.
+
+``request`` takes a http method as a string for its first argument.
 
 When using the basic functions they each require a uri::
 
     import asks
 
     async def blah():
-        a = asks.get('https://example.com')
-        s = asks.head('http://httpbin.org')
-        k = asks.post('https://localhost:25000')
-        s = asks.put('www.your-coat-on.net') # <- no scheme! Will fail!
+        a = await asks.get('https://example.com')
+        s = await asks.head('http://httpbin.org')
+        k = await asks.post('https://webservice.net:25000')
+        s = await asks.put('www.your-coat-on.net') # <- no scheme! Will fail!
         # etc.
+        r = await asks.request('GET', 'http://httpbin.org/get')
 
-A scheme *must* be supplied.
+A scheme *must* be supplied. Port can be set by providing it in the uri.
 
 All functions / methods share the same set of args / keyword args, though not all are appropriate for every http method.
 
@@ -136,4 +139,3 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
                            auth=BasicAuth(usr_pw))
         r2 = await asks.get('https://other_protected.thingy',
                            auth=DigestAuth(usr_pw))
-

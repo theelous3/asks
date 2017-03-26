@@ -1,65 +1,25 @@
 from urllib.parse import urlparse, urlunparse
+from functools import partial
+
 from asks.sessions import Session
 
 
-__all__ = ['get', 'head', 'post', 'put', 'delete', 'options']
+__all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
 
 
-async def get(uri, **kwargs):
+async def request(method, uri, **kwargs):
     c_interact = kwargs.pop('cookie_interactions', None)
     scheme, netloc, path, _, query, _ = urlparse(uri)
     s = Session((scheme + '://' + netloc),
                 endpoint=urlunparse(('', '', path, '', query, '')),
                 cookie_interactions=c_interact)
-    r = await s.get(**kwargs)
+    r = await s.request(method, path='', **kwargs)
     return r
 
 
-async def head(uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = s.head(**kwargs)
-    return r
-
-
-async def post(uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = await s.post(**kwargs)
-    return r
-
-
-async def put(uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = await s.put(**kwargs)
-    return r
-
-
-async def delete(uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = await s.delete(**kwargs)
-    return r
-
-
-async def options(uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = await s.options(**kwargs)
-    return r
+get = partial(request, 'GET')
+head = partial(request, 'HEAD')
+post = partial(request, 'POST')
+put = partial(request, 'PUT')
+delete = partial(request, 'DELETE')
+options = partial(request, 'OPTIONS')

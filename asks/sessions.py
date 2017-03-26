@@ -24,26 +24,6 @@ from .utils import get_netloc_port
 __all__ = ['Session', 'DSession']
 
 
-async def _http_method(self, method=None, url=None, *, path='', **kwargs):
-    if url is None:
-        url = self._make_url() + path
-        sock = await self._grab_connection()
-        port = self.port
-    else:
-        sock = await self._grab_connection(url)
-        port = sock.port
-    req = Request(method,
-                  url,
-                  port,
-                  encoding=self.encoding,
-                  sock=sock,
-                  persist_cookies=self.cookie_tracker_obj,
-                  **kwargs)
-    r = await req.make_request()
-    await self._replace_connection(sock)
-    return r
-
-
 class BaseSession:
     '''
     The base class for asks' session.
@@ -92,17 +72,32 @@ class BaseSession:
             return await self._open_connection_https(
                 (netloc, int(port))), port
 
-    get = partialmethod(_http_method, method='GET')
+    async def request(self, method, url=None, *, path='', **kwargs):
+        if url is None:
+            url = self._make_url() + path
+            sock = await self._grab_connection()
+            port = self.port
+        else:
+            sock = await self._grab_connection(url)
+            port = sock.port
+        req = Request(method,
+                      url,
+                      port,
+                      encoding=self.encoding,
+                      sock=sock,
+                      persist_cookies=self.cookie_tracker_obj,
+                      **kwargs)
+        r = await req.make_request()
+        await self._replace_connection(sock)
+        return r
 
-    head = partialmethod(_http_method, method='HEAD')
-
-    post = partialmethod(_http_method, method='POST')
-
-    put = partialmethod(_http_method, method='PUT')
-
-    delete = partialmethod(_http_method, method='DELETE')
-
-    options = partialmethod(_http_method, method='OPTIONS')
+    # These be the actual http methods!
+    get = partialmethod(request, 'GET')
+    head = partialmethod(request, 'HEAD')
+    post = partialmethod(request, 'POST')
+    put = partialmethod(request, 'PUT')
+    delete = partialmethod(request, 'DELETE')
+    options = partialmethod(request, 'OPTIONS')
 
 
 class Session(BaseSession):
