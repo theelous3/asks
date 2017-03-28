@@ -180,7 +180,18 @@ class Request:
         the previous response object in history_objects, and passing this
         persistent list on to the next or final call.
         '''
-        redirect, force_get, location = response_obj._check_redirect()
+        redirect, force_get, location = False, None, None
+        if 300 <= response_obj.status_code < 400:
+            if response_obj.status_code in [301, 305]:
+                # redirect / force GET / location
+                redirect = True
+                force_get = False
+                location = response_obj.headers['Location']
+            else:
+                redirect = True
+                force_get = True
+                location = response_obj.headers['Location']
+
         if redirect:
             redirect_uri = urlparse(location.strip())
             # relative redirect

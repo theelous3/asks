@@ -33,16 +33,6 @@ class Response:
         for k, v in self.__dict__.items():
             yield k, v
 
-    def _check_redirect(self):
-        if 300 <= self.status_code < 400:
-            if self.status_code in [301, 305]:
-                # redirect / force GET / location
-                return True, False, self.headers['Location']
-            else:
-                return True, True, self.headers['Location']
-        else:
-            return False, None, None
-
     def _guess_encoding(self):
         try:
             guess = self.headers['content-type'].split('=')[1]

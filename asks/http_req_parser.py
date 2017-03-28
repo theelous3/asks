@@ -75,8 +75,9 @@ class HttpParser:
         Parses the response body, returning when the end of
         the body is reached, or if a callback is set, when that completes.
         '''
+
         if callback:
-            await self._body_callback(callback)
+            await self._body_callback(callback, length)
             return
 
         body_total = b''
@@ -98,7 +99,7 @@ class HttpParser:
                         body_total += chunk
             return body_total.strip()
         else:
-            readsize = 1024
+            readsize = 4096
             redd = 0
             while redd != length:
                 if (length - redd) < readsize:
@@ -109,16 +110,18 @@ class HttpParser:
 
         return body_total.strip()
 
-    async def _body_callback(self, func):
+    async def _body_callback(self, func, length):
         '''
         A callback func to be supplied if the user wants to do something
         directly with the response body's stream.
 
         UNTESTED! Gut feeling says this will hang indefinitely. Do test!
         '''
-        while True:
-            bytechunk = await self.sock.read(2048)
-            if not bytechunk:
-                break
-            else:
-                await func(bytechunk)
+        readsize = 4096
+        redd = 0
+        while redd != length:
+            if (length - redd) < readsize:
+                    readsize = length - redd
+            bytechunk = await self.sock.read(readsize)
+            await curio.spawn(func(bytechunk))
+            redd += len(bytechunk)
