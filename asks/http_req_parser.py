@@ -70,7 +70,8 @@ class HttpParser:
     async def parse_body(self,
                          length=0,
                          callback=False,
-                         chunked=False):
+                         chunked=False,
+                         iterator=False):
         '''
         Parses the response body, returning when the end of
         the body is reached, or if a callback is set, when that completes.
@@ -121,7 +122,7 @@ class HttpParser:
         redd = 0
         while redd != length:
             if (length - redd) < readsize:
-                    readsize = length - redd
+                readsize = length - redd
             bytechunk = await self.sock.read(readsize)
             await curio.spawn(func(bytechunk))
             redd += len(bytechunk)
