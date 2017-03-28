@@ -156,7 +156,6 @@ We will define a callback function that takes bytes and saves 'em, and pass it i
 
     async def main():
         r = await asks.get('http://httpbin.org/image/png', callback=downloader)
-        print(r.status_code)
 
     curio.run(main())
 
@@ -171,9 +170,9 @@ What about downloading a whole bunch of images, and naming them sequentially? ::
             await out_file.write(bytechunk)
 
     async def main():
-        for i in range(5):
-            func = partial(downloader, str(i) + '.png')
-            r = await asks.get('http://httpbin.org/image/png', callback=func)
-        print(r.status_code)
+        for indx, url in enumerate(['http://placehold.it/1000x1000',
+                                 'http://httpbin.org/image/png']):
+            func = partial(downloader, str(indx) + '.png')
+            await curio.spawn(asks.get(url, callback=func))
 
     curio.run(main())
