@@ -2,7 +2,9 @@ import curio
 
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 
-from .errors import RequestTimeout, ServerClosedConnectionError
+from .errors import (RequestTimeout,
+                     ServerClosedConnectionError,
+                     BadHttpResponse)
 
 
 class HttpParser:
@@ -21,7 +23,6 @@ class HttpParser:
                     'status_code': '',
                     'http_version': None,
                     'headers': c_i_Dict(),
-                    'errors': [],
                     'cookies': []
                     }
 
@@ -37,8 +38,8 @@ class HttpParser:
             else:
                 status_line = await self.sock.__anext__()
         except StopAsyncIteration:
-            req_dict['errors'].append(ServerClosedConnectionError)
-            return req_dict
+            raise ServerClosedConnectionError('Server closed connection before'
+                                              'any data could be received.')
         status_line = status_line.decode('utf-8',
                                          errors='replace').strip().split(' ',
                                                                          2)
@@ -47,7 +48,7 @@ class HttpParser:
              req_dict['status_code'], \
              req_dict['reason_phrase'] = status_line
         except ValueError:
-            req_dict['errors'].append(ServerClosedConnectionError)
+            raise BadHttpResponse('Bad status line:', status_line)
 
         async for hder_field in self.sock:
             if not any(hder_field == x for x in (b'\r\n', b'\n')):
@@ -124,5 +125,5 @@ class HttpParser:
             if (length - redd) < readsize:
                 readsize = length - redd
             bytechunk = await self.sock.read(readsize)
-            await curio.spawn(func(bytechunk))
+            await func(bytechunk)
             redd += len(bytechunk)

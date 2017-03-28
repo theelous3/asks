@@ -355,7 +355,7 @@ class Request:
                 if self.callback:
                     parse_kwargs = {'length': content_len,
                                     'callback': self.callback}
-                    resp['body'] = '{}'.format(self.callback.__name__)
+                    resp['body'] = ''
                 else:
                     parse_kwargs = {'length': content_len}
 

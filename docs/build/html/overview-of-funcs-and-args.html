@@ -165,6 +165,43 @@ Note that if your workflow here involves opening a json file, you should use cur
 </pre></div>
 </div>
 </div>
+<div class="section" id="handling-response-body-content-yer-bad-self-downloads-etc">
+<h2>Handling response body content yer bad self (downloads etc.)<a class="headerlink" href="#handling-response-body-content-yer-bad-self-downloads-etc" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.</p>
+<p>We will define a callback function that takes bytes and saves &#8216;em, and pass it in.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">downloader</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>What about downloading a whole bunch of images, and naming them sequentially?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">bytechunk</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">downloader</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">func</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -186,6 +223,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <li><a class="reference internal" href="#limiting-redirects">Limiting Redirects</a></li>
 <li><a class="reference internal" href="#set-timeout">Set Timeout</a></li>
 <li><a class="reference internal" href="#authing">Authing</a></li>
+<li><a class="reference internal" href="#handling-response-body-content-yer-bad-self-downloads-etc">Handling response body content yer bad self (downloads etc.)</a></li>
 </ul>
 </li>
 </ul>

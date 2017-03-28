@@ -139,3 +139,41 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
                            auth=BasicAuth(usr_pw))
         r2 = await asks.get('https://other_protected.thingy',
                            auth=DigestAuth(usr_pw))
+
+Handling response body content yer bad self (downloads etc.)
+____________________________________________________________
+
+The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.
+
+We will define a callback function that takes bytes and saves 'em, and pass it in. ::
+
+    import asks
+    import curio
+
+    async def downloader(bytechunk):
+        async with curio.aopen('our_image.png', 'ab') as out_file:
+            await out_file.write(bytechunk)
+
+    async def main():
+        r = await asks.get('http://httpbin.org/image/png', callback=downloader)
+        print(r.status_code)
+
+    curio.run(main())
+
+What about downloading a whole bunch of images, and naming them sequentially? ::
+
+    import asks
+    import curio
+    from functools import partial
+
+    async def downloader(filename, bytechunk):
+        async with curio.aopen(filename, 'ab') as out_file:
+            await out_file.write(bytechunk)
+
+    async def main():
+        for i in range(5):
+            func = partial(downloader, str(i) + '.png')
+            r = await asks.get('http://httpbin.org/image/png', callback=func)
+        print(r.status_code)
+
+    curio.run(main())

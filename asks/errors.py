@@ -10,11 +10,18 @@ class AsksException(Exception):
     pass
 
 
-class ConnectivityError(AsksException):
+class TooManyRedirects(AsksException):
     pass
 
 
-class TooManyRedirects(AsksException):
+class ConnectivityError(AsksException):
+    '''
+    Base exception for network failure errors.
+    '''
+    pass
+
+
+class BadHttpResponse(AsksException):
     pass
 
 
