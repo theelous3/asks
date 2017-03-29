@@ -1,5 +1,3 @@
-import curio
-
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 
 from .errors import ServerClosedConnectionError, BadHttpResponse
