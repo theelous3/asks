@@ -116,7 +116,7 @@ You can limit the number of redirects by setting ``max_redirects``. By default, 
 Set Timeout
 ___________
 
-Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the time asks will wait between when the request is first sent, and the first piece of response data is received. ::
+Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the total time alotted for the request. ::
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
@@ -140,39 +140,10 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
         r2 = await asks.get('https://other_protected.thingy',
                            auth=DigestAuth(usr_pw))
 
-Handling response body content yer bad self (downloads etc.)
-____________________________________________________________
+
+Callbacks
+_________
 
 The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.
 
-We will define a callback function that takes bytes and saves 'em, and pass it in. ::
-
-    import asks
-    import curio
-
-    async def downloader(bytechunk):
-        async with curio.aopen('our_image.png', 'ab') as out_file:
-            await out_file.write(bytechunk)
-
-    async def main():
-        r = await asks.get('http://httpbin.org/image/png', callback=downloader)
-
-    curio.run(main())
-
-What about downloading a whole bunch of images, and naming them sequentially? ::
-
-    import asks
-    import curio
-    from functools import partial
-
-    async def downloader(filename, bytechunk):
-        async with curio.aopen(filename, 'ab') as out_file:
-            await out_file.write(bytechunk)
-
-    async def main():
-        for indx, url in enumerate(['http://placehold.it/1000x1000',
-                                 'http://httpbin.org/image/png']):
-            func = partial(downloader, str(indx) + '.png')
-            await curio.spawn(asks.get(url, callback=func))
-
-    curio.run(main())
+For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#callbacks-handling-response-body-content-downloads-etc>`_

@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>asks - Useful idioms and tricks. &#8212; asks 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="asks - refrence manual" href="refrence-manual.html" />
+    <link rel="prev" title="asks - The Response Object" href="the-response-object.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="asks-useful-idioms-and-tricks">
+<h1>asks - Useful idioms and tricks.<a class="headerlink" href="#asks-useful-idioms-and-tricks" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="maintaining-order">
+<h2>Maintaining Order<a class="headerlink" href="#maintaining-order" title="Permalink to this headline">¶</a></h2>
+<p>Due to the nature of async, if you feed a list of urls to asks in some fashion, and store the responses in a list, there is no gaurantee the responses will be in the same order as the list of urls.</p>
+<p>A handy way of dealing with this is on an example <code class="docutils literal"><span class="pre">url_list</span></code> is to pass the enumerated list as a dict <code class="docutils literal"><span class="pre">dict(enumerate(url_list))</span></code> and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">url_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;urls&#39;</span><span class="p">]</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">url_list</span><span class="p">):</span>
+    <span class="n">url_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">url_list</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">url_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
+
+<span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">DSession</span><span class="p">(</span><span class="n">connections</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">url_list</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In the above example, <code class="docutils literal"><span class="pre">sorted_results</span></code> is a list of response objects in the same order as <code class="docutils literal"><span class="pre">url_list</span></code>.</p>
+</div>
+<div class="section" id="callbacks-handling-response-body-content-downloads-etc">
+<h2>(Callbacks) Handling response body content (downloads etc.)<a class="headerlink" href="#callbacks-handling-response-body-content-downloads-etc" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.</p>
+<p>Below you&#8217;ll find an example of a single download of an image with a given filename, and multiple downloads with sequential numeric filenames.</p>
+<p>We define a callback function <code class="docutils literal"><span class="pre">downloader</span></code> that takes bytes and saves &#8216;em, and pass it in.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">downloader</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>What about downloading a whole bunch of images, and naming them sequentially?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">bytechunk</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">indx</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;http://placehold.it/1000x1000&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">]):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">downloader</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">func</span><span class="p">))</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">asks - Useful idioms and tricks.</a><ul>
+<li><a class="reference internal" href="#maintaining-order">Maintaining Order</a></li>
+<li><a class="reference internal" href="#callbacks-handling-response-body-content-downloads-etc">(Callbacks) Handling response body content (downloads etc.)</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="the-response-object.html" title="previous chapter">asks - The Response Object</a></li>
+      <li>Next: <a href="refrence-manual.html" title="next chapter">asks - refrence manual</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idioms.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Mark Jameson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/idioms.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

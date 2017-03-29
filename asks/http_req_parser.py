@@ -2,9 +2,7 @@ import curio
 
 from .req_structs import CaseInsensitiveDict as c_i_Dict
 
-from .errors import (RequestTimeout,
-                     ServerClosedConnectionError,
-                     BadHttpResponse)
+from .errors import ServerClosedConnectionError, BadHttpResponse
 
 
 class HttpParser:
@@ -27,16 +25,7 @@ class HttpParser:
                     }
 
         try:
-            if timeout is not None:
-                response_task = await curio.spawn(self.sock.__anext__())
-                try:
-                    status_line = await curio.timeout_after(
-                        timeout, response_task.join())
-                except curio.TaskTimeout:
-                    await response_task.cancel()
-                    raise RequestTimeout
-            else:
-                status_line = await self.sock.__anext__()
+            status_line = await self.sock.__anext__()
         except StopAsyncIteration:
             raise ServerClosedConnectionError('Server closed connection before'
                                               'any data could be received.')

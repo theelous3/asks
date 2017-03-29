@@ -19,6 +19,7 @@ from asks.request import Request
 from .cookie_utils import CookieTracker
 from .req_structs import SocketQ
 from .utils import get_netloc_port
+from .errors import RequestTimeout
 
 
 __all__ = ['Session', 'DSession']
@@ -73,6 +74,8 @@ class BaseSession:
                 (netloc, int(port))), port
 
     async def request(self, method, url=None, *, path='', **kwargs):
+        timeout = kwargs.pop('timeout', None)
+
         if url is None:
             url = self._make_url() + path
             sock = await self._grab_connection()
@@ -80,6 +83,7 @@ class BaseSession:
         else:
             sock = await self._grab_connection(url)
             port = sock.port
+
         req = Request(method,
                       url,
                       port,
@@ -87,7 +91,17 @@ class BaseSession:
                       sock=sock,
                       persist_cookies=self.cookie_tracker_obj,
                       **kwargs)
-        r = await req.make_request()
+
+        if timeout is None:
+            r = await req.make_request()
+        else:
+            response_task = await curio.spawn(req.make_request())
+            try:
+                r = await curio.timeout_after(timeout, response_task.join())
+            except curio.TaskTimeout:
+                await response_task.cancel()
+                raise RequestTimeout
+
         await self._replace_connection(sock)
         return r
 

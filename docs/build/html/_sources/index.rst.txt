@@ -13,6 +13,7 @@ _________
    overview-of-funcs-and-args
    a-look-at-sessions
    the-response-object
+   idioms
    refrence-manual
 
 What is asks?
