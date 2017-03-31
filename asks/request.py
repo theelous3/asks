@@ -17,13 +17,17 @@ from .http_req_parser import HttpParser
 from .errors import TooManyRedirects
 
 
+__all__ = ['Request']
+
+
 _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
 
 
 class Request:
 
-    def __init__(self, method, uri, port, **kwargs):
+    def __init__(self, session, method, uri, port, **kwargs):
         # These are kwargsable attribs.
+        self.session = session
         self.method = method
         self.uri = uri
         self.port = port
@@ -115,7 +119,7 @@ class Request:
         # call i/o handling func
         response_obj = await self.request_io(package, body)
 
-        return response_obj
+        return self.sock, response_obj
 
     async def request_io(self, package, body):
         '''
@@ -203,15 +207,35 @@ class Request:
             else:
                 self.uri = location.strip()
 
-            # follow redirect with correct func
+            # follow redirect with correct http method type
             if force_get:
                 self.history_objects.append(response_obj)
                 self.method = 'GET'
             else:
                 self.history_objects.append(response_obj)
             self.max_redirects -= 1
-            response_obj = await self.make_request()
+
+            try:
+                if response_obj.headers['connection'].lower() == 'close':
+                    await self.get_new_sock()
+            except KeyError:
+                pass
+
+            self.sock, response_obj = await self.make_request()
         return response_obj
+
+    async def get_new_sock(self):
+        '''
+        On 'Connetcion: close' headers we've to create a new connection.
+        This reaches in to the parent session and pulls a switcheroo.
+        '''
+        self.sock._file = None
+        await self.session._replace_connection(self.sock)
+        from asks.sessions import DSession
+        if isinstance(self.session, DSession):
+            self.sock = await self.session._grab_connection(self.uri)
+        else:
+            self.sock = await self.session._grab_connection()
 
     async def _formulate_body(self):
         '''
@@ -344,8 +368,7 @@ class Request:
         the callback function.
         '''
         parser = HttpParser(self.sock)
-        resp = await parser.parse_stream_headers(self.timeout)
-        cookies = resp.pop('cookies')
+        resp = await parser.parse_stream_headers()
         statuscode = int(resp.pop('status_code'))
         parse_kwargs = {}
         try:
@@ -370,7 +393,7 @@ class Request:
         else:
             resp['body'] = None
         return Response(
-            self.encoding, cookies, statuscode, method=self.method, **resp)
+            self.encoding, statuscode, method=self.method, **resp)
 
     async def _send(self, package, body):
         '''

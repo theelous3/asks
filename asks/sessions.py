@@ -15,7 +15,7 @@ from functools import partialmethod
 import curio
 from curio import socket, open_connection
 
-from asks.request import Request
+from .request import Request
 from .cookie_utils import CookieTracker
 from .req_structs import SocketQ
 from .utils import get_netloc_port
@@ -84,24 +84,30 @@ class BaseSession:
             sock = await self._grab_connection(url)
             port = sock.port
 
-        req = Request(method,
-                      url,
-                      port,
-                      encoding=self.encoding,
-                      sock=sock,
-                      persist_cookies=self.cookie_tracker_obj,
-                      **kwargs)
+        req_obj = Request(self,
+                          method,
+                          url,
+                          port,
+                          encoding=self.encoding,
+                          sock=sock,
+                          persist_cookies=self.cookie_tracker_obj,
+                          **kwargs)
 
         if timeout is None:
-            r = await req.make_request()
+            sock, r = await req_obj.make_request()
         else:
-            response_task = await curio.spawn(req.make_request())
+            response_task = await curio.spawn(req_obj.make_request())
             try:
-                r = await curio.timeout_after(timeout, response_task.join())
+                sock, r = await curio.timeout_after(
+                    timeout, response_task.join())
             except curio.TaskTimeout:
                 await response_task.cancel()
                 raise RequestTimeout
-
+        try:
+            if r.headers['connection'].lower() == 'close':
+                sock._file = None
+        except KeyError:
+            pass
         await self._replace_connection(sock)
         return r
 
@@ -177,7 +183,8 @@ class Session(BaseSession):
             self.connection_pool.appendleft(sock)
         else:
             self.checked_out_sockets.remove(sock)
-            self.connection_pool.appendleft((await self._connect()[0]))
+            sock, _ = await self._connect()
+            self.connection_pool.appendleft(sock)
 
     def _make_url(self):
         return self.host + (self.endpoint or '')
@@ -210,7 +217,6 @@ class DSession(BaseSession):
     async def _replace_connection(self, sock):
         if sock._file is not None:
             self.checked_out_sockets.remove(sock)
-
         else:
             self.checked_out_sockets.remove(sock)
             sock = (await self._make_connection(sock.host))

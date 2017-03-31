@@ -23,9 +23,9 @@ A handy way of dealing with this is on an example ``url_list`` is to pass the en
     async def main(url_list):
         url_dict = dict(enumerate(url_list))
         for key, url in url_dict.items():
-            curio.spawn(worker(key, url))
+            await curio.spawn(worker(key, url))
 
-    sorted_results = [response for key, response in sorted(results.items()]
+    sorted_results = [response for _, response in sorted(results.items()]
 
     s = asks.DSession(connections=10)
     curio.run(main(url_list))

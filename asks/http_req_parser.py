@@ -10,7 +10,7 @@ class HttpParser:
     def __init__(self, sock):
         self.sock = sock
 
-    async def parse_stream_headers(self, timeout=None):
+    async def parse_stream_headers(self):
         '''
         Parses the response status line and headers, returning when the end of
         the headers is reached. Implements a response timeout if one is set.
@@ -21,7 +21,6 @@ class HttpParser:
                     'headers': c_i_Dict(),
                     'cookies': []
                     }
-
         try:
             status_line = await self.sock.__anext__()
         except StopAsyncIteration:
@@ -48,8 +47,7 @@ class HttpParser:
                 else:
                     if header.lower() == 'set-cookie':
                         req_dict['cookies'].append(header_content)
-                    else:
-                        req_dict['headers'][header] = header_content.lstrip()
+                    req_dict['headers'][header] = header_content.lstrip()
             else:
                 break
 

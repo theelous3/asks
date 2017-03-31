@@ -12,12 +12,11 @@ class Response:
     for accessing the status line, header, cookies, history and
     body of a response.
     '''
-    def __init__(self, encoding, cookies, status_code, **data):
+    def __init__(self, encoding, status_code, **data):
         for name, value in data.items():
             setattr(self, name, value)
         self.encoding = encoding
         self.history = []
-        self.cookies = cookies
         self.status_code = status_code
 
     def __repr__(self):
