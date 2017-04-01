@@ -7,7 +7,7 @@ _________________
 
 Due to the nature of async, if you feed a list of urls to asks in some fashion, and store the responses in a list, there is no gaurantee the responses will be in the same order as the list of urls.
 
-A handy way of dealing with this is on an example ``url_list`` is to pass the enumerated list as a dict ``dict(enumerate(url_list))`` and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look: ::
+A handy way of dealing with this on an example ``url_list`` is to pass the enumerated list as a dict ``dict(enumerate(url_list))`` and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look: ::
 
     import asks
     import curio

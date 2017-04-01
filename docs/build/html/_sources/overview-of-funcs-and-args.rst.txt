@@ -138,7 +138,10 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
         r = await asks.get('https://some_protected.resource',
                            auth=BasicAuth(usr_pw))
         r2 = await asks.get('https://other_protected.thingy',
-                           auth=DigestAuth(usr_pw))
+                           auth=DigestAuth(usr_pw),
+                           auth_off_domain=True)
+
+**Note**: asks will not pass auth along to connections that switch from http to https, or off domain locations unless you pass ``auth_off_domain=True`` to the call.
 
 
 Callbacks

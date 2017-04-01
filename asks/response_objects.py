@@ -4,8 +4,8 @@
 import codecs
 from types import SimpleNamespace
 import json as _json
-import gzip
-import zlib
+from gzip import decompress as gdecompress
+from zlib import decompress as zdecompress
 
 
 class Response:
@@ -68,9 +68,9 @@ class Response:
         except KeyError:
             return body
         if resp_encoding == 'gzip':
-            return gzip.decompress(body)
+            return gdecompress(body)
         elif resp_encoding == 'deflate':
-            return zlib.decompress(body)
+            return zdecompress(body)
         return body
 
     def json(self):

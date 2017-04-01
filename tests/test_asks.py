@@ -19,8 +19,9 @@ async def test_https_get():
     assert r.status_code == 200
 
 
-async def test_bad_www_get():
-    r = await asks.get('https://reddit.com')
+@curio_run
+async def test_bad_www_and_schema_get():
+    r = await asks.get('http://reddit.com')
     assert r.status_code == 200
 
 

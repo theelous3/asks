@@ -48,7 +48,7 @@
 <div class="section" id="maintaining-order">
 <h2>Maintaining Order<a class="headerlink" href="#maintaining-order" title="Permalink to this headline">¶</a></h2>
 <p>Due to the nature of async, if you feed a list of urls to asks in some fashion, and store the responses in a list, there is no gaurantee the responses will be in the same order as the list of urls.</p>
-<p>A handy way of dealing with this is on an example <code class="docutils literal"><span class="pre">url_list</span></code> is to pass the enumerated list as a dict <code class="docutils literal"><span class="pre">dict(enumerate(url_list))</span></code> and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look:</p>
+<p>A handy way of dealing with this on an example <code class="docutils literal"><span class="pre">url_list</span></code> is to pass the enumerated list as a dict <code class="docutils literal"><span class="pre">dict(enumerate(url_list))</span></code> and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
@@ -63,9 +63,9 @@
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">url_list</span><span class="p">):</span>
     <span class="n">url_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">url_list</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">url_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
+        <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
 
-<span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+<span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
 
 <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">DSession</span><span class="p">(</span><span class="n">connections</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">url_list</span><span class="p">))</span>

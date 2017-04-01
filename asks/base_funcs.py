@@ -1,7 +1,7 @@
 from urllib.parse import urlparse, urlunparse
 from functools import partial
 
-from asks.sessions import Session
+from asks.sessions import DSession
 
 
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
@@ -9,11 +9,8 @@ __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
 
 async def request(method, uri, **kwargs):
     c_interact = kwargs.pop('cookie_interactions', None)
-    scheme, netloc, path, _, query, _ = urlparse(uri)
-    s = Session((scheme + '://' + netloc),
-                endpoint=urlunparse(('', '', path, '', query, '')),
-                cookie_interactions=c_interact)
-    r = await s.request(method, path='', **kwargs)
+    s = DSession(cookie_interactions=c_interact)
+    r = await s.request(method, url=uri, **kwargs)
     return r
 
 

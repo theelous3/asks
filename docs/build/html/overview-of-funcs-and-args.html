@@ -161,9 +161,11 @@ Note that if your workflow here involves opening a json file, you should use cur
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://some_protected.resource&#39;</span><span class="p">,</span>
                        <span class="n">auth</span><span class="o">=</span><span class="n">BasicAuth</span><span class="p">(</span><span class="n">usr_pw</span><span class="p">))</span>
     <span class="n">r2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://other_protected.thingy&#39;</span><span class="p">,</span>
-                       <span class="n">auth</span><span class="o">=</span><span class="n">DigestAuth</span><span class="p">(</span><span class="n">usr_pw</span><span class="p">))</span>
+                       <span class="n">auth</span><span class="o">=</span><span class="n">DigestAuth</span><span class="p">(</span><span class="n">usr_pw</span><span class="p">),</span>
+                       <span class="n">auth_off_domain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
+<p><strong>Note</strong>: asks will not pass auth along to connections that switch from http to https, or off domain locations unless you pass <code class="docutils literal"><span class="pre">auth_off_domain=True</span></code> to the call.</p>
 </div>
 <div class="section" id="callbacks">
 <h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h2>
