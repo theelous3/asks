@@ -1,4 +1,3 @@
-from urllib.parse import urlparse, urlunparse
 from functools import partial
 
 from asks.sessions import DSession
