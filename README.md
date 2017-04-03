@@ -19,7 +19,6 @@ Above you'll find detailed docs with a large number of simple examples to help y
 
 `pip install git+https://github.com/theelous3/asks.git`
 
-`pip install git+https://github.com/dabeaz/curio.git`
 
 ## Making requests
 
