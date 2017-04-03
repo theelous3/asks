@@ -1,6 +1,7 @@
 # pylint: disable=wildcard-import
 # pylint: disable=no-else-return
 # pylint: disable=not-callable
+# pylint: disable=no-member
 from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
@@ -494,7 +495,7 @@ class Request:
                     if isinstance(data, h11.Data):
                         resp_data['body'] += data.data
                     elif isinstance(data, h11.EndOfMessage):
-                            break
+                        break
             else:
                 endof = await self.recv_event(hconnection)
                 assert isinstance(endof, h11.EndOfMessage)
@@ -619,5 +620,5 @@ class Request:
             if (length - redd) < readsize:
                 readsize = length - redd
             bytechunk = await self.sock.recv(readsize)
-            await func(bytechunk)
+            await self.callback(bytechunk)
             redd += len(bytechunk)
