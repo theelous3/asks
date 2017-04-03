@@ -1,6 +1,8 @@
 # pylint: disable=wildcard-import
 # pylint: disable=no-else-return
 # pylint: disable=not-callable
+# pylint: disable=no-member
+# pylint: disable=too-many-nested-blocks
 from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
@@ -619,5 +621,5 @@ class Request:
             if (length - redd) < readsize:
                 readsize = length - redd
             bytechunk = await self.sock.recv(readsize)
-            await func(bytechunk)
+            await self.callback(bytechunk)
             redd += len(bytechunk)
