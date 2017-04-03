@@ -1,8 +1,6 @@
 # pylint: disable=wildcard-import
 # pylint: disable=no-else-return
 # pylint: disable=not-callable
-# pylint: disable=no-member
-# pylint: disable=too-many-nested-blocks
 from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
@@ -465,7 +463,6 @@ class Request:
             The most recent response object.
         '''
         response = await self.recv_event(hconnection)
-        print(response)
 
         resp_data = {'status_code': response.status_code,
                      'reason_phrase': str(response.reason),
@@ -484,25 +481,26 @@ class Request:
                     resp_data['headers']['set-cookie'] = [str(header[1],
                                                               'utf-8')]
         if self.callback is None:
+            get_body = False
             try:
                 if int(resp_data['headers']['content-length']) > 0:
-                    while True:
-                        data = await self.recv_event(hconnection)
-                        if isinstance(data, h11.Data):
-                            resp_data['body'] += data.data
-                        else:
-                            if isinstance(data, h11.EndOfMessage):
-                                break
-                else:
-                    endof = await self.recv_event(hconnection)
-                    print(endof)
-                    assert isinstance(endof, h11.EndOfMessage)
+                    get_body = True
             except KeyError:
-                pass
+                if resp_data['headers']['transfer-encoding'] == 'chunked':
+                    get_body = True
+            if get_body:
+                while True:
+                    data = await self.recv_event(hconnection)
+                    if isinstance(data, h11.Data):
+                        resp_data['body'] += data.data
+                    elif isinstance(data, h11.EndOfMessage):
+                            break
+            else:
+                endof = await self.recv_event(hconnection)
+                assert isinstance(endof, h11.EndOfMessage)
         else:
             await self._body_callback(resp_data['headers']['content-length'])
             endof = await self.recv_event(hconnection)
-            print(endof)
             assert isinstance(endof, h11.EndOfMessage)
 
         return Response(
@@ -512,7 +510,7 @@ class Request:
         while True:
             event = hconnection.next_event()
             if event is h11.NEED_DATA:
-                hconnection.receive_data((await self.sock.recv(_MAX_BYTES)))
+                hconnection.receive_data((await self.sock.recv(10000)))
                 continue
             return event
 
@@ -621,5 +619,5 @@ class Request:
             if (length - redd) < readsize:
                 readsize = length - redd
             bytechunk = await self.sock.recv(readsize)
-            await self.callback(bytechunk)
+            await func(bytechunk)
             redd += len(bytechunk)
