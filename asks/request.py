@@ -480,15 +480,16 @@ class Request:
                                                                   'utf-8'))
                 except (KeyError, AttributeError):
                     resp_data['headers']['set-cookie'] = [str(header[1],
-                                                              'utf-8')]
+                                                          'utf-8')]
+
+        get_body = False
+        try:
+            if int(resp_data['headers']['content-length']) > 0:
+                get_body = True
+        except KeyError:
+            if resp_data['headers']['transfer-encoding'] == 'chunked':
+                get_body = True
         if self.callback is None:
-            get_body = False
-            try:
-                if int(resp_data['headers']['content-length']) > 0:
-                    get_body = True
-            except KeyError:
-                if resp_data['headers']['transfer-encoding'] == 'chunked':
-                    get_body = True
             if get_body:
                 while True:
                     data = await self.recv_event(hconnection)
@@ -500,7 +501,9 @@ class Request:
                 endof = await self.recv_event(hconnection)
                 assert isinstance(endof, h11.EndOfMessage)
         else:
-            await self._body_callback(resp_data['headers']['content-length'])
+            if get_body:
+                await self._body_callback(
+                    resp_data['headers']['content-length'])
             endof = await self.recv_event(hconnection)
             assert isinstance(endof, h11.EndOfMessage)
 
