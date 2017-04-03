@@ -69,18 +69,18 @@ Now whilst we have all of this sweet sweet async speed, we must talk about our g
 Stateful Sessions
 _________________
 
-HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the ``cookie_interactions=True`` kwarg on session instanciation. ::
+HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the ``persist_cookies=True`` kwarg on session instanciation. ::
 
     from asks import Session
 
     async def main():
-        s = Session('https://jsontest.com', cookie_interactions=True)
+        s = Session('https://jsontest.com', persist_cookies=True)
         r = await s.get()
 
 Creating a DSession
 ___________________
 
-The main difference between the ``DSession`` and the ``Session`` is that you must supply a url to the ``DSession`` methods. Aside from that, the usual stuff applies. You can add ``params`` , ``cookie_interactions=True`` and do all of that other good stuff that you can do with the ``Session`` class and base functions. ::
+The main difference between the ``DSession`` and the ``Session`` is that you must supply a url to the ``DSession`` methods. Aside from that, the usual stuff applies. You can add ``params`` , ``persist_cookies=True`` and do all of that other good stuff that you can do with the ``Session`` class and base functions. ::
 
     from asks import DSession
     import curio

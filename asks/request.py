@@ -9,12 +9,12 @@ from random import randint
 import mimetypes
 import re
 
+import h11
 from curio.file import aopen
 
 from .auth import PreResponseAuth, PostResponseAuth
-from .req_structs import CaseInsensitiveDict as c_i_Dict
+from .req_structs import CaseInsensitiveDict as c_i_dict
 from .response_objects import Response
-from .http_req_parser import HttpParser
 from .errors import TooManyRedirects
 
 
@@ -23,6 +23,7 @@ __all__ = ['Request']
 
 _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
 _WWX_MATCH = re.compile(r'\Aww.\.')
+_MAX_BYTES = 4096
 
 
 class Request:
@@ -102,6 +103,7 @@ class Request:
                 redirects, the redirect responses will be stored in the final
                 response object's `.history`.
         '''
+        hconnection = h11.Connection(our_role=h11.CLIENT)
         self.scheme, self.netloc, self.path, _, self.query, _ = urlparse(
             self.uri)
 
@@ -109,7 +111,7 @@ class Request:
                                 self.port == '443')
                 else self.netloc + ':' + self.port)
         # default header construction
-        asks_headers = c_i_Dict([('Host', host),
+        asks_headers = c_i_dict([('Host', host),
                                  ('Connection', 'keep-alive'),
                                  ('Accept-Encoding', 'gzip, deflate'),
                                  ('Accept', '*/*'),
@@ -126,8 +128,6 @@ class Request:
 
         # formulate path / query and intended extra querys for use in uri
         self._build_path()
-
-        package = [' '.join((self.method, self.path, 'HTTP/1.1'))]
 
         # handle building the request body, if any
         body = ''
@@ -146,22 +146,29 @@ class Request:
             asks_headers.update(await self.auth_handler_pre())
             asks_headers.update(await self.auth_handler_post_get_auth())
 
-        # add all headers to package
-        for k, v in asks_headers.items():
-            package.append(k + ': ' + v)
-
         # add cookies
         if self.cookies:
             cookie_str = ''
             for k, v in self.cookies.items():
                 cookie_str += '{}={}; '.format(k, v)
-            package.append('Cookie: ' + cookie_str[:-1])
+            asks_headers['Cookie'] = cookie_str[:-1]
+
+        req = h11.Request(method=self.method,
+                          target=self.path,
+                          headers=asks_headers.items())
+        if body:
+            if not isinstance(body, bytes):
+                body = bytes(body, self.encoding)
+            req_body = h11.Data(data=body)
+        else:
+            req_body = None
+
         # call i/o handling func
-        response_obj = await self.request_io(package, body)
+        response_obj = await self.request_io(req, req_body, hconnection)
 
         return self.sock, response_obj
 
-    async def request_io(self, package, body):
+    async def request_io(self, request_bytes, body_bytes, hconnection):
         '''
         Takes care of the i/o side of the request once it's been built,
         and calls a couple of cleanup functions to check for redirects / store
@@ -182,8 +189,8 @@ class Request:
             This function sets off a possible call to `_redirect` which
             is semi-recursive.
         '''
-        await self._send(package, body)
-        response_obj = await self._catch_response()
+        await self._send(request_bytes, body_bytes, hconnection)
+        response_obj = await self._catch_response(hconnection)
 
         response_obj._parse_cookies(self.netloc)
 
@@ -299,7 +306,7 @@ class Request:
         On 'Connetcion: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo.
         '''
-        self.sock._file = None
+        self.sock._active = False
         await self.session._replace_connection(self.sock)
         from asks.sessions import DSession
         if isinstance(self.session, DSession):
@@ -319,7 +326,7 @@ class Request:
             The body as a str.
         '''
         c_type, body = None, ''
-        multipart_ctype = ' multipart/form-data; boundary={}'.format(_BOUNDARY)
+        multipart_ctype = 'multipart/form-data; boundary={}'.format(_BOUNDARY)
         if self.files is not None and self.data is not None:
             c_type = multipart_ctype
             wombo_combo = {**self.files, **self.data}
@@ -330,7 +337,7 @@ class Request:
             body = await self._multipart(self.files)
 
         elif self.data is not None:
-            c_type = ' application/x-www-form-urlencoded'
+            c_type = 'application/x-www-form-urlencoded'
             try:
                 body = self._dict_2_query(self.data, params=False)
             except AttributeError:
@@ -338,7 +345,7 @@ class Request:
                 c_type = ' text/html'
 
         elif self.json is not None:
-            c_type = ' application/json'
+            c_type = 'application/json'
             body = _json.dumps(self.json)
 
         return c_type, str(len(body)), body
@@ -437,7 +444,7 @@ class Request:
         return quote(query.encode(self.encoding, errors='strict'),
                      safe='/=+?&')
 
-    async def _catch_response(self):
+    async def _catch_response(self, hconnection):
         '''
         Instanciates the parser which manages incoming data, first getting
         the headers, storing cookies, and then parsing the response's body,
@@ -455,35 +462,59 @@ class Request:
         Returns:
             The most recent response object.
         '''
-        parser = HttpParser(self.sock)
-        resp = await parser.parse_stream_headers()
-        statuscode = int(resp.pop('status_code'))
-        parse_kwargs = {}
-        try:
-            content_len = int(resp['headers']['Content-Length'])
+        response = await self.recv_event(hconnection)
+        print(response)
 
-            if content_len > 0:
-                if self.callback:
-                    parse_kwargs = {'length': content_len,
-                                    'callback': self.callback}
-                    resp['body'] = ''
-                else:
-                    parse_kwargs = {'length': content_len}
-
-        except KeyError:
+        resp_data = {'status_code': response.status_code,
+                     'reason_phrase': str(response.reason),
+                     'http_version': str(response.http_version),
+                     'headers': c_i_dict(
+                        [(str(name, 'utf-8'), str(value, 'utf-8'))
+                         for name, value in response.headers]),
+                     'body': b''
+                     }
+        for header in response.headers:
+            if header[0] == b'set-cookie':
+                try:
+                    resp_data['headers']['set-cookie'].append(str(header[1],
+                                                                  'utf-8'))
+                except (KeyError, AttributeError):
+                    resp_data['headers']['set-cookie'] = [str(header[1],
+                                                              'utf-8')]
+        if self.callback is None:
             try:
-                if resp['headers']['Transfer-Encoding'].strip() == 'chunked':
-                    parse_kwargs = {'chunked': True}
+                if int(resp_data['headers']['content-length']) > 0:
+                    while True:
+                        data = await self.recv_event(hconnection)
+                        if isinstance(data, h11.Data):
+                            resp_data['body'] += data.data
+                        else:
+                            if isinstance(data, h11.EndOfMessage):
+                                break
+                else:
+                    endof = await self.recv_event(hconnection)
+                    print(endof)
+                    assert isinstance(endof, h11.EndOfMessage)
             except KeyError:
                 pass
-        if parse_kwargs:
-            resp['body'] = await parser.parse_body(**parse_kwargs)
         else:
-            resp['body'] = None
-        return Response(
-            self.encoding, statuscode, method=self.method, **resp)
+            await self._body_callback(resp_data['headers']['content-length'])
+            endof = await self.recv_event(hconnection)
+            print(endof)
+            assert isinstance(endof, h11.EndOfMessage)
 
-    async def _send(self, package, body):
+        return Response(
+            self.encoding, method=self.method, **resp_data)
+
+    async def recv_event(self, hconnection):
+        while True:
+            event = hconnection.next_event()
+            if event is h11.NEED_DATA:
+                hconnection.receive_data((await self.sock.recv(_MAX_BYTES)))
+                continue
+            return event
+
+    async def _send(self, request_bytes, body_bytes, hconnection):
         '''
         Takes a package and body, combines then, then shoots 'em off in to
         the ether.
@@ -492,16 +523,10 @@ class Request:
             package (list of str): The header package.
             body (str): The str representation of the body.
         '''
-        http_package = bytes(
-            ('\r\n'.join(package) + '\r\n\r\n'), self.encoding)
-
-        if body:
-            try:
-                http_package += body
-            except TypeError:
-                http_package += bytes(body, self.encoding)
-
-        await self.sock.write(http_package)
+        await self.sock.sendall(hconnection.send(request_bytes))
+        if body_bytes is not None:
+            await self.sock.sendall(hconnection.send(body_bytes))
+        await self.sock.sendall(hconnection.send(h11.EndOfMessage()))
 
     async def auth_handler_pre(self):
         '''
@@ -580,3 +605,19 @@ class Request:
                 return False
             else:
                 return True
+
+    async def _body_callback(self, length):
+        '''
+        A callback func to be supplied if the user wants to do something
+        directly with the response body's stream.
+
+        UNTESTED! Gut feeling says this will hang indefinitely. Do test!
+        '''
+        readsize = 4096
+        redd = 0
+        while redd != length:
+            if (length - redd) < readsize:
+                readsize = length - redd
+            bytechunk = await self.sock.recv(readsize)
+            await func(bytechunk)
+            redd += len(bytechunk)

@@ -86,10 +86,10 @@ Pass a dict of cookie name(key) / value pairs to the ``cookies`` arg to ship 'em
 Cookie Interactions
 ___________________
 
-By default asks does not return sent cookies. To enable two way cookie interactions, just pass ``cookie_interactions=True``. ::
+By default asks does not return sent cookies. To enable two way cookie interactions, just pass ``persist_cookies=True``. ::
 
     async def example():
-        r = await asks.get('www.example.com', cookie_interactions=True)
+        r = await asks.get('www.example.com', persist_cookies=True)
 
 
 Set Encoding

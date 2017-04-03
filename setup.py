@@ -11,6 +11,6 @@ setup(
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
-    install_requires=['curio'],
+    install_requires=['curio', 'h11'],
     classifiers=['Programming Language :: Python :: 3']
 )

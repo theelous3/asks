@@ -14,12 +14,12 @@ class Response:
     for accessing the status line, header, cookies, history and
     body of a response.
     '''
-    def __init__(self, encoding, status_code, **data):
+    def __init__(self, encoding, **data):
         for name, value in data.items():
             setattr(self, name, value)
         self.encoding = encoding
         self.history = []
-        self.status_code = status_code
+        self.cookies = []
 
     def __repr__(self):
         # pylint: disable=fixme
@@ -46,21 +46,27 @@ class Response:
             self.encoding = guess
 
     def _parse_cookies(self, host):
+        '''
+        Why the hell is this here.
+        '''
         cookie_pie = []
-        for cookie in self.cookies:
-            cookie_jar = {}
-            name_val, *rest = cookie.split(';')
-            name, value = name_val.split('=', 1)
-            cookie_jar['name'] = name.strip()
-            cookie_jar['value'] = value
-            for item in rest:
-                try:
-                    name, value = item.split('=')
-                    cookie_jar[name.lower().lstrip()] = value
-                except ValueError:
-                    cookie_jar[item.lower().lstrip()] = True
-            cookie_pie.append(cookie_jar)
-        self.cookies = [Cookie(host, x) for x in cookie_pie]
+        try:
+            for cookie in self.headers['set-cookie']:
+                cookie_jar = {}
+                name_val, *rest = cookie.split(';')
+                name, value = name_val.split('=', 1)
+                cookie_jar['name'] = name.strip()
+                cookie_jar['value'] = value
+                for item in rest:
+                    try:
+                        name, value = item.split('=')
+                        cookie_jar[name.lower().lstrip()] = value
+                    except ValueError:
+                        cookie_jar[item.lower().lstrip()] = True
+                cookie_pie.append(cookie_jar)
+            self.cookies = [Cookie(host, x) for x in cookie_pie]
+        except KeyError:
+            pass
 
     def _decompress(self, body):
         try:

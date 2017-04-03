@@ -7,8 +7,8 @@ __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
 
 
 async def request(method, uri, **kwargs):
-    c_interact = kwargs.pop('cookie_interactions', None)
-    s = DSession(cookie_interactions=c_interact)
+    c_interact = kwargs.pop('persist_cookies', None)
+    s = DSession(persist_cookies=c_interact)
     r = await s.request(method, url=uri, **kwargs)
     return r
 

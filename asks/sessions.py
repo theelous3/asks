@@ -36,7 +36,7 @@ class BaseSession:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         await sock.connect(location)
-        sock = sock.as_stream()
+        sock._active = True
         return sock
 
     async def _open_connection_https(self, location):
@@ -47,7 +47,7 @@ class BaseSession:
                                      443,
                                      ssl=True,
                                      server_hostname=location[0])
-        sock = sock.as_stream()
+        sock._active = True
         return sock
 
     async def _connect(self, host_loc=None):
@@ -105,7 +105,7 @@ class BaseSession:
                 raise RequestTimeout
         try:
             if r.headers['connection'].lower() == 'close':
-                sock._file = None
+                sock._active = False
         except KeyError:
             pass
         await self._replace_connection(sock)
@@ -125,17 +125,12 @@ class Session(BaseSession):
     The heart of asks. Async and connection pooling are a wonderful
     combination. This session class is a quick, efficent, and (if you like,
     sateful) abstraction over the base http method functions.
-
-    >>> async def main():
-    ...    s = await Session('https://url.com')
-    ...    for _ in range(1000):
-    ...        r = await s.get()
     '''
     def __init__(self,
                  host,
                  endpoint=None,
                  encoding='utf-8',
-                 cookie_interactions=None,
+                 persist_cookies=None,
                  connections=1):
 
         self.encoding = encoding
@@ -143,10 +138,10 @@ class Session(BaseSession):
         self.host = host
         self.port = None
 
-        if cookie_interactions is True:
+        if persist_cookies is True:
             self.cookie_tracker_obj = CookieTracker()
         else:
-            self.cookie_tracker_obj = cookie_interactions
+            self.cookie_tracker_obj = persist_cookies
 
         self.connection_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
@@ -178,7 +173,7 @@ class Session(BaseSession):
         '''
         Unregistered socket objects as checked out and returns them.
         '''
-        if sock._file is not None:  # Don't think this is valid check.
+        if sock._active:
             self.checked_out_sockets.remove(sock)
             self.connection_pool.appendleft(sock)
         else:
@@ -196,14 +191,14 @@ class DSession(BaseSession):
     '''
     def __init__(self,
                  encoding='utf-8',
-                 cookie_interactions=None,
+                 persist_cookies=None,
                  connections=20):
         self.encoding = encoding
 
-        if cookie_interactions is True:
+        if persist_cookies is True:
             self.cookie_tracker_obj = CookieTracker()
         else:
-            self.cookie_tracker_obj = cookie_interactions
+            self.cookie_tracker_obj = persist_cookies
 
         self.connection_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
@@ -215,7 +210,7 @@ class DSession(BaseSession):
         return sock
 
     async def _replace_connection(self, sock):
-        if sock._file is not None:
+        if sock._active:
             self.checked_out_sockets.remove(sock)
         else:
             self.checked_out_sockets.remove(sock)
