@@ -489,23 +489,22 @@ class Request:
         except KeyError:
             if resp_data['headers']['transfer-encoding'] == 'chunked':
                 get_body = True
-        if self.callback is None:
-            if get_body:
+
+        if get_body:
+            if self.callback is None:
                 while True:
                     data = await self.recv_event(hconnection)
                     if isinstance(data, h11.Data):
                         resp_data['body'] += data.data
                     elif isinstance(data, h11.EndOfMessage):
+                        endof = data
                         break
             else:
-                endof = await self.recv_event(hconnection)
-                assert isinstance(endof, h11.EndOfMessage)
+                endof = await self._body_callback(hconnection)
         else:
-            if get_body:
-                await self._body_callback(
-                    resp_data['headers']['content-length'])
             endof = await self.recv_event(hconnection)
-            assert isinstance(endof, h11.EndOfMessage)
+
+        assert isinstance(endof, h11.EndOfMessage)
 
         return Response(
             self.encoding, method=self.method, **resp_data)
@@ -610,18 +609,14 @@ class Request:
             else:
                 return True
 
-    async def _body_callback(self, length):
+    async def _body_callback(self, hconnection):
         '''
         A callback func to be supplied if the user wants to do something
         directly with the response body's stream.
-
-        UNTESTED! Gut feeling says this will hang indefinitely. Do test!
         '''
-        readsize = 4096
-        redd = 0
-        while redd != length:
-            if (length - redd) < readsize:
-                readsize = length - redd
-            bytechunk = await self.sock.recv(readsize)
-            await self.callback(bytechunk)
-            redd += len(bytechunk)
+        while True:
+            next_event = await self.recv_event(hconnection)
+            if isinstance(next_event, h11.Data):
+                await self.callback(next_event.data)
+            else:
+                return next_event

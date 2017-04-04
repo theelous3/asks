@@ -62,3 +62,9 @@ curio.run(main(path_list))
 
 
 ### Shoutout to ##lp, and the fine peeps of 8banana
+
+# TODO
+
+* Allow switching schema in Session without polluting connection pool (sort of dumb but probably for the best.)
+* Allow cookies param to take asks-native cookie objects
+* A million other things, probably.
