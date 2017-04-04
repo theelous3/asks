@@ -307,7 +307,7 @@ class Request:
                         allow_redirect = self.location_auth_protect(location)
                 self.uri = location
                 l_scheme, l_netloc, *_ = urlparse(location)
-                if (l_scheme != self.scheme or l_netloc != self.netloc):
+                if l_scheme != self.scheme or l_netloc != self.netloc:
                     await self.get_new_sock(off_base_loc=self.uri)
 
             # follow redirect with correct http method type

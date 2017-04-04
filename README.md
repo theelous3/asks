@@ -65,7 +65,6 @@ curio.run(main(path_list))
 
 # TODO
 
-* Allow switching schema in Session without polluting connection pool (sort of dumb but probably for the best.)
 * Allow cookies param to take asks-native cookie objects
 * Streaming responses
 * A million other things, probably.
