@@ -34,31 +34,44 @@ class Request:
 
     Args:
         session (child of BaseSession): A refrence to the calling session.
+
         method (str): The HTTP method to be used in the request.
+
         uri (str): The full uri path to be requested. May not include query.
+
         port (str): The port we want to use on the net location.
+
         auth (child of AuthBase): An object for handling auth construction.
+
         data (dict or str): Info to be processed as a body-bound query.
+
         params (dict or str): Info to be processed as a url-bound query.
+
         headers (dict): User HTTP headers to be used in the request.
+
         encoding (str): The str representation of the codec to process the
             request under.
+
         json (dict): A dict to be formatted as json and sent in request body.
+
         files (dict): A dict of `filename:filepath`s to be sent as multipart.
+
         cookies (dict): A dict of `name:value` cookies to be passed in request.
+
         callback (func): A callback function to be called on each bytechunk of
             of the response body.
+
         timeout (int or float): A numeric representation of the longest time to
             wait on a complete response once a request has been sent.
+
         max_redirects (int): The maximum number of redirects allowed.
+
         sock (StreamSock): The socket object to be used for the request. This
             socket object may be updated on `connection: close` headers.
+
         persist_cookies (True or None): Passing True instanciates a
             CookieTracker object to manage the return of cookies to the server
             under the relevant domains.
-
-
-
     '''
     def __init__(self, session, method, uri, port, **kwargs):
         # These are kwargsable attribs.
@@ -91,7 +104,10 @@ class Request:
         self.query = None
         self.target_netloc = None
 
-    async def make_request(self):
+        self.initial_scheme = None
+        self.initial_netloc = None
+
+    async def make_request(self, redirect=False):
         '''
         Acts as the central hub for preparing requests to be sent, and
         returning them upon completion. Generally just pokes through
@@ -107,6 +123,10 @@ class Request:
         hconnection = h11.Connection(our_role=h11.CLIENT)
         self.scheme, self.netloc, self.path, _, self.query, _ = urlparse(
             self.uri)
+
+        if not redirect:
+            self.initial_scheme = self.scheme
+            self.initial_netloc = self.netloc
 
         host = (self.netloc if (self.port == '80' or
                                 self.port == '443')
@@ -166,6 +186,11 @@ class Request:
 
         # call i/o handling func
         response_obj = await self.request_io(req, req_body, hconnection)
+
+        if redirect:
+            if not (self.scheme == self.initial_scheme and
+               self.netloc == self.initial_netloc):
+                self.sock._active = False
 
         return self.sock, response_obj
 
@@ -281,9 +306,9 @@ class Request:
                     if not self.auth_off_domain:
                         allow_redirect = self.location_auth_protect(location)
                 self.uri = location
-                l_scheme, *_ = urlparse(location)
-                if l_scheme != self.scheme:
-                    await self.get_new_sock()
+                l_scheme, l_netloc, *_ = urlparse(location)
+                if (l_scheme != self.scheme or l_netloc != self.netloc):
+                    await self.get_new_sock(off_base_loc=self.uri)
 
             # follow redirect with correct http method type
             if force_get:
@@ -302,7 +327,7 @@ class Request:
                 _, response_obj = await self.make_request()
         return response_obj
 
-    async def get_new_sock(self):
+    async def get_new_sock(self, off_base_loc=False):
         '''
         On 'Connetcion: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo.
@@ -311,9 +336,15 @@ class Request:
         await self.session._replace_connection(self.sock)
         from asks.sessions import DSession
         if isinstance(self.session, DSession):
-            self.sock = await self.session._grab_connection(self.uri)
+            self.sock = await self.session._grab_connection(
+                self.uri)
+            self.port = self.sock.port
         else:
-            self.sock = await self.session._grab_connection()
+            if not off_base_loc:
+                self.sock = await self.session._grab_connection()
+            else:
+                self.sock, self.port = await self.session._grab_connection(
+                    off_base_loc=off_base_loc)
 
     async def _formulate_body(self):
         '''

@@ -146,7 +146,7 @@ class Session(BaseSession):
         self.connection_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
 
-    async def _grab_connection(self):
+    async def _grab_connection(self, off_base_loc=False):
         '''
         The connection pool handler. Returns a connection
         to the caller. If there are no connections ready, and
@@ -156,6 +156,10 @@ class Session(BaseSession):
         If there is a connection ready, we pop it, register it
         as checked out, and return it.
         '''
+        if off_base_loc:
+            sock, port = await self._connect(host_loc=off_base_loc)
+            self.checked_out_sockets.append(sock)
+            return sock, port
         while True:
             try:
                 sock = self.connection_pool.pop()
