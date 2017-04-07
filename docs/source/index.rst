@@ -31,10 +31,6 @@ The easiest way to install asks, is to pip the master git repo::
 
     pip install git+https://github.com/theelous3/asks.git
 
-To install curio::
-
-    pip install git+https://github.com/dabeaz/curio.git
-
 
 A dirty little example:
 _______________________

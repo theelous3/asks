@@ -65,6 +65,4 @@ curio.run(main(path_list))
 
 # TODO
 
-* Allow cookies param to take asks-native cookie objects
-* Streaming responses
-* A million other things, probably.
+* A million things, probably.

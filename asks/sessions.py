@@ -103,12 +103,14 @@ class BaseSession:
             except curio.TaskTimeout:
                 await response_task.cancel()
                 raise RequestTimeout
-        try:
-            if r.headers['connection'].lower() == 'close':
-                sock._active = False
-        except KeyError:
-            pass
-        await self._replace_connection(sock)
+
+        if sock is not None:
+            try:
+                if r.headers['connection'].lower() == 'close':
+                    sock._active = False
+            except KeyError:
+                pass
+            await self._replace_connection(sock)
         return r
 
     # These be the actual http methods!

@@ -15,7 +15,7 @@ from curio.file import aopen
 
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
-from .response_objects import Response
+from .response_objects import Response, StreamBody
 from .errors import TooManyRedirects
 
 
@@ -89,6 +89,7 @@ class Request:
         self.files = None
         self.cookies = {}
         self.callback = None
+        self.stream = None
         self.timeout = None
         self.max_redirects = float('inf')
         self.sock = None
@@ -107,6 +108,8 @@ class Request:
         self.initial_scheme = None
         self.initial_netloc = None
 
+        self.streaming = False
+
     async def make_request(self, redirect=False):
         '''
         Acts as the central hub for preparing requests to be sent, and
@@ -114,7 +117,7 @@ class Request:
         self's attribs and makes decisions about what to do.
 
         Returns:
-            StreamSock: The socket to be returned to the calling session's
+            sock: The socket to be returned to the calling session's
                 pool.
             Response: The response object, after any redirects. If there were
                 redirects, the redirect responses will be stored in the final
@@ -164,8 +167,8 @@ class Request:
 
         # add auth
         if self.auth is not None:
-            asks_headers.update(await self.auth_handler_pre())
-            asks_headers.update(await self.auth_handler_post_get_auth())
+            asks_headers.update(await self._auth_handler_pre())
+            asks_headers.update(await self._auth_handler_post_get_auth())
 
         # add cookies
         if self.cookies:
@@ -174,9 +177,11 @@ class Request:
                 cookie_str += '{}={}; '.format(k, v)
             asks_headers['Cookie'] = cookie_str[:-1]
 
+        # Construct h11 request object.
         req = h11.Request(method=self.method,
                           target=self.path,
                           headers=asks_headers.items())
+        # Construct h11 body object, if any body.
         if body:
             if not isinstance(body, bytes):
                 body = bytes(body, self.encoding)
@@ -185,16 +190,23 @@ class Request:
             req_body = None
 
         # call i/o handling func
-        response_obj = await self.request_io(req, req_body, hconnection)
+        response_obj = await self._request_io(req, req_body, hconnection)
 
+        # check to see if the final socket object is suitable to be returned
+        # to the calling session's connection pool.
+        # We don't want to return sockets that are of a difference schema or
+        # different top level domain.
         if redirect:
             if not (self.scheme == self.initial_scheme and
                self.netloc == self.initial_netloc):
                 self.sock._active = False
 
+        if self.streaming:
+            return None, response_obj
+
         return self.sock, response_obj
 
-    async def request_io(self, request_bytes, body_bytes, hconnection):
+    async def _request_io(self, request_bytes, body_bytes, hconnection):
         '''
         Takes care of the i/o side of the request once it's been built,
         and calls a couple of cleanup functions to check for redirects / store
@@ -230,7 +242,7 @@ class Request:
 
         # Check to see if there's a PostResponseAuth set, and does magic.
         if self.auth is not None:
-            response_obj = await self.auth_handler_post_check_retry(
+            response_obj = await self._auth_handler_post_check_retry(
                 response_obj)
 
         # check redirects
@@ -258,10 +270,10 @@ class Request:
         if self.params:
             try:
                 if self.query:
-                    self.path = self.path + self._dict_2_query(
+                    self.path = self.path + self._dict_to_query(
                         self.params, base_query=True)
                 else:
-                    self.path = self.path + self._dict_2_query(self.params)
+                    self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
                 self.path = self.path + '?' + self._queryify(self.params)
 
@@ -304,11 +316,11 @@ class Request:
                 location = location.strip()
                 if self.auth is not None:
                     if not self.auth_off_domain:
-                        allow_redirect = self.location_auth_protect(location)
+                        allow_redirect = self._location_auth_protect(location)
                 self.uri = location
                 l_scheme, l_netloc, *_ = urlparse(location)
                 if l_scheme != self.scheme or l_netloc != self.netloc:
-                    await self.get_new_sock(off_base_loc=self.uri)
+                    await self._get_new_sock(off_base_loc=self.uri)
 
             # follow redirect with correct http method type
             if force_get:
@@ -320,14 +332,14 @@ class Request:
 
             try:
                 if response_obj.headers['connection'].lower() == 'close':
-                    await self.get_new_sock()
+                    await self._get_new_sock()
             except KeyError:
                 pass
             if allow_redirect:
                 _, response_obj = await self.make_request()
         return response_obj
 
-    async def get_new_sock(self, off_base_loc=False):
+    async def _get_new_sock(self, off_base_loc=False):
         '''
         On 'Connetcion: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo.
@@ -371,7 +383,7 @@ class Request:
         elif self.data is not None:
             c_type = 'application/x-www-form-urlencoded'
             try:
-                body = self._dict_2_query(self.data, params=False)
+                body = self._dict_to_query(self.data, params=False)
             except AttributeError:
                 body = self.data
                 c_type = ' text/html'
@@ -382,7 +394,7 @@ class Request:
 
         return c_type, str(len(body)), body
 
-    def _dict_2_query(self, data, params=True, base_query=False):
+    def _dict_to_query(self, data, params=True, base_query=False):
         '''
         Turns python dicts in to valid body-queries or queries for use directly
         in the request url. Unlike the stdlib quote() and it's variations,
@@ -494,7 +506,7 @@ class Request:
         Returns:
             The most recent response object.
         '''
-        response = await self.recv_event(hconnection)
+        response = await self._recv_event(hconnection)
 
         resp_data = {'status_code': response.status_code,
                      'reason_phrase': str(response.reason),
@@ -512,7 +524,6 @@ class Request:
                 except (KeyError, AttributeError):
                     resp_data['headers']['set-cookie'] = [str(header[1],
                                                           'utf-8')]
-
         get_body = False
         try:
             if int(resp_data['headers']['content-length']) > 0:
@@ -522,25 +533,33 @@ class Request:
                 get_body = True
 
         if get_body:
-            if self.callback is None:
+            if self.callback is not None:
+                endof = await self._body_callback(hconnection)
+            elif self.stream is not None:
+                if 199 < resp_data['status_code'] < 300:
+                    if not ((self.scheme == self.initial_scheme and
+                            self.netloc == self.initial_netloc) or
+                            resp_data['headers']['connection'] == 'close'):
+                        self.sock._active = False
+                    resp_data['body'] = StreamBody(self.session,
+                                                   hconnection,
+                                                   self.sock)
+                    self.streaming = True
+            else:
                 while True:
-                    data = await self.recv_event(hconnection)
+                    data = await self._recv_event(hconnection)
                     if isinstance(data, h11.Data):
                         resp_data['body'] += data.data
                     elif isinstance(data, h11.EndOfMessage):
                         endof = data
                         break
-            else:
-                endof = await self._body_callback(hconnection)
         else:
-            endof = await self.recv_event(hconnection)
-
-        assert isinstance(endof, h11.EndOfMessage)
+            endof = await self._recv_event(hconnection)
 
         return Response(
             self.encoding, method=self.method, **resp_data)
 
-    async def recv_event(self, hconnection):
+    async def _recv_event(self, hconnection):
         while True:
             event = hconnection.next_event()
             if event is h11.NEED_DATA:
@@ -562,7 +581,7 @@ class Request:
             await self.sock.sendall(hconnection.send(body_bytes))
         await self.sock.sendall(hconnection.send(h11.EndOfMessage()))
 
-    async def auth_handler_pre(self):
+    async def _auth_handler_pre(self):
         '''
         If the user supplied auth does not rely on any response
         (is a PreResponseAuth object) then we call the auth's __call__
@@ -572,7 +591,7 @@ class Request:
             return await self.auth(self)
         return {}
 
-    async def auth_handler_post_get_auth(self):
+    async def _auth_handler_post_get_auth(self):
         '''
         If the user supplied auth does rely on a response
         (is a PostResponseAuth object) then we call the auth's __call__
@@ -589,9 +608,9 @@ class Request:
                         return await self.auth(authable_resp, self)
         return {}
 
-    async def auth_handler_post_check_retry(self, response_obj):
+    async def _auth_handler_post_check_retry(self, response_obj):
         '''
-        The other half of auth_handler_post_check_retry (what a mouthfull).
+        The other half of _auth_handler_post_check_retry (what a mouthfull).
         If auth has not yet been attempted and the most recent response
         object is a 401, we store that response object and retry the request
         in exactly the same manner as before except with the correct auth.
@@ -610,7 +629,7 @@ class Request:
                     return response_obj
         return response_obj
 
-    async def location_auth_protect(self, location):
+    async def _location_auth_protect(self, location):
         '''
         Checks to see if the new location is
             1. The same top level domain
@@ -646,7 +665,7 @@ class Request:
         directly with the response body's stream.
         '''
         while True:
-            next_event = await self.recv_event(hconnection)
+            next_event = await self._recv_event(hconnection)
             if isinstance(next_event, h11.Data):
                 await self.callback(next_event.data)
             else:

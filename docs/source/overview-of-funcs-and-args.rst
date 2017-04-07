@@ -143,10 +143,31 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
 
 **Note**: asks will not pass auth along to connections that switch from http to https, or off domain locations, unless you pass ``auth_off_domain=True`` to the call.
 
+Streaming response data
+_______________________
+
+You can stream the body of a response by setting ``stream=True`` , and iterating the response object's ``.body`` . An example of downloading a file: ::
+
+    import asks
+    import curio
+
+    async def main():
+        r = await asks.get('http://httpbin.org/image/png', stream=True)
+        with open('our_image.png', 'ab') as out_file:
+            async for bytechunk in r.body:
+                out_file.write(bytechunk)
+
+    curio.run(main())
+
+You can also use this for streaming feeds and stuff of twitter and the likes.
+
+For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc>`_
 
 Callbacks
 _________
 
-The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.
+Similar enough to streaming as seen above, but happens during the processing of the response body, before the response is returned. Overall probably worse to use than streaming in every case but I'm sure someone will find a use for it.
 
-For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#callbacks-handling-response-body-content-downloads-etc>`_
+The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body *as the request is being processed*, as in, before the response has been returned.
+
+For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc>`_

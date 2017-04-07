@@ -7,6 +7,8 @@ import json as _json
 from gzip import decompress as gdecompress
 from zlib import decompress as zdecompress
 
+import h11
+
 
 class Response:
     '''
@@ -131,3 +133,28 @@ class Cookie(SimpleNamespace):
     def __iter__(self):
         for k, v in self.__dict__.items():
             yield k, v
+
+
+class StreamBody:
+
+    def __init__(self, session, hconnection, sock):
+        self.session = session
+        self.hconnection = hconnection
+        self.sock = sock
+
+    async def __aiter__(self):
+        while True:
+            event = await self._recv_event()
+            if isinstance(event, h11.Data):
+                yield event.data
+            elif isinstance(event, h11.EndOfMessage):
+                await self.session._replace_connection(self.sock)
+                break
+
+    async def _recv_event(self):
+        while True:
+            event = self.hconnection.next_event()
+            if event is h11.NEED_DATA:
+                self.hconnection.receive_data((await self.sock.recv(10000)))
+                continue
+            return event

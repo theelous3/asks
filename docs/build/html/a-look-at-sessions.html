@@ -97,18 +97,18 @@ This number dictates the maximum number of concurrent connections asks will be a
 </div>
 <div class="section" id="stateful-sessions">
 <h2>Stateful Sessions<a class="headerlink" href="#stateful-sessions" title="Permalink to this headline">¶</a></h2>
-<p>HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code> kwarg on session instanciation.</p>
+<p>HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> kwarg on session instanciation.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">,</span> <span class="n">cookie_interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">,</span> <span class="n">persist_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="creating-a-dsession">
 <h2>Creating a DSession<a class="headerlink" href="#creating-a-dsession" title="Permalink to this headline">¶</a></h2>
-<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">Session</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods. Aside from that, the usual stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">Session</span></code> class and base functions.</p>
+<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">Session</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods. Aside from that, the usual stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">Session</span></code> class and base functions.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">DSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 

@@ -73,10 +73,43 @@
 </div>
 <p>In the above example, <code class="docutils literal"><span class="pre">sorted_results</span></code> is a list of response objects in the same order as <code class="docutils literal"><span class="pre">url_list</span></code>.</p>
 </div>
-<div class="section" id="callbacks-handling-response-body-content-downloads-etc">
-<h2>(Callbacks) Handling response body content (downloads etc.)<a class="headerlink" href="#callbacks-handling-response-body-content-downloads-etc" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.</p>
-<p>Below you&#8217;ll find an example of a single download of an image with a given filename, and multiple downloads with sequential numeric filenames.</p>
+<div class="section" id="handling-response-body-content-downloads-etc">
+<h2>Handling response body content (downloads etc.)<a class="headerlink" href="#handling-response-body-content-downloads-etc" title="Permalink to this headline">¶</a></h2>
+<p>The recommended way to handle this sort of thing, is by streaming, like so:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>An example of multiple downloads with streaming:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">indx</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;http://placehold.it/1000x1000&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">]):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">downloader</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body <em>as the request is being processed</em> . A simple use case for this is downloading a file.</p>
+<p>Below you&#8217;ll find an example of a single download of an image with a given filename, and multiple downloads with sequential numeric filenames. They are very similar to the streaming examples above.</p>
 <p>We define a callback function <code class="docutils literal"><span class="pre">downloader</span></code> that takes bytes and saves &#8216;em, and pass it in.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
 <span class="kn">import</span> <span class="nn">curio</span>
@@ -110,6 +143,22 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="resending-an-asks-cookie">
+<h2>Resending an asks.Cookie<a class="headerlink" href="#resending-an-asks-cookie" title="Permalink to this headline">¶</a></h2>
+<p>Simply refrence the <code class="docutils literal"><span class="pre">Cookie</span></code> &#8216;s <code class="docutils literal"><span class="pre">.name</span></code> and <code class="docutils literal"><span class="pre">.value</span></code> attributes as you pass them in to the <code class="docutils literal"><span class="pre">cookies</span></code> argument.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="n">a_cookie</span> <span class="o">=</span> <span class="n">previous_response_object</span><span class="o">.</span><span class="n">cookies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+    <span class="n">cookies_to_go</span> <span class="o">=</span> <span class="p">{</span><span class="n">a_cookie</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">a_cookie</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;another&#39;</span><span class="p">:</span> <span class="s1">&#39;cookie&#39;</span><span class="p">}</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="n">cookies_to_go</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">example</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -122,7 +171,8 @@
   <ul>
 <li><a class="reference internal" href="#">asks - Useful idioms and tricks.</a><ul>
 <li><a class="reference internal" href="#maintaining-order">Maintaining Order</a></li>
-<li><a class="reference internal" href="#callbacks-handling-response-body-content-downloads-etc">(Callbacks) Handling response body content (downloads etc.)</a></li>
+<li><a class="reference internal" href="#handling-response-body-content-downloads-etc">Handling response body content (downloads etc.)</a></li>
+<li><a class="reference internal" href="#resending-an-asks-cookie">Resending an asks.Cookie</a></li>
 </ul>
 </li>
 </ul>

@@ -117,9 +117,9 @@ Note that if your workflow here involves opening a json file, you should use cur
 </div>
 <div class="section" id="cookie-interactions">
 <h2>Cookie Interactions<a class="headerlink" href="#cookie-interactions" title="Permalink to this headline">¶</a></h2>
-<p>By default asks does not return sent cookies. To enable two way cookie interactions, just pass <code class="docutils literal"><span class="pre">cookie_interactions=True</span></code>.</p>
+<p>By default asks does not return sent cookies. To enable two way cookie interactions, just pass <code class="docutils literal"><span class="pre">persist_cookies=True</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">cookie_interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">persist_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -165,12 +165,31 @@ Note that if your workflow here involves opening a json file, you should use cur
                        <span class="n">auth_off_domain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Note</strong>: asks will not pass auth along to connections that switch from http to https, or off domain locations unless you pass <code class="docutils literal"><span class="pre">auth_off_domain=True</span></code> to the call.</p>
+<p><strong>Note</strong>: asks will not pass auth along to connections that switch from http to https, or off domain locations, unless you pass <code class="docutils literal"><span class="pre">auth_off_domain=True</span></code> to the call.</p>
+</div>
+<div class="section" id="streaming-response-data">
+<h2>Streaming response data<a class="headerlink" href="#streaming-response-data" title="Permalink to this headline">¶</a></h2>
+<p>You can stream the body of a response by setting <code class="docutils literal"><span class="pre">stream=True</span></code> , and iterating the response object&#8217;s <code class="docutils literal"><span class="pre">.body</span></code> . An example of downloading a file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>You can also use this for streaming feeds and stuff of twitter and the likes.</p>
+<p>For some examples of how to use this, <a class="reference external" href="https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc">look here</a></p>
 </div>
 <div class="section" id="callbacks">
 <h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body. A simple use case for this is downloading a file.</p>
-<p>For some examples of how to use this, <a class="reference external" href="https://asks.readthedocs.io/en/latest/idioms.html#callbacks-handling-response-body-content-downloads-etc">look here</a></p>
+<p>Similar enough to streaming as seen above, but happens during the processing of the response body, before the response is returned. Overall probably worse to use than streaming in every case but I&#8217;m sure someone will find a use for it.</p>
+<p>The <code class="docutils literal"><span class="pre">callback</span></code> argument lets you pass a function as a callback that will be run on each byte chunk of response body <em>as the request is being processed</em>, as in, before the response has been returned.</p>
+<p>For some examples of how to use this, <a class="reference external" href="https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc">look here</a></p>
 </div>
 </div>
 
@@ -193,6 +212,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <li><a class="reference internal" href="#limiting-redirects">Limiting Redirects</a></li>
 <li><a class="reference internal" href="#set-timeout">Set Timeout</a></li>
 <li><a class="reference internal" href="#authing">Authing</a></li>
+<li><a class="reference internal" href="#streaming-response-data">Streaming response data</a></li>
 <li><a class="reference internal" href="#callbacks">Callbacks</a></li>
 </ul>
 </li>
