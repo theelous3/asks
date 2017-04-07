@@ -535,6 +535,7 @@ class Request:
         if get_body:
             if self.callback is not None:
                 endof = await self._body_callback(hconnection)
+                assert isinstance(endof, h11.EndOfMessage)
             elif self.stream is not None:
                 if 199 < resp_data['status_code'] < 300:
                     if not ((self.scheme == self.initial_scheme and
@@ -552,9 +553,11 @@ class Request:
                         resp_data['body'] += data.data
                     elif isinstance(data, h11.EndOfMessage):
                         endof = data
+                        assert isinstance(endof, h11.EndOfMessage)
                         break
         else:
             endof = await self._recv_event(hconnection)
+            assert isinstance(endof, h11.EndOfMessage)
 
         return Response(
             self.encoding, method=self.method, **resp_data)
