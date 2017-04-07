@@ -145,7 +145,7 @@ class Session(BaseSession):
         else:
             self.cookie_tracker_obj = persist_cookies
 
-        self.connection_pool = SocketQ(maxlen=connections)
+        self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
 
     async def _grab_connection(self, off_base_loc=False):
@@ -164,11 +164,11 @@ class Session(BaseSession):
             return sock, port
         while True:
             try:
-                sock = self.connection_pool.pop()
+                sock = self.conn_pool.pop()
                 self.checked_out_sockets.append(sock)
                 return sock
             except IndexError:
-                if len(self.checked_out_sockets) < self.connection_pool.maxlen:
+                if len(self.checked_out_sockets) < self.conn_pool.maxlen:
                     sock, self.port = (await self._connect())
                     self.checked_out_sockets.append(sock)
                     return sock
@@ -181,11 +181,11 @@ class Session(BaseSession):
         '''
         if sock._active:
             self.checked_out_sockets.remove(sock)
-            self.connection_pool.appendleft(sock)
+            self.conn_pool.appendleft(sock)
         else:
             self.checked_out_sockets.remove(sock)
             sock, _ = await self._connect()
-            self.connection_pool.appendleft(sock)
+            self.conn_pool.appendleft(sock)
 
     def _make_url(self):
         return self.host + (self.endpoint or '')
@@ -206,12 +206,13 @@ class DSession(BaseSession):
         else:
             self.cookie_tracker_obj = persist_cookies
 
-        self.connection_pool = SocketQ(maxlen=connections)
+        self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
+        self._pool_lock = False
 
     def _checkout_connection(self, host_loc):
-        index = self.connection_pool.index(host_loc)
-        sock = self.connection_pool.pull(index)
+        index = self.conn_pool.index(host_loc)
+        sock = self.conn_pool.pull(index)
         self.checked_out_sockets.append(sock)
         return sock
 
@@ -222,7 +223,7 @@ class DSession(BaseSession):
             self.checked_out_sockets.remove(sock)
             sock = (await self._make_connection(sock.host))
 
-        self.connection_pool.appendleft(sock)
+        self.conn_pool.appendleft(sock)
 
     async def _make_connection(self, host_loc):
         sock, port = await self._connect(host_loc=host_loc)
@@ -233,18 +234,24 @@ class DSession(BaseSession):
         scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
         while True:
-            if host_loc in self.connection_pool:
+            if host_loc in self.conn_pool:
                 sock = self._checkout_connection(host_loc)
                 break
-            elif host_loc in self.checked_out_sockets:
-                if len(self.checked_out_sockets) < self.connection_pool.maxlen:
+            if not self._pool_lock:
+                if host_loc in self.checked_out_sockets:
+                    if len(self.checked_out_sockets) < self.conn_pool.maxlen:
+                        self._pool_lock = True
+                        sock = await self._make_connection(host_loc)
+                        self.checked_out_sockets.append(sock)
+                        self._pool_lock = False
+                        break
+                else:
+                    self._pool_lock = True
                     sock = await self._make_connection(host_loc)
                     self.checked_out_sockets.append(sock)
+                    self._pool_lock = False
                     break
-                else:
-                    await curio.sleep(0)
-                    continue
-            else:
-                sock = await self._make_connection(host_loc)
-                self.checked_out_sockets.append(sock)
+            await curio.sleep(0)
+            continue
+
         return sock

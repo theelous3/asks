@@ -535,7 +535,6 @@ class Request:
         if get_body:
             if self.callback is not None:
                 endof = await self._body_callback(hconnection)
-                assert isinstance(endof, h11.EndOfMessage)
             elif self.stream is not None:
                 if 199 < resp_data['status_code'] < 300:
                     if not ((self.scheme == self.initial_scheme and
