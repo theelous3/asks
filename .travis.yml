@@ -8,8 +8,8 @@ python:
 
 install:
    - ./setup.py develop
-   - pip3 install git+git://github.com/PyCQA/pylint.git@56daa5c3a0d2d6592c673c2932c354b68679997f
-   - pip3 install git+git://github.com/PyCQA/astroid.git@313c0c34100118be87164214bd22b226a748166d
+   - pip3 install git+git://github.com/PyCQA/pylint.git@79f45263a8904533160d3fa0d4e69b11d3d7d315
+   - pip3 install git+git://github.com/PyCQA/astroid.git@12b673267dce7c899ca384792386ed9b657fe66a
 
 script:
   - cd tests
