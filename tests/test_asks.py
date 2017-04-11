@@ -189,9 +189,8 @@ async def callback_example(chunk):
 
 @curio_run
 async def test_callback():
-    img = b''
-    r = await asks.get('http://httpbin.org/image/png',
-                       callback=callback_example)
+    await asks.get('http://httpbin.org/image/png',
+                   callback=callback_example)
     assert len(callback_data) == 8090
 
 
