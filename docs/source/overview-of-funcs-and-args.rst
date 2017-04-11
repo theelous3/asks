@@ -106,7 +106,7 @@ Handy list of builtin encodings: https://gist.github.com/theelous3/7d6a3fe20a219
 Limiting Redirects
 __________________
 
-You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests. ::
+You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is ``20``. asks will not redirect on HEAD requests. ::
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))

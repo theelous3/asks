@@ -91,7 +91,7 @@ class Request:
         self.callback = None
         self.stream = None
         self.timeout = None
-        self.max_redirects = float('inf')
+        self.max_redirects = 20
         self.sock = None
         self.persist_cookies = None
 
@@ -294,6 +294,8 @@ class Request:
         '''
         redirect, force_get, location = False, None, None
         if 300 <= response_obj.status_code < 400:
+            if response_obj.status_code == 303:
+                self.data, self.json, self.file = None, None, None
             if response_obj.status_code in [301, 305]:
                 # redirect / force GET / location
                 redirect = True
