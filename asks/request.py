@@ -346,8 +346,8 @@ class Request:
         '''
         self.sock._active = False
         await self.session._replace_connection(self.sock)
-        from asks.sessions import DSession
-        if isinstance(self.session, DSession):
+        from asks.sessions import Session
+        if isinstance(self.session, Session):
             self.sock = await self.session._grab_connection(
                 self.uri)
             self.port = self.sock.port

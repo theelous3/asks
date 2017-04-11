@@ -3,7 +3,7 @@ asks - An overview of the functions and kw/argumetns.
 
 asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
-The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
+The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` and ``HSession`` classes as methods.
 
 
 General HTTP methods
@@ -33,7 +33,7 @@ All functions / methods share the same set of args / keyword args, though not al
 Passing Queries
 _______________
 
-The ``params`` and ``data`` args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively. ::
+The ``params`` and ``data`` args take a dictionary and convert it in to a query string to be appended to to url, or sent in the request body, respectively. ::
 
     async def example():
         r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
@@ -41,7 +41,7 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a valid 
     # sends as request path:
     b'/?Elmo=wants+data'
 
-You may also pass strings and asks will attempt to format them correctly. ::
+You may also pass strings and iterables, asks will attempt to format them correctly. ::
 
     async def example():
         r = await asks.get('www.example.com', data='Elmo wants data'))
@@ -153,7 +153,7 @@ You can stream the body of a response by setting ``stream=True`` , and iterating
 
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
-        with open('our_image.png', 'ab') as out_file:
+        async with curio.aopen('our_image.png', 'ab') as out_file:
             async for bytechunk in r.body:
                 out_file.write(bytechunk)
 

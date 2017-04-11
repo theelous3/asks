@@ -4,7 +4,7 @@ Has minimal tests, but currently working well!
 
 TO DO:
     * Write more tests.
-    * Especially for DSession
+    * Especially for Session
 '''
 
 # pylint: disable=no-else-return
@@ -22,7 +22,7 @@ from .utils import get_netloc_port
 from .errors import RequestTimeout
 
 
-__all__ = ['Session', 'DSession']
+__all__ = ['HSession', 'Session']
 
 
 class BaseSession:
@@ -122,10 +122,10 @@ class BaseSession:
     options = partialmethod(request, 'OPTIONS')
 
 
-class Session(BaseSession):
+class HSession(BaseSession):
     '''
     The heart of asks. Async and connection pooling are a wonderful
-    combination. This session class is a quick, efficent, and (if you like,
+    combination. This HSession class is a quick, efficent, and (if you like,
     sateful) abstraction over the base http method functions.
     '''
     def __init__(self,
@@ -191,7 +191,7 @@ class Session(BaseSession):
         return self.host + (self.endpoint or '')
 
 
-class DSession(BaseSession):
+class Session(BaseSession):
     '''
     The disparate session class, for handling piles of unrelated requests.
     '''

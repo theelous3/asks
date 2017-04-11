@@ -27,7 +27,7 @@ A handy way of dealing with this on an example ``url_list`` is to pass the enume
 
     sorted_results = [response for _, response in sorted(results.items()]
 
-    s = asks.DSession(connections=10)
+    s = asks.Session(connections=10)
     curio.run(main(url_list))
 
 In the above example, ``sorted_results`` is a list of response objects in the same order as ``url_list``.
@@ -58,7 +58,7 @@ An example of multiple downloads with streaming: ::
 
     async def downloader(filename, url):
         r = await asks.get(url, stream=True)
-        with open(filename, 'ab') as out_file:
+        async with curio.aopen(filename, 'ab') as out_file:
             async for bytechunk in r.body:
                 out_file.write(bytechunk)
 
