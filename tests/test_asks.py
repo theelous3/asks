@@ -199,15 +199,16 @@ async def test_callback():
 
 # Test HSession with two pooled connections on four get requests.
 async def hsession_t_smallpool(s):
-    for _ in range(4):
-        r = await s.get(path='/get')
-        assert r.status_code == 200
+    r = await s.get(path='/get')
+    assert r.status_code == 200
 
 
 @curio_run
 async def test_hsession_smallpool():
     s = HSession('http://httpbin.org', connections=2)
-    await curio.spawn(hsession_t_smallpool(s))
+    async with curio.TaskGroup() as g:
+        for _ in range(10):
+            await g.spawn(hsession_t_smallpool(s))
 
 
 # Test stateful HSession
@@ -220,8 +221,8 @@ async def hsession_t_stateful(s):
 async def test_session_stateful():
     s = HSession(
         'https://google.ie', persist_cookies=True)
-    await curio.spawn(hsession_t_stateful(s))
-    await curio.sleep(1.5)  # Terrible hack, hassle of .join() in test though.
+    async with curio.TaskGroup() as g:
+        await g.spawn(hsession_t_stateful(s))
     assert 'www.google.ie' in s.cookie_tracker_obj.domain_dict.keys()
 
 
@@ -236,6 +237,6 @@ async def session_t_smallpool(s, url):
 
 @curio_run
 async def test_Session_smallpool():
-    s = Session(connections=1)
-    for _ in range(2):
+    s = Session(connections=2)
+    for _ in range(10):
         await curio.spawn(session_t_smallpool(s, 'http://httpbin.org/get'))

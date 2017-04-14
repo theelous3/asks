@@ -229,7 +229,6 @@ class Request:
         '''
         await self._send(request_bytes, body_bytes, hconnection)
         response_obj = await self._catch_response(hconnection)
-
         response_obj._parse_cookies(self.netloc)
 
         # If there's a cookie tracker object, store any cookies we
@@ -509,7 +508,6 @@ class Request:
             The most recent response object.
         '''
         response = await self._recv_event(hconnection)
-
         resp_data = {'status_code': response.status_code,
                      'reason_phrase': str(response.reason),
                      'http_version': str(response.http_version),
