@@ -46,7 +46,7 @@
   <div class="section" id="asks-an-overview-of-the-functions-and-kw-argumetns">
 <h1>asks - An overview of the functions and kw/argumetns.<a class="headerlink" href="#asks-an-overview-of-the-functions-and-kw-argumetns" title="Permalink to this headline">¶</a></h1>
 <p>asks is <em>heavily</em> influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you&#8217;re familiar with the format you can pretty much skip to the distinctions regarding <a class="reference external" href="https://asks.readthedocs.io/en/latest/a-look-at-sessions.html">sessions</a></p>
-<p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">Session</span></code> class as methods.</p>
+<p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">Session</span></code> and <code class="docutils literal"><span class="pre">HSession</span></code> classes as methods.</p>
 <div class="section" id="general-http-methods">
 <h2>General HTTP methods<a class="headerlink" href="#general-http-methods" title="Permalink to this headline">¶</a></h2>
 <p>asks supports <code class="docutils literal"><span class="pre">get()</span></code>, <code class="docutils literal"><span class="pre">head()</span></code>, <code class="docutils literal"><span class="pre">post()</span></code>, <code class="docutils literal"><span class="pre">put()</span></code>, <code class="docutils literal"><span class="pre">delete()</span></code>, <code class="docutils literal"><span class="pre">options()</span></code> and <code class="docutils literal"><span class="pre">request()</span></code>.</p>
@@ -68,7 +68,7 @@
 </div>
 <div class="section" id="passing-queries">
 <h2>Passing Queries<a class="headerlink" href="#passing-queries" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">params</span></code> and <code class="docutils literal"><span class="pre">data</span></code> args take a dictionary and convert it in to a valid query string to be appended to to url, or sent in the request body, respectively.</p>
+<p>The <code class="docutils literal"><span class="pre">params</span></code> and <code class="docutils literal"><span class="pre">data</span></code> args take a dictionary and convert it in to a query string to be appended to to url, or sent in the request body, respectively.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Elmo&#39;</span><span class="p">:</span> <span class="s1">&#39;wants data&#39;</span><span class="p">}))</span>
 
@@ -76,7 +76,7 @@
 <span class="sa">b</span><span class="s1">&#39;/?Elmo=wants+data&#39;</span>
 </pre></div>
 </div>
-<p>You may also pass strings and asks will attempt to format them correctly.</p>
+<p>You may also pass strings and iterables, asks will attempt to format them correctly.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;Elmo wants data&#39;</span><span class="p">))</span>
 
@@ -134,7 +134,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 </div>
 <div class="section" id="limiting-redirects">
 <h2>Limiting Redirects<a class="headerlink" href="#limiting-redirects" title="Permalink to this headline">¶</a></h2>
-<p>You can limit the number of redirects by setting <code class="docutils literal"><span class="pre">max_redirects</span></code>. By default, the number of redirects is unlimited. asks will not redirect on HEAD requests.</p>
+<p>You can limit the number of redirects by setting <code class="docutils literal"><span class="pre">max_redirects</span></code>. By default, the number of redirects is <code class="docutils literal"><span class="pre">20</span></code>. asks will not redirect on HEAD requests.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;www.httpbin.org/redirect/3&#39;</span><span class="p">,</span> <span class="n">max_redirects</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
@@ -175,7 +175,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
         <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
             <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
 

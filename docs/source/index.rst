@@ -21,13 +21,17 @@ _____________
 
 asks is an async http lib that can best be described as an effort to bring the same level of usable abstraction that requests offers synchronous python, to asynchronous python programming. Ideal for api interactions, webscraping etc.
 
+It is important to note that the code examples in this documentation are to showcase asks, and not curio. In real code, it would be benificial to use things like curio's taskgroups and other neat tools to manage your requests. Here's a link to curio's docs for refrence:
+
+http://curio.rtfd.io/
+
 
 Installation:
 _____________
 
-asks requires `Python 3.6 <www.python.org>`_. and `Curio <https://github.com/dabeaz/curio>`_.
+asks requires `Python 3.6 <www.python.org>`_ , `Curio <https://github.com/dabeaz/curio>`_ and `h11 <https://github.com/njsmith/h11>`_.
 
-The easiest way to install asks, is to pip the master git repo::
+The easiest way to install all three, is to pip the master git repo::
 
     pip install git+https://github.com/theelous3/asks.git
 
@@ -80,6 +84,8 @@ Here's an example of making 1000 calls to an api and storing the results in a li
     async def main(path_list):
         for path in path_list:
             curio.spawn(grabber(path))
+
+    curio.run(main(path_list))
 
 Now we're talkin'.
 

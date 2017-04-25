@@ -32,6 +32,8 @@ A handy way of dealing with this on an example ``url_list`` is to pass the enume
 
 In the above example, ``sorted_results`` is a list of response objects in the same order as ``url_list``.
 
+There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio's taskgroups.
+
 
 Handling response body content (downloads etc.)
 ___________________________________________________________

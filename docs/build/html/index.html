@@ -67,7 +67,7 @@
 <li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#creating-a-session">Creating a Session</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#many-connections-and-connection-pooling">Many Connections and Connection Pooling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#stateful-sessions">Stateful Sessions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#creating-a-dsession">Creating a DSession</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#id1">Creating a Session</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="the-response-object.html">asks - The Response Object</a><ul>
@@ -96,11 +96,13 @@
 <div class="section" id="what-is-asks">
 <h2>What is asks?<a class="headerlink" href="#what-is-asks" title="Permalink to this headline">¶</a></h2>
 <p>asks is an async http lib that can best be described as an effort to bring the same level of usable abstraction that requests offers synchronous python, to asynchronous python programming. Ideal for api interactions, webscraping etc.</p>
+<p>It is important to note that the code examples in this documentation are to showcase asks, and not curio. In real code, it would be benificial to use things like curio&#8217;s taskgroups and other neat tools to manage your requests. Here&#8217;s a link to curio&#8217;s docs for refrence:</p>
+<p><a class="reference external" href="http://curio.rtfd.io/">http://curio.rtfd.io/</a></p>
 </div>
 <div class="section" id="installation">
 <h2>Installation:<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>asks requires <a class="reference external" href="www.python.org">Python 3.6</a>. and <a class="reference external" href="https://github.com/dabeaz/curio">Curio</a>.</p>
-<p>The easiest way to install asks, is to pip the master git repo:</p>
+<p>asks requires <a class="reference external" href="www.python.org">Python 3.6</a> , <a class="reference external" href="https://github.com/dabeaz/curio">Curio</a> and <a class="reference external" href="https://github.com/njsmith/h11">h11</a>.</p>
+<p>The easiest way to install all three, is to pip the master git repo:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">theelous3</span><span class="o">/</span><span class="n">asks</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
@@ -130,16 +132,17 @@
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># many_get.py</span>
 <span class="c1"># make a whole pile of api calls and store</span>
 <span class="c1"># their response objects in a list.</span>
+<span class="c1"># Using the homogeneous-session.</span>
 
-<span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
+<span class="kn">import</span> <span class="nn">asks</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
 <span class="n">path_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;1000&#39;</span><span class="p">,</span> <span class="s1">&#39;paths&#39;</span><span class="p">]</span>
 
 <span class="n">retrieved_responses</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
-             <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">HSession</span><span class="p">(</span><span class="s1">&#39;https://some-web-service.com&#39;</span><span class="p">,</span>
+                  <span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">grabber</span><span class="p">(</span><span class="n">a_path</span><span class="p">):</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">a_path</span><span class="p">)</span>
