@@ -14,7 +14,6 @@ _________
    a-look-at-sessions
    the-response-object
    idioms
-   refrence-manual
 
 What is asks?
 _____________
@@ -29,12 +28,14 @@ http://curio.rtfd.io/
 Installation:
 _____________
 
-asks requires `Python 3.6 <www.python.org>`_ , `Curio <https://github.com/dabeaz/curio>`_ and `h11 <https://github.com/njsmith/h11>`_.
+asks requires `Python 3.6 <www.python.org>`_ .
 
-The easiest way to install all three, is to pip the master git repo::
+The easiest way to install asks is to pip the master git repo::
 
     pip install git+https://github.com/theelous3/asks.git
 
+asks was built for use with `Curio <https://github.com/dabeaz/curio>`_.
+Internally asks uses the excellent `h11 <https://github.com/njsmith/h11>`_.
 
 A dirty little example:
 _______________________

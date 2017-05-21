@@ -509,8 +509,8 @@ class Request:
         '''
         response = await self._recv_event(hconnection)
         resp_data = {'status_code': response.status_code,
-                     'reason_phrase': str(response.reason),
-                     'http_version': str(response.http_version),
+                     'reason_phrase': str(response.reason, 'utf-8'),
+                     'http_version': str(response.http_version, 'utf-8'),
                      'headers': c_i_dict(
                         [(str(name, 'utf-8'), str(value, 'utf-8'))
                          for name, value in response.headers]),
