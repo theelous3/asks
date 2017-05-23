@@ -104,17 +104,17 @@ class Response:
             return self._decompress(self.body)
 
     @property
-    '''
-    Returns the content as-is after decompression, if any.
-    '''
     def content(self):
+        '''
+        Returns the content as-is after decompression, if any.
+        '''
         return self._decompress(self.body)
 
     @property
-    '''
-    Returns the response body as received.
-    '''
     def raw(self):
+        '''
+        Returns the response body as received.
+        '''
         return self.body
 
 
