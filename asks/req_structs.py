@@ -1,3 +1,6 @@
+'''
+Some structures used throughout asks.
+'''
 from collections import OrderedDict, MutableMapping, Mapping, deque
 
 

@@ -9,13 +9,13 @@ For more info on how to use these methods, take a `look-see <https://asks.readth
 
 **There are two kinds of session in asks.** The disparate session (``DSession``) and the homogeneous session(``HSession``).
 
-The `DSession`` class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this. This is like requests' ``Session`` and should be familiar to use.
+The ``DSession`` class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this. This is like requests' ``Session`` and should be familiar to use.
 
 The ``HSession`` class is aimed at working with many requests to a single host. Dealing with an API is a great example of this and you'll see more on that below.
 
 
-Creating a HSession
-___________________
+HSession
+________
 
 
 The only required argument to HSession's ``__init__`` is a top level host name, like ``https://example.org`` . ::
@@ -26,7 +26,7 @@ The only required argument to HSession's ``__init__`` is a top level host name, 
         s = HSession('https://example.org')
         r = await s.get()
 
-As you can see, unlike requests' ``Session`` and asks ``DSession`` , we don't need to give any arguments at all to a ``HSession`` 's' ``get()`` method. Pretty weird right?
+As you can see, unlike requests' ``Session`` and asks ``DSession`` , we don't *need* to give any arguments at all to a ``HSession`` 's' ``get()`` method. Pretty weird right?
 
 This means we can do things like set an endpoint, and just feed querys in to our ``.get()`` though the ``params`` arg without rebuilding the path for the request each time.
 
@@ -62,8 +62,8 @@ The ``connections`` argument dictates the maximum number of concurrent connectio
 
 Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is **selfish**. Don't be that guy / gal. Rate limit yourself by placing ``curio.sleep(n)``'s in appropriate the place(s), or utilising curio's semaphores / taskgroups / queues etc.
 
-Creating a DSession
-___________________
+DSession
+________
 
 The main difference between the ``DSession`` and the ``HSession`` is that you must supply a url to the ``DSession`` methods much like you would to a requests' ``Session``. Aside from that, the same stuff applies. You can add ``params`` , ``persist_cookies=True`` and do all of that other good stuff that you can do with the ``HSession`` class and methods. ::
 

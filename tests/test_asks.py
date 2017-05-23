@@ -2,7 +2,7 @@ import curio
 import pytest
 
 import asks
-from asks.sessions import HSession, Session
+from asks.sessions import HSession, DSession
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
@@ -226,7 +226,7 @@ async def test_session_stateful():
     assert 'www.google.ie' in s.cookie_tracker_obj.domain_dict.keys()
 
 
-# Session Tests
+# DSession Tests
 # ==============
 
 # Test Session with one pooled connections on four get requests.
@@ -237,6 +237,6 @@ async def session_t_smallpool(s, url):
 
 @curio_run
 async def test_Session_smallpool():
-    s = Session(connections=2)
+    s = DSession(connections=2)
     for _ in range(10):
         await curio.spawn(session_t_smallpool(s, 'http://httpbin.org/get'))

@@ -82,6 +82,10 @@ class Response:
         return body
 
     def json(self):
+        '''
+        If the response's body is valid json, we load it as a python dict
+        and return it.
+        '''
         body = self._decompress(self.body)
         try:
             return _json.loads(body.decode(self.encoding, errors='replace'))
@@ -90,6 +94,9 @@ class Response:
 
     @property
     def text(self):
+        '''
+        Returns the (maybe decompressed) decoded version of the body.
+        '''
         try:
             return self._decompress(self.body).decode(self.encoding,
                                                       errors='replace')
@@ -97,10 +104,16 @@ class Response:
             return self._decompress(self.body)
 
     @property
+    '''
+    Returns the content as-is after decompression, if any.
+    '''
     def content(self):
         return self._decompress(self.body)
 
     @property
+    '''
+    Returns the response body as received.
+    '''
     def raw(self):
         return self.body
 

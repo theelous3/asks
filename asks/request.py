@@ -343,12 +343,13 @@ class Request:
     async def _get_new_sock(self, off_base_loc=False):
         '''
         On 'Connetcion: close' headers we've to create a new connection.
-        This reaches in to the parent session and pulls a switcheroo.
+        This reaches in to the parent session and pulls a switcheroo, dunking
+        the current connection and requesting a new one.
         '''
         self.sock._active = False
         await self.session._replace_connection(self.sock)
-        from asks.sessions import Session
-        if isinstance(self.session, Session):
+        from asks.sessions import DSession
+        if isinstance(self.session, DSession):
             self.sock = await self.session._grab_connection(
                 self.uri)
             self.port = self.sock.port
