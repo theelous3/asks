@@ -64,10 +64,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="a-look-at-sessions.html">asks - A Look at Sessions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#creating-a-session">Creating a Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#many-connections-and-connection-pooling">Many Connections and Connection Pooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#hsession">HSession</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#dsession">DSession</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#stateful-sessions">Stateful Sessions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="a-look-at-sessions.html#id1">Creating a Session</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="the-response-object.html">asks - The Response Object</a><ul>
@@ -81,13 +80,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idioms.html">asks - Useful idioms and tricks.</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="idioms.html#sanely-making-many-requests-with-semaphores">Sanely making many requests (with semaphores)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idioms.html#maintaining-order">Maintaining Order</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idioms.html#handling-response-body-content-downloads-etc">Handling response body content (downloads etc.)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idioms.html#resending-an-asks-cookie">Resending an asks.Cookie</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="refrence-manual.html">asks - refrence manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="refrence-manual.html#coming-soon">Coming soon!</a></li>
 </ul>
 </li>
 </ul>
@@ -101,11 +97,13 @@
 </div>
 <div class="section" id="installation">
 <h2>Installation:<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>asks requires <a class="reference external" href="www.python.org">Python 3.6</a> , <a class="reference external" href="https://github.com/dabeaz/curio">Curio</a> and <a class="reference external" href="https://github.com/njsmith/h11">h11</a>.</p>
-<p>The easiest way to install all three, is to pip the master git repo:</p>
+<p>asks requires <a class="reference external" href="www.python.org">Python 3.6</a> .</p>
+<p>The easiest way to install asks is to pip the master git repo:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">theelous3</span><span class="o">/</span><span class="n">asks</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
+<p>asks was built for use with <a class="reference external" href="https://github.com/dabeaz/curio">Curio</a>.
+Internally asks uses the excellent <a class="reference external" href="https://github.com/njsmith/h11">h11</a>.</p>
 </div>
 <div class="section" id="a-dirty-little-example">
 <h2>A dirty little example:<a class="headerlink" href="#a-dirty-little-example" title="Permalink to this headline">¶</a></h2>
@@ -151,6 +149,8 @@
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
         <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">grabber</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+<span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">path_list</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Now we&#8217;re talkin&#8217;.</p>

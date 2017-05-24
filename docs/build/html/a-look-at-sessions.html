@@ -46,35 +46,31 @@
   <div class="section" id="asks-a-look-at-sessions">
 <h1>asks - A Look at Sessions<a class="headerlink" href="#asks-a-look-at-sessions" title="Permalink to this headline">¶</a></h1>
 <p>While something like requests makes grabbing a single request very simple (and asks does too!); the sessions in asks aim to make getting a great many things simple as well.</p>
-<p>asks&#8217; sessions&#8217; methods are the same as the base asks functions, supporting <code class="docutils literal"><span class="pre">get()</span></code>, <code class="docutils literal"><span class="pre">head()</span></code>, <code class="docutils literal"><span class="pre">post()</span></code>, <code class="docutils literal"><span class="pre">put()</span></code>, <code class="docutils literal"><span class="pre">delete()</span></code> and <code class="docutils literal"><span class="pre">options()</span></code>.</p>
+<p>asks&#8217; sessions&#8217; methods are the same as the base asks functions, supporting <code class="docutils literal"><span class="pre">.get()</span></code>, <code class="docutils literal"><span class="pre">.head()</span></code>, <code class="docutils literal"><span class="pre">.post()</span></code>, <code class="docutils literal"><span class="pre">.put()</span></code>, <code class="docutils literal"><span class="pre">.delete()</span></code>, <code class="docutils literal"><span class="pre">.options()</span></code> and <code class="docutils literal"><span class="pre">.request()</span></code>.</p>
 <p>For more info on how to use these methods, take a <a class="reference external" href="https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html">look-see</a>.</p>
-<p><strong>There are two kinds of session in asks. The</strong> <code class="docutils literal"><span class="pre">Session</span></code> <strong>and the homogeneous session(</strong> <code class="docutils literal"><span class="pre">HSession</span></code> <strong>).</strong></p>
-<p>The <code class="docutils literal"><span class="pre">HSession</span></code> class is aimed at working with many requests to a single host. Dealing with an API is a great example of this.</p>
-<p>The <cite>DSession`</cite> class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this.</p>
-<p>The reason for two classes, is that they each have their own streamlined connection pooling, and the <code class="docutils literal"><span class="pre">HSession</span></code> methods do not require a url or path in order to facilitate many similar / slightly different calls.</p>
-<div class="section" id="creating-a-session">
-<h2>Creating a Session<a class="headerlink" href="#creating-a-session" title="Permalink to this headline">¶</a></h2>
-<p>(Specifically a <code class="docutils literal"><span class="pre">HSession</span></code> and not a <code class="docutils literal"><span class="pre">Session</span></code>)</p>
+<p><strong>There are two kinds of session in asks.</strong> The disparate session (<code class="docutils literal"><span class="pre">DSession</span></code>) and the homogeneous session(<code class="docutils literal"><span class="pre">HSession</span></code>).</p>
+<p>The <code class="docutils literal"><span class="pre">DSession</span></code> class is aimed at working with many requests, to many hosts! Webscraping and such is an excellent use for this. This is like requests&#8217; <code class="docutils literal"><span class="pre">Session</span></code> and should be familiar to use.</p>
+<p>The <code class="docutils literal"><span class="pre">HSession</span></code> class is aimed at working with many requests to a single host. Dealing with an API is a great example of this and you&#8217;ll see more on that below.</p>
+<div class="section" id="hsession">
+<h2>HSession<a class="headerlink" href="#hsession" title="Permalink to this headline">¶</a></h2>
 <p>The only required argument to HSession&#8217;s <code class="docutils literal"><span class="pre">__init__</span></code> is a top level host name, like <code class="docutils literal"><span class="pre">https://example.org</span></code> .</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">HSession</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">HSession</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">HSession</span><span class="p">(</span><span class="s1">&#39;https://example.org&#39;</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>As you can see, unlike requests&#8217; session and asks <code class="docutils literal"><span class="pre">Session</span></code> , we don&#8217;t need to give any arguments at all to a <code class="docutils literal"><span class="pre">HSession</span></code> &#8216;s&#8217; <code class="docutils literal"><span class="pre">get()</span></code> method. Pretty weird right? But, very convenient. This means we can do things like set an endpoint, and just feed querys in to our <code class="docutils literal"><span class="pre">.get()</span></code> though the <code class="docutils literal"><span class="pre">params</span></code> kw-arg without rebuilding the path for the request each time.</p>
-</div>
-<div class="section" id="many-connections-and-connection-pooling">
-<h2>Many Connections and Connection Pooling<a class="headerlink" href="#many-connections-and-connection-pooling" title="Permalink to this headline">¶</a></h2>
-<p>In the next example, we&#8217;ll make ten thousand calls over fifty connections to <a class="reference external" href="http://echo.jsontest.com">http://echo.jsontest.com</a>. We&#8217;ll do much of the same as above, except we&#8217;ll define an endpoint of <code class="docutils literal"><span class="pre">/asks/test</span></code> and in each request pass a number as a path, like <code class="docutils literal"><span class="pre">/1</span></code>.</p>
+<p>As you can see, unlike requests&#8217; <code class="docutils literal"><span class="pre">Session</span></code> and asks <code class="docutils literal"><span class="pre">DSession</span></code> , we don&#8217;t <em>need</em> to give any arguments at all to a <code class="docutils literal"><span class="pre">HSession</span></code> &#8216;s&#8217; <code class="docutils literal"><span class="pre">get()</span></code> method. Pretty weird right?</p>
+<p>This means we can do things like set an endpoint, and just feed querys in to our <code class="docutils literal"><span class="pre">.get()</span></code> though the <code class="docutils literal"><span class="pre">params</span></code> arg without rebuilding the path for the request each time.</p>
+<p>In the next example, we&#8217;ll make ten thousand calls over fifty connections to <a class="reference external" href="http://echo.jsontest.com">http://echo.jsontest.com</a>. We&#8217;ll do much of the same as above, except we&#8217;ll set an endpoint of <code class="docutils literal"><span class="pre">/asks/test</span></code> and in each request pass a number as a path, like <code class="docutils literal"><span class="pre">/1</span></code>.</p>
 <p>The result will be a bunch of calls that look like</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">http://echo.jsontest.com/asks/test/1</span></code></li>
 <li><code class="docutils literal"><span class="pre">http://echo.jsontest.com/asks/test/2</span></code></li>
 <li><code class="docutils literal"><span class="pre">http://echo.jsontest.com/asks/test/etc.</span></code></li>
 </ul>
-<p>Note that actually doing this will probably get you timed out or banned by that website.</p>
+<p>Please don&#8217;t actually do this or the jsontest.com website will be very unhappy.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">HSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
@@ -91,24 +87,13 @@
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><strong>The default number of connections in the pool is a measly ONE.</strong> If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%.
-This number dictates the maximum number of concurrent connections asks will be allowed to make at any point of the <code class="docutils literal"><span class="pre">HSessions</span></code> lifespan. You <em>will</em> want to change the number of connections to a value that suits you and your target server.</p>
-<p>Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is <strong>selfish</strong>. Don&#8217;t be that guy / gal. Rate limit yourself by placing <code class="docutils literal"><span class="pre">curio.sleep(n)</span></code>&#8216;s in appropriate the place(s).</p>
+<p><strong>The default number of connections in the pool for a HSession is a measly ONE.</strong> If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%.</p>
+<p>The <code class="docutils literal"><span class="pre">connections</span></code> argument dictates the maximum number of concurrent connections asks will be allowed to make at any point of the <code class="docutils literal"><span class="pre">HSessions</span></code> lifespan. You <em>will</em> want to change the number of connections to a value that suits your needs and the server&#8217;s limitations. If no data is publicly available to guide you here, air of the low side.</p>
+<p>Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is <strong>selfish</strong>. Don&#8217;t be that guy / gal. Rate limit yourself by placing <code class="docutils literal"><span class="pre">curio.sleep(n)</span></code>&#8216;s in appropriate the place(s), or utilising curio&#8217;s semaphores / taskgroups / queues etc.</p>
 </div>
-<div class="section" id="stateful-sessions">
-<h2>Stateful Sessions<a class="headerlink" href="#stateful-sessions" title="Permalink to this headline">¶</a></h2>
-<p>HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> kwarg on session instanciation.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">HSession</span>
-
-<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">HSession</span><span class="p">(</span><span class="s1">&#39;https://jsontest.com&#39;</span><span class="p">,</span> <span class="n">persist_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="id1">
-<h2>Creating a Session<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>The main difference between the <code class="docutils literal"><span class="pre">Session</span></code> and the <code class="docutils literal"><span class="pre">HSession</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">Session</span></code> methods. Aside from that, the usual stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">HSession</span></code> class and methods.</p>
+<div class="section" id="dsession">
+<h2>DSession<a class="headerlink" href="#dsession" title="Permalink to this headline">¶</a></h2>
+<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">HSession</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods much like you would to a requests&#8217; <code class="docutils literal"><span class="pre">Session</span></code>. Aside from that, the same stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">HSession</span></code> class and methods.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
@@ -128,6 +113,17 @@ This number dictates the maximum number of concurrent connections asks will be a
 </div>
 <p>The default number of connections in the <code class="docutils literal"><span class="pre">Session</span></code> pool is <code class="docutils literal"><span class="pre">20</span></code>.</p>
 </div>
+<div class="section" id="stateful-sessions">
+<h2>Stateful Sessions<a class="headerlink" href="#stateful-sessions" title="Permalink to this headline">¶</a></h2>
+<p>HTTP is stateless, and by default asks is too. You can turn stateful cookie returning on by supplying the <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> kwarg on session instanciation.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">HSession</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">HSession</span><span class="p">(</span><span class="s1">&#39;https://example.com&#39;</span><span class="p">,</span> <span class="n">persist_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -139,10 +135,9 @@ This number dictates the maximum number of concurrent connections asks will be a
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">asks - A Look at Sessions</a><ul>
-<li><a class="reference internal" href="#creating-a-session">Creating a Session</a></li>
-<li><a class="reference internal" href="#many-connections-and-connection-pooling">Many Connections and Connection Pooling</a></li>
+<li><a class="reference internal" href="#hsession">HSession</a></li>
+<li><a class="reference internal" href="#dsession">DSession</a></li>
 <li><a class="reference internal" href="#stateful-sessions">Stateful Sessions</a></li>
-<li><a class="reference internal" href="#id1">Creating a Session</a></li>
 </ul>
 </li>
 </ul>

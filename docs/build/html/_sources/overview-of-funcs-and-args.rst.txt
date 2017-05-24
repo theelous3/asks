@@ -125,7 +125,7 @@ Don't want to wait forever? Me neither. You may set a timeout with the timeout a
 Authing
 _______
 
-Available off the bat, we have http basic auth and http digest auth. These are both crappy and next on the agenda is adding support for good auth.
+Available off the bat, we have http basic auth and http digest auth.
 
 To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``__init__`` of an auth class. For example::
 

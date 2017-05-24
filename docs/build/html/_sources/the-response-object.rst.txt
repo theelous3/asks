@@ -3,20 +3,19 @@ asks - The Response Object
 
 A plain ol' response object, ``Response`` is returned from every request.
 
-It has some attribs/properties to access the response content from, and it works some minor magic when it can. Nothing too voodoo though.
+It has some attribs/properties to access the response content from. Nothing too voodoo.
 
 Encoding
 ________
 
-By default the ``Response`` object tries to use ``utf-8``.
+By default the ``Response`` object uses ``utf-8``.
 
-The response object will try to guess its own encoding before it's returned, given the appropriate headers in the response.
+The response object will try to glean encoding from the response headers if available, before it's returned.
 
-You can override the guessed or default encoding with either a builtin encoding or one you've registered locally with your codecs module by accessing ``Response.encoding``. ::
+You can override the response-set or default encoding with either a builtin encoding or one you've registered locally with your codecs module by accessing the response's ``.encoding`` attribute. ::
 
     async def main():
         r = asks.get('http://example.com')
-
         r.encoding = 'latin-1'
 
 Status Line
@@ -27,7 +26,7 @@ The three parts of the status line, are the HTTP-Version, Status-Code and Reason
     async def main():
         r = asks.get('http://example.com')
 
-        r.http_version  # -> 'HTTP/1.1'
+        r.http_version  # -> '1.1'
         r.status_code   # -> 200
         r.reason_phrase # -> 'OK'
 
@@ -76,6 +75,7 @@ To view the body exactly as it was sent, just use the ``.body`` attribute. Note 
             r.text
             r.body
 
+If the request was made with ``stream=True``, the ``.body`` attribute will be an iterable from which you can stream data.
 
 Cookies
 _______

@@ -46,15 +46,14 @@
   <div class="section" id="asks-the-response-object">
 <h1>asks - The Response Object<a class="headerlink" href="#asks-the-response-object" title="Permalink to this headline">¶</a></h1>
 <p>A plain ol&#8217; response object, <code class="docutils literal"><span class="pre">Response</span></code> is returned from every request.</p>
-<p>It has some attribs/properties to access the response content from, and it works some minor magic when it can. Nothing too voodoo though.</p>
+<p>It has some attribs/properties to access the response content from. Nothing too voodoo.</p>
 <div class="section" id="encoding">
 <h2>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
-<p>By default the <code class="docutils literal"><span class="pre">Response</span></code> object tries to use <code class="docutils literal"><span class="pre">utf-8</span></code>.</p>
-<p>The response object will try to guess its own encoding before it&#8217;s returned, given the appropriate headers in the response.</p>
-<p>You can override the guessed or default encoding with either a builtin encoding or one you&#8217;ve registered locally with your codecs module by accessing <code class="docutils literal"><span class="pre">Response.encoding</span></code>.</p>
+<p>By default the <code class="docutils literal"><span class="pre">Response</span></code> object uses <code class="docutils literal"><span class="pre">utf-8</span></code>.</p>
+<p>The response object will try to glean encoding from the response headers if available, before it&#8217;s returned.</p>
+<p>You can override the response-set or default encoding with either a builtin encoding or one you&#8217;ve registered locally with your codecs module by accessing the response&#8217;s <code class="docutils literal"><span class="pre">.encoding</span></code> attribute.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">)</span>
-
     <span class="n">r</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;latin-1&#39;</span>
 </pre></div>
 </div>
@@ -65,7 +64,7 @@
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">)</span>
 
-    <span class="n">r</span><span class="o">.</span><span class="n">http_version</span>  <span class="c1"># -&gt; &#39;HTTP/1.1&#39;</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">http_version</span>  <span class="c1"># -&gt; &#39;1.1&#39;</span>
     <span class="n">r</span><span class="o">.</span><span class="n">status_code</span>   <span class="c1"># -&gt; 200</span>
     <span class="n">r</span><span class="o">.</span><span class="n">reason_phrase</span> <span class="c1"># -&gt; &#39;OK&#39;</span>
 </pre></div>
@@ -110,6 +109,7 @@
         <span class="n">r</span><span class="o">.</span><span class="n">body</span>
 </pre></div>
 </div>
+<p>If the request was made with <code class="docutils literal"><span class="pre">stream=True</span></code>, the <code class="docutils literal"><span class="pre">.body</span></code> attribute will be an iterable from which you can stream data.</p>
 </div>
 <div class="section" id="cookies">
 <h2>Cookies<a class="headerlink" href="#cookies" title="Permalink to this headline">¶</a></h2>

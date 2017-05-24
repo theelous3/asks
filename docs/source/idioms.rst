@@ -1,6 +1,41 @@
 asks - Useful idioms and tricks.
 ================================
 
+Sanely making many requests (with semaphores)
+_____________________________________________
+
+A (bounded) semaphore is like a sofa (sofaphore?). It can only fit so many tasks at once. If we have a semaphore who's maximum size is ``5`` then only ``5`` tasks can sit on it. If one task finishes, another task can sit down. This is an extremely simple and effective way to manage the resources used by asks when making large amounts of requests.
+
+If we wanted to request two thousand urls, we wouldn't want to spawn two thousand tasks and have them all fight for cpu time. ::
+
+
+    import asks
+    import curio
+
+    async def worker(sema, url):
+        async with sema:
+            r = await asks.get(url)
+            print('got ', url)
+
+
+    async def main(url_list):
+        sema = curio.BoundedSemaphore(value=2) # Set sofa size.
+        for url in url_list:
+            await curio.spawn(worker(sema, url))
+
+    url_list = ['http://httpbin.org/delay/5',
+                'http://httpbin.org/delay/1',
+                'http://httpbin.org/delay/2']
+
+    curio.run(main(url_list))
+
+This method of limiting works for the single request asks functions and for any of the sessions' methods.
+
+The result of running this is that the first and second url ('delay/5' and 'delay/1') run. 'delay/1' finishes, and allows the third url, 'delay/2' to run.
+
+* After one second, 'delay/1' finishes.
+* After three seconds, 'delay/2' finishes.
+* After five seconds, 'delay/5' finishes.
 
 Maintaining Order
 _________________
