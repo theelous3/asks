@@ -94,6 +94,7 @@
 <p>asks is an async http lib that can best be described as an effort to bring the same level of usable abstraction that requests offers synchronous python, to asynchronous python programming. Ideal for api interactions, webscraping etc.</p>
 <p>It is important to note that the code examples in this documentation are to showcase asks, and not curio. In real code, it would be benificial to use things like curio&#8217;s taskgroups and other neat tools to manage your requests. Here&#8217;s a link to curio&#8217;s docs for refrence:</p>
 <p><a class="reference external" href="http://curio.rtfd.io/">http://curio.rtfd.io/</a></p>
+<p>(The most useful thing to know when dealing with asks is a BoundedSemaphore, <a class="reference external" href="http://asks.readthedocs.io/en/latest/idioms.html#sanely-making-many-requests-with-semaphores">for which I&#8217;ve written an example with asks</a> )</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation:<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -166,6 +167,10 @@ Internally asks uses the excellent <a class="reference external" href="https://g
 <p>asks packs most if not all of the features requests does. The usual <code class="docutils literal"><span class="pre">.json()</span></code> ing of responses and such. You can take a more in depth look <a class="reference external" href="https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html">here</a>.</p>
 <p>However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus. More detail can be found <a class="reference external" href="https://asks.readthedocs.io/en/latest/a-look-at-sessions.html">here</a></p>
 </div>
+<div class="section" id="the-future">
+<h2>The Future<a class="headerlink" href="#the-future" title="Permalink to this headline">¶</a></h2>
+<p>As soon as <a class="reference external" href="https://github.com/python-trio/trio">trio</a> supports async file i/o, asks will be available for trio too :)</p>
+</div>
 <div class="section" id="about">
 <h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
 <p>asks was created by Mark Jameson</p>
@@ -190,6 +195,7 @@ Internally asks uses the excellent <a class="reference external" href="https://g
 <li><a class="reference internal" href="#a-far-finer-example">A far finer example:</a></li>
 <li><a class="reference internal" href="#why-asks">Why asks?</a></li>
 <li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#the-future">The Future</a></li>
 <li><a class="reference internal" href="#about">About</a></li>
 </ul>
 </li>

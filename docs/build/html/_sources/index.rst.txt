@@ -24,6 +24,7 @@ It is important to note that the code examples in this documentation are to show
 
 http://curio.rtfd.io/
 
+(The most useful thing to know when dealing with asks is a BoundedSemaphore, `for which I've written an example with asks <http://asks.readthedocs.io/en/latest/idioms.html#sanely-making-many-requests-with-semaphores>`_ )
 
 Installation:
 _____________
@@ -108,6 +109,9 @@ asks packs most if not all of the features requests does. The usual ``.json()`` 
 
 However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus. More detail can be found `here <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
+The Future
+__________
+As soon as `trio <https://github.com/python-trio/trio>`_ supports async file i/o, asks will be available for trio too :)
 
 About
 _____
