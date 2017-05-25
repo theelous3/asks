@@ -41,7 +41,7 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a query 
         r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
 
     # sends as request path:
-    b'/?Elmo=wants+data'
+    b'?Elmo=wants+data'
 
 You may also pass strings and iterables, asks will attempt to format them correctly. ::
 
@@ -49,7 +49,7 @@ You may also pass strings and iterables, asks will attempt to format them correc
         r = await asks.get('www.example.com', data='Elmo wants data'))
 
     # sends in request body:
-    b'/?Elmo+wants+data'
+    b'?Elmo+wants+data'
 
 
 Custom Headers

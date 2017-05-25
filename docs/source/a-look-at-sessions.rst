@@ -58,16 +58,18 @@ Please don't actually do this or the jsontest.com website will be very unhappy. 
 
 **The default number of connections in the pool for a HSession is a measly ONE.** If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%.
 
-The ``connections`` argument dictates the maximum number of concurrent connections asks will be allowed to make at any point of the ``HSessions`` lifespan. You *will* want to change the number of connections to a value that suits your needs and the server's limitations. If no data is publicly available to guide you here, air of the low side.
+The ``connections`` argument dictates the maximum number of concurrent connections asks will be allowed to make at any point of the ``HSessions`` lifespan. You *will* want to change the number of connections to a value that suits your needs and the server's limitations. If no data is publicly available to guide you here, air on the low side.
 
-Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is **selfish**. Don't be that guy / gal. Rate limit yourself by placing ``curio.sleep(n)``'s in appropriate the place(s), or utilising curio's semaphores / taskgroups / queues etc.
+Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is **selfish**. Don't be that guy / gal. Rate limit yourself by placing ``curio.sleep(n)``'s in appropriate the place(s), or utilising `curio's semaphores <http://asks.readthedocs.io/en/latest/idioms.html#sanely-making-many-requests-with-semaphores>`_ / taskgroups / queues etc.
 
 DSession
 ________
 
-The main difference between the ``DSession`` and the ``HSession`` is that you must supply a url to the ``DSession`` methods much like you would to a requests' ``Session``. Aside from that, the same stuff applies. You can add ``params`` , ``persist_cookies=True`` and do all of that other good stuff that you can do with the ``HSession`` class and methods. ::
+The main difference between the ``DSession`` and the ``HSession`` is that you must supply a url to the ``DSession`` methods much like you would to a requests' ``Session``, and you do not instanciate it with a top level location.
 
-    from asks import Session
+Aside from that, the same stuff applies. You can add ``params`` , ``persist_cookies=True`` and do all of that other good stuff that you can do with the ``HSession`` class and methods. ::
+
+    from asks import DSession
     import curio
 
     url_list = ['a', 'bunch', 'of', 'random', 'urls']
@@ -80,10 +82,10 @@ The main difference between the ``DSession`` and the ``HSession`` is that you mu
         for url in url_list:
             await curio.spawn(worker(url))
 
-    s = Session(connections=20)
+    s = DSession()
     curio.run(main())
 
-The default number of connections in the ``Session`` pool is ``20``.
+The default number of connections in the ``DSession`` pool is ``20``.
 
 
 Stateful Sessions
