@@ -230,8 +230,8 @@ async def test_session_stateful():
 # ==============
 
 # Test Session with one pooled connections on four get requests.
-async def session_t_smallpool(s, url):
-    r = await s.get(url)
+async def session_t_smallpool(s):
+    r = await s.get('http://httpbin.org/get')
     assert r.status_code == 200
 
 
@@ -239,4 +239,4 @@ async def session_t_smallpool(s, url):
 async def test_Session_smallpool():
     s = DSession(connections=2)
     for _ in range(10):
-        await curio.spawn(session_t_smallpool(s, 'http://httpbin.org/get'))
+        await curio.spawn(session_t_smallpool(s))

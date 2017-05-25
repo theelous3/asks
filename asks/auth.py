@@ -118,7 +118,6 @@ class DigestAuth(PostResponseAuth):
         bytes_method = bytes(req_obj.method, self.encoding)
         try:
             if b'auth-int' in auth_dict['qop'].lower():
-                print(response_obj.raw)
                 hashed_body = bytes(md5(response_obj.raw or b'').hexdigest(),
                                     self.encoding)
                 ha2 = bytes(md5(b':'.join((bytes_method,
@@ -168,5 +167,4 @@ class DigestAuth(PostResponseAuth):
         response_items.extend(['nc={:08x}'.format(self.nonce_count),
                               'cnonce="{}"'.format(str(cnonce,
                                                    self.encoding))])
-        print('NC:', self.nonce_count)
         return {'Authorization': "Digest {}".format(', '.join(response_items))}

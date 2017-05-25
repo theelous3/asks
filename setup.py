@@ -7,7 +7,7 @@ setup(
     description='asks - async http',
     long_description='asks is an async http lib for curio',
     license='MIT',
-    version='0.1.0',
+    version='0.1.1',
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],

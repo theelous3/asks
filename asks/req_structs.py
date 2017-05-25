@@ -13,13 +13,11 @@ class SocketQ(deque):
         super().__init__(self, *args, **kwargs)
 
     def index(self, host_loc):
-        count = 0
-        for i in self:
-            if i.host == host_loc:
-                return count
-            else:
-                count += 1
-        raise ValueError(f'{host_loc} not in SocketQ')
+        try:
+            return next(index for index, i in enumerate(self)
+                        if i.host == host_loc)
+        except StopIteration:
+            raise ValueError(f'{host_loc} not in SocketQ') from None
 
     def pull(self, index):
         x = self[index]

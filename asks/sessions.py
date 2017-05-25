@@ -57,10 +57,7 @@ class BaseSession:
         '''
         scheme, netloc, path, parameters, query, fragment = urlparse(
             host_loc or self.host)
-        if not any((parameters, query, fragment)):
-            if path == '/':
-                pass
-        else:
+        if parameters or query or fragment:
             raise ValueError('Supplied info beyond scheme, netloc.' +
                              ' Host should be top level only:\n', path)
 
@@ -229,7 +226,8 @@ class HSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self._pool_lock = False
+        self.sema = curio.BoundedSemaphore(value=connections)
+        self.in_connection_counter = 0
 
     async def _grab_connection(self, off_base_loc=False):
         '''
@@ -247,23 +245,25 @@ class HSession(BaseSession):
                 creates a new connection to the provided domain.
         '''
         if off_base_loc:
-            sock, port = await self._connect(host_loc=off_base_loc)
-            self.checked_out_sockets.append(sock)
+            while True:
+                if self.in_connection_counter < self.conn_pool.maxlen:
+                    sock, port = await self._connect(host_loc=off_base_loc)
+                    self.checked_out_sockets.append(sock)
+                    self.in_connection_counter += 1
+                    break
             return sock, port
         while True:
-            if not self._pool_lock:
-                try:
-                    sock = self.conn_pool.pop()
+            try:
+                sock = self.conn_pool.pop()
+                self.checked_out_sockets.append(sock)
+                self.in_connection_counter += 1
+                break
+            except IndexError:
+                if self.in_connection_counter < self.conn_pool.maxlen:
+                    self.in_connection_counter += 1
+                    sock, self.port = (await self._connect())
                     self.checked_out_sockets.append(sock)
                     break
-                except IndexError:
-                    if len(self.checked_out_sockets) + len(self.conn_pool)\
-                      < self.conn_pool.maxlen:
-                        self._pool_lock = True
-                        sock, self.port = (await self._connect())
-                        self.checked_out_sockets.append(sock)
-                        self._pool_lock = False
-                        break
             await curio.sleep(0)
             continue
 
@@ -274,21 +274,18 @@ class HSession(BaseSession):
         Unregisteres socket objects as checked out and returns them to pool.
         '''
         while True:
-            if not self._pool_lock:
-                self._pool_lock = True
-                if sock._active:
-                    self.checked_out_sockets.remove(sock)
-                    self.conn_pool.appendleft(sock)
-                    self._pool_lock = False
-                    break
-                else:
-                    sock_new, _ = await self._connect()
-                    self.checked_out_sockets.remove(sock)
-                    self.conn_pool.appendleft(sock_new)
-                    self._pool_lock = False
-                    break
+            if sock._active:
+                self.checked_out_sockets.remove(sock)
+                self.conn_pool.appendleft(sock)
+                break
+            else:
+                sock_new, _ = await self._connect()
+                self.checked_out_sockets.remove(sock)
+                self.conn_pool.appendleft(sock_new)
+                break
             await curio.sleep(0)
             continue
+        self.in_connection_counter -= 1
 
     def _make_url(self):
         '''
@@ -329,12 +326,17 @@ class DSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self._pool_lock = False
+        self.sema = curio.BoundedSemaphore(value=1)
+        self.in_connection_counter = 0
 
     def _checkout_connection(self, host_loc):
-        index = self.conn_pool.index(host_loc)
+        try:
+            index = self.conn_pool.index(host_loc)
+        except ValueError:
+            return None
         sock = self.conn_pool.pull(index)
         self.checked_out_sockets.append(sock)
+        self.in_connection_counter += 1
         return sock
 
     async def _replace_connection(self, sock):
@@ -345,6 +347,7 @@ class DSession(BaseSession):
             sock = (await self._make_connection(sock.host))
 
         self.conn_pool.appendleft(sock)
+        self.in_connection_counter -= 1
 
     async def _make_connection(self, host_loc):
         sock, port = await self._connect(host_loc=host_loc)
@@ -369,26 +372,14 @@ class DSession(BaseSession):
         scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
         while True:
-            if host_loc in self.conn_pool:
-                sock = self._checkout_connection(host_loc)
+            sock = self._checkout_connection(host_loc)
+            if sock is not None:
                 break
-            if not self._pool_lock:
-                if host_loc in self.checked_out_sockets:
-                    if len(self.checked_out_sockets) + len(self.conn_pool)\
-                      < self.conn_pool.maxlen:
-                        self._pool_lock = True
-                        sock = await self._make_connection(host_loc)
-                        self.checked_out_sockets.append(sock)
-                        self._pool_lock = False
-                        break
-                else:
-                    if len(self.checked_out_sockets) + len(self.conn_pool)\
-                      < self.conn_pool.maxlen:
-                        self._pool_lock = True
-                        sock = await self._make_connection(host_loc)
-                        self.checked_out_sockets.append(sock)
-                        self._pool_lock = False
-                        break
+            if self.in_connection_counter < self.conn_pool.maxlen:
+                self.in_connection_counter += 1
+                sock = await self._make_connection(host_loc)
+                self.checked_out_sockets.append(sock)
+                break
             await curio.sleep(0)
             continue
 
