@@ -3,7 +3,9 @@ asks - An overview of the functions and kw/argumetns.
 
 asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
-The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` and ``HSession`` classes as methods.
+The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``DSession`` and ``HSession`` classes as methods.
+
+(Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``DSession``.)
 
 
 General HTTP methods
@@ -71,6 +73,22 @@ Note that if your workflow here involves opening a json file, you should use cur
 
     async def example():
         r = await asks.post('www.example.com', json=dict_to_send))
+
+Sending Files
+_____________
+
+Pass a dict in the form ``{filename: filepath}`` (as many as you like) and asks will asyncronously get the file data, building a multipart formatted http body. You can also pass non-file paths if you wish to send arbitrary multipart body data sections. ::
+
+    async def send_file():
+        r = await asks.post('http://httpbin.org/post',
+                            files={'file_1': 'my_file.txt'})
+
+    # if we wanted to send both a file and some random data:
+    async def send_file_and_data():
+        r = await asks.post('http://httpbin.org/post',
+                            files={'file_1': 'my_file.txt',
+                                   'some_data': 'I am multipart hear me roar'})
+
 
 
 Sending Cookies

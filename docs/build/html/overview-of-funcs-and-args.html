@@ -46,7 +46,8 @@
   <div class="section" id="asks-an-overview-of-the-functions-and-kw-argumetns">
 <h1>asks - An overview of the functions and kw/argumetns.<a class="headerlink" href="#asks-an-overview-of-the-functions-and-kw-argumetns" title="Permalink to this headline">¶</a></h1>
 <p>asks is <em>heavily</em> influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you&#8217;re familiar with the format you can pretty much skip to the distinctions regarding <a class="reference external" href="https://asks.readthedocs.io/en/latest/a-look-at-sessions.html">sessions</a></p>
-<p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">Session</span></code> and <code class="docutils literal"><span class="pre">HSession</span></code> classes as methods.</p>
+<p>The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the <code class="docutils literal"><span class="pre">DSession</span></code> and <code class="docutils literal"><span class="pre">HSession</span></code> classes as methods.</p>
+<p>(Calling <code class="docutils literal"><span class="pre">asks.get('https://some-url.io'))</span></code> really makes a temporary <code class="docutils literal"><span class="pre">DSession</span></code>.)</p>
 <div class="section" id="general-http-methods">
 <h2>General HTTP methods<a class="headerlink" href="#general-http-methods" title="Permalink to this headline">¶</a></h2>
 <p>asks supports <code class="docutils literal"><span class="pre">get()</span></code>, <code class="docutils literal"><span class="pre">head()</span></code>, <code class="docutils literal"><span class="pre">post()</span></code>, <code class="docutils literal"><span class="pre">put()</span></code>, <code class="docutils literal"><span class="pre">delete()</span></code>, <code class="docutils literal"><span class="pre">options()</span></code> and <code class="docutils literal"><span class="pre">request()</span></code>.</p>
@@ -103,6 +104,21 @@ Note that if your workflow here involves opening a json file, you should use cur
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;www.example.com&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">dict_to_send</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sending-files">
+<h2>Sending Files<a class="headerlink" href="#sending-files" title="Permalink to this headline">¶</a></h2>
+<p>Pass a dict in the form <code class="docutils literal"><span class="pre">{filename:</span> <span class="pre">filepath}</span></code> (as many as you like) and asks will asyncronously get the file data, building a multipart formatted http body. You can also pass non-file paths if you wish to send arbitrary multipart body data sections.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">send_file</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/post&#39;</span><span class="p">,</span>
+                        <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;file_1&#39;</span><span class="p">:</span> <span class="s1">&#39;test_file.txt&#39;</span><span class="p">})</span>
+
+<span class="c1"># if we wanted to send both a file and some random data:</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">send_file_and_data</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/post&#39;</span><span class="p">,</span>
+                        <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;file_1&#39;</span><span class="p">:</span> <span class="s1">&#39;test_file.txt&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;some_data&#39;</span><span class="p">:</span> <span class="s1">&#39;I am multipart hear me roar&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -206,6 +222,7 @@ Note that if your workflow here involves opening a json file, you should use cur
 <li><a class="reference internal" href="#passing-queries">Passing Queries</a></li>
 <li><a class="reference internal" href="#custom-headers">Custom Headers</a></li>
 <li><a class="reference internal" href="#sending-json">Sending JSON</a></li>
+<li><a class="reference internal" href="#sending-files">Sending Files</a></li>
 <li><a class="reference internal" href="#sending-cookies">Sending Cookies</a></li>
 <li><a class="reference internal" href="#cookie-interactions">Cookie Interactions</a></li>
 <li><a class="reference internal" href="#set-encoding">Set Encoding</a></li>

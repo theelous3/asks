@@ -74,6 +74,65 @@ class BaseSession:
                 (netloc, int(port))), port
 
     async def request(self, method, url=None, *, path='', **kwargs):
+        '''
+        This is the template for all of the `http method` methods for
+        the HSession and DSession.
+
+        Args:
+            method (str): A http method, such as 'GET' or 'POST'.
+            url (str): The url the request should be made to.
+            path (str): An optional kw-arg for use in HSession method calls.
+            kwargs: Any number of the following:
+                        data (dict or str): Info to be processed as a
+                            body-bound query.
+                        params (dict or str): Info to be processed as a
+                            url-bound query.
+                        headers (dict): User HTTP headers to be used in the
+                            request.
+                        encoding (str): The str representation of the codec to
+                            process the request under.
+                        json (dict): A dict to be formatted as json and sent in
+                            the request body.
+                        files (dict): A dict of `filename:filepath`s to be sent
+                            as multipart.
+                        cookies (dict): A dict of `name:value` cookies to be
+                            passed in request.
+                        callback (func): A callback function to be called on
+                            each bytechunk of of the response body.
+                        timeout (int or float): A numeric representation of the
+                            longest time to wait on a complete response once a
+                            request has been sent.
+                        max_redirects (int): The maximum number of redirects
+                            allowed.
+                        persist_cookies (True or None): Passing True
+                            instanciates a CookieTracker object to manage the
+                            return of cookies to the server under the relevant
+                            domains.
+                        auth (child of AuthBase): An object for handling auth
+                            construction.
+
+        When you call something like DSession.get() or asks.post(), you're
+        really calling a partial method that has the 'method' argument
+        pre-completed.
+
+        When this method is used in a DSession, like so:
+            s = asks.DSession()
+            s.get('https://example.org')
+        ...you're passing your url string under the `url` keyword positional
+        arg. All DSession methods bar a direct call to `request` pass the
+        `method` argument implicitly.
+
+        When this method is used in a HSession, like this:
+            s = asks.HSession('https://example.org')
+            s.get()
+        ...both the method *and* url are passed implicitly. The url in this
+        case is the concatenation of .host and .endpoint. You may further
+        augment the url by explicitly using the `path` kw-arg.
+            s = asks.HSession('https://example.org')
+            s.endpoint = '/chat'
+            s.get(path='/chat-room-1')
+            # results in a call to 'https://example.org/chat/chat-room-1'
+        '''
         timeout = kwargs.pop('timeout', None)
 
         if url is None:
@@ -114,6 +173,8 @@ class BaseSession:
         return r
 
     # These be the actual http methods!
+    # They are partial methods of `request`. See the `request` docstring
+    # above for information.
     get = partialmethod(request, 'GET')
     head = partialmethod(request, 'HEAD')
     post = partialmethod(request, 'POST')
@@ -125,7 +186,7 @@ class BaseSession:
 class HSession(BaseSession):
     '''
     The Homogeneous Session.
-    This type of session is build to deal with many requests to a single host.
+    This type of session is built to deal with many requests to a single host.
     An example of this, would be dealing with an api or scraping all of the
     comics from xkdc.
 
@@ -140,7 +201,7 @@ class HSession(BaseSession):
                  connections=1):
         '''
         Args:
-            host (str): The top level domain to which most/all of the
+            host (str): The top level domain to which all of the
                 requests will be made. Example: 'https://example.org'
             endpoint (str): The base uri can be augmented further. Example:
                 '/chat'. Calling one of the http method methods without a
@@ -151,7 +212,10 @@ class HSession(BaseSession):
                 stateful cookie behaviour, returning cookies to the host when
                 appropriate.
             connections (int): The max number of concurrent connections to the
-                host asks will allow its self to have.
+                host asks will allow its self to have. The default number of
+                connections is ONE. You *WILL* want to change this value to
+                suit your application and the limits of the remote host you're
+                working with.
         '''
         self.encoding = encoding
         self.endpoint = endpoint
@@ -237,11 +301,25 @@ class DSession(BaseSession):
     '''
     The disparate session class, for handling piles of unrelated requests.
     This is just like requests' Session.
+
+    This class inherits from BaseSession, where all of the 'http method'
+    methods are defined.
     '''
     def __init__(self,
                  encoding='utf-8',
                  persist_cookies=None,
                  connections=20):
+        '''
+        Args:
+            encoding (str): The encoding asks'll try to use on response bodies.
+            persist_cookies (bool): Passing True turns on browserishlike
+                stateful cookie behaviour, returning cookies to the host when
+                appropriate.
+            connections (int): The max number of concurrent connections to the
+                host asks will allow its self to have. The default number of
+                connections is 20. You may increase or decrease this value
+                as you see fit.
+        '''
         self.encoding = encoding
 
         if persist_cookies is True:

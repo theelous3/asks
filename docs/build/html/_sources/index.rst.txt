@@ -113,6 +113,11 @@ The Future
 __________
 As soon as `trio <https://github.com/python-trio/trio>`_ supports async file i/o, asks will be available for trio too :)
 
+Contributing
+____________
+
+Contributions are very welcome :)
+
 About
 _____
 

@@ -66,12 +66,12 @@ class Request:
 
         max_redirects (int): The maximum number of redirects allowed.
 
-        sock (StreamSock): The socket object to be used for the request. This
-            socket object may be updated on `connection: close` headers.
-
         persist_cookies (True or None): Passing True instanciates a
             CookieTracker object to manage the return of cookies to the server
             under the relevant domains.
+
+        sock (StreamSock): The socket object to be used for the request. This
+            socket object may be updated on `connection: close` headers.
     '''
     def __init__(self, session, method, uri, port, **kwargs):
         # These are kwargsable attribs.
