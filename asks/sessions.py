@@ -62,7 +62,6 @@ class BaseSession:
                              ' Host should be top level only:\n', path)
 
         netloc, port = get_netloc_port(scheme, netloc)
-
         if scheme == 'http':
             return await self._open_connection_http(
                 (netloc, int(port))), port
@@ -251,6 +250,9 @@ class HSession(BaseSession):
                     self.checked_out_sockets.append(sock)
                     self.in_connection_counter += 1
                     break
+                else:
+                    await curio.sleep(0)
+                    continue
             return sock, port
         while True:
             try:

@@ -177,15 +177,31 @@ You can stream the body of a response by setting ``stream=True`` , and iterating
 
     curio.run(main())
 
-You can also use this for streaming feeds and stuff of twitter and the likes.
+It is important to note that if you do not iterate the ``.body`` to completion, bad things may happen as the connection sits there and isn't returned to the connection pool. You can get around this by context-managering the ``.body`` if there is a chance you might not iter fully. ::
+
+    import asks
+    import curio
+
+    async def main():
+        r = await asks.get('http://httpbin.com/image/png', stream=True)
+        async with curio.aopen('our_image.png', 'wb') as out_file:
+            async with r.body: # Bam! Safe!
+                async for bytechunk in r.body:
+                    await out_file.write(bytechunk)
+
+    curio.run(main())
+
+This way, once you leave the ``async with`` block, the asks will automatically ensure the underlying socket is handled properly. You may also call ``.body.close()`` to manually close the stream.
+
+The streaming body can also be used for streaming feeds and stuff of twitter and the likes.
 
 For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc>`_
 
 Callbacks
 _________
 
-Similar enough to streaming as seen above, but happens during the processing of the response body, before the response is returned. Overall probably worse to use than streaming in every case but I'm sure someone will find a use for it.
+Similar enough to streaming as seen above, but happens during the processing of the response body, before the response object is returned. Overall probably worse to use than streaming in every case but I'm sure someone will find a use for it.
 
-The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body *as the request is being processed*, as in, before the response has been returned.
+The ``callback`` argument lets you pass a function as a callback that will be run on each bytechunk of response body *as the request is being processed*.
 
 For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc>`_

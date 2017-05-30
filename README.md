@@ -24,11 +24,11 @@ Above you'll find detailed docs with a large number of simple examples to help y
 
 ```python
 # one request
+# A little silly to async one request, but not without its use!
 import asks
 import curio
 
 async def example():
-    # A little silly to async one request, but not without its use.
     r = await asks.get('https://example.org')
     print(r.content)
 
@@ -47,7 +47,7 @@ path_list = ['a', 'list', 'of', '1000', 'paths']
 results = []
 
 async def grabber(path):
-    r = s.get(path)
+    r = await s.get(path)
     results.append(r)
 
 async def main(path_list):

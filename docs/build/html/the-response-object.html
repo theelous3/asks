@@ -46,12 +46,12 @@
   <div class="section" id="asks-the-response-object">
 <h1>asks - The Response Object<a class="headerlink" href="#asks-the-response-object" title="Permalink to this headline">¶</a></h1>
 <p>A plain ol&#8217; response object, <code class="docutils literal"><span class="pre">Response</span></code> is returned from every request.</p>
-<p>It has some attribs/properties to access the response content from. Nothing too voodoo.</p>
+<p>It has some attribs/properties to access the response content. Nothing too voodoo.</p>
 <div class="section" id="encoding">
 <h2>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
 <p>By default the <code class="docutils literal"><span class="pre">Response</span></code> object uses <code class="docutils literal"><span class="pre">utf-8</span></code>.</p>
 <p>The response object will try to glean encoding from the response headers if available, before it&#8217;s returned.</p>
-<p>You can override the response-set or default encoding with either a builtin encoding or one you&#8217;ve registered locally with your codecs module by accessing the response&#8217;s <code class="docutils literal"><span class="pre">.encoding</span></code> attribute.</p>
+<p>You can override the response-set or default encoding with either a built-in encoding or one you&#8217;ve registered locally with your codecs module by accessing the response&#8217;s <code class="docutils literal"><span class="pre">.encoding</span></code> attribute.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://example.com&#39;</span><span class="p">)</span>
     <span class="n">r</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;latin-1&#39;</span>
@@ -96,8 +96,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="view-body-text-decoded-content-barebones">
-<h2>View Body (text decoded, content, barebones)<a class="headerlink" href="#view-body-text-decoded-content-barebones" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="view-body-text-decoded-content-raw">
+<h2>View Body (text decoded, content, raw)<a class="headerlink" href="#view-body-text-decoded-content-raw" title="Permalink to this headline">¶</a></h2>
 <p>Generally the way to see the body as it was intended is to use the <code class="docutils literal"><span class="pre">.content</span></code> property. This will return the content as is, after decompression if there was any.</p>
 <p>For something slightly more human readable, you may want to try the <code class="docutils literal"><span class="pre">.text</span></code> property. This will attempt to decompress (if needed) and decode the content (with <code class="docutils literal"><span class="pre">.encoding</span></code>). This for example, makes html and json etc. quite readable in your shell.</p>
 <p>To view the body exactly as it was sent, just use the <code class="docutils literal"><span class="pre">.body</span></code> attribute. Note that this may be compressed madness, so don&#8217;t worry if you can&#8217;t read it with your poor wee eyes.</p>
@@ -155,7 +155,7 @@
 <li><a class="reference internal" href="#status-line">Status Line</a></li>
 <li><a class="reference internal" href="#headers">Headers</a></li>
 <li><a class="reference internal" href="#json">JSON</a></li>
-<li><a class="reference internal" href="#view-body-text-decoded-content-barebones">View Body (text decoded, content, barebones)</a></li>
+<li><a class="reference internal" href="#view-body-text-decoded-content-raw">View Body (text decoded, content, raw)</a></li>
 <li><a class="reference internal" href="#cookies">Cookies</a></li>
 <li><a class="reference internal" href="#response-history">Response History</a></li>
 </ul>

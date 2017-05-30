@@ -3,7 +3,7 @@ asks - The Response Object
 
 A plain ol' response object, ``Response`` is returned from every request.
 
-It has some attribs/properties to access the response content from. Nothing too voodoo.
+It has some attribs/properties to access the response content. Nothing too voodoo.
 
 Encoding
 ________
@@ -12,7 +12,7 @@ By default the ``Response`` object uses ``utf-8``.
 
 The response object will try to glean encoding from the response headers if available, before it's returned.
 
-You can override the response-set or default encoding with either a builtin encoding or one you've registered locally with your codecs module by accessing the response's ``.encoding`` attribute. ::
+You can override the response-set or default encoding with either a built-in encoding or one you've registered locally with your codecs module by accessing the response's ``.encoding`` attribute. ::
 
     async def main():
         r = asks.get('http://example.com')
@@ -59,8 +59,8 @@ If the response was compressed, it will be decompressed. ::
     # {'args': {}, 'headers': {'Accept': '*/*', 'Accept-Encoding', ...
 
 
-View Body (text decoded, content, barebones)
-____________________________________________
+View Body (text decoded, content, raw)
+______________________________________
 
 Generally the way to see the body as it was intended is to use the ``.content`` property. This will return the content as is, after decompression if there was any.
 

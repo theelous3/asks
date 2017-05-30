@@ -88,13 +88,14 @@
 </pre></div>
 </div>
 <p><strong>The default number of connections in the pool for a HSession is a measly ONE.</strong> If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%.</p>
-<p>The <code class="docutils literal"><span class="pre">connections</span></code> argument dictates the maximum number of concurrent connections asks will be allowed to make at any point of the <code class="docutils literal"><span class="pre">HSessions</span></code> lifespan. You <em>will</em> want to change the number of connections to a value that suits your needs and the server&#8217;s limitations. If no data is publicly available to guide you here, air of the low side.</p>
-<p>Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is <strong>selfish</strong>. Don&#8217;t be that guy / gal. Rate limit yourself by placing <code class="docutils literal"><span class="pre">curio.sleep(n)</span></code>&#8216;s in appropriate the place(s), or utilising curio&#8217;s semaphores / taskgroups / queues etc.</p>
+<p>The <code class="docutils literal"><span class="pre">connections</span></code> argument dictates the maximum number of concurrent connections asks will be allowed to make at any point of the <code class="docutils literal"><span class="pre">HSessions</span></code> lifespan. You <em>will</em> want to change the number of connections to a value that suits your needs and the server&#8217;s limitations. If no data is publicly available to guide you here, air on the low side.</p>
+<p>Now whilst we have all of this sweet sweet async speed, we must talk about our great great responsibility. asks is fast, and hammering the bejaysus out of a webservice shared by many people is <strong>selfish</strong>. Don&#8217;t be that guy / gal. Rate limit yourself by placing <code class="docutils literal"><span class="pre">curio.sleep(n)</span></code>&#8216;s in appropriate the place(s), or utilising <a class="reference external" href="http://asks.readthedocs.io/en/latest/idioms.html#sanely-making-many-requests-with-semaphores">curio&#8217;s semaphores</a> / taskgroups / queues etc.</p>
 </div>
 <div class="section" id="dsession">
 <h2>DSession<a class="headerlink" href="#dsession" title="Permalink to this headline">¶</a></h2>
-<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">HSession</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods much like you would to a requests&#8217; <code class="docutils literal"><span class="pre">Session</span></code>. Aside from that, the same stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">HSession</span></code> class and methods.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">Session</span>
+<p>The main difference between the <code class="docutils literal"><span class="pre">DSession</span></code> and the <code class="docutils literal"><span class="pre">HSession</span></code> is that you must supply a url to the <code class="docutils literal"><span class="pre">DSession</span></code> methods much like you would to a requests&#8217; <code class="docutils literal"><span class="pre">Session</span></code>, and you do not instanciate it with a top level location.</p>
+<p>Aside from that, the same stuff applies. You can add <code class="docutils literal"><span class="pre">params</span></code> , <code class="docutils literal"><span class="pre">persist_cookies=True</span></code> and do all of that other good stuff that you can do with the <code class="docutils literal"><span class="pre">HSession</span></code> class and methods.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">asks</span> <span class="k">import</span> <span class="n">DSession</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
 <span class="n">url_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;bunch&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="s1">&#39;urls&#39;</span><span class="p">]</span>
@@ -107,11 +108,11 @@
     <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">url_list</span><span class="p">:</span>
         <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
 
-<span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="n">connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">DSession</span><span class="p">()</span>
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>The default number of connections in the <code class="docutils literal"><span class="pre">Session</span></code> pool is <code class="docutils literal"><span class="pre">20</span></code>.</p>
+<p>The default number of connections in the <code class="docutils literal"><span class="pre">DSession</span></code> pool is <code class="docutils literal"><span class="pre">20</span></code>.</p>
 </div>
 <div class="section" id="stateful-sessions">
 <h2>Stateful Sessions<a class="headerlink" href="#stateful-sessions" title="Permalink to this headline">¶</a></h2>

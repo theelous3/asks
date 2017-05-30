@@ -31,9 +31,9 @@ _____________
 
 asks requires `Python 3.6 <www.python.org>`_ .
 
-The easiest way to install asks is to pip the master git repo::
+The easiest way to install asks is to pip it::
 
-    pip install git+https://github.com/theelous3/asks.git
+    pip install asks
 
 asks was built for use with `Curio <https://github.com/dabeaz/curio>`_.
 Internally asks uses the excellent `h11 <https://github.com/njsmith/h11>`_.
@@ -62,7 +62,7 @@ Making one request in an async program is a little weird, but not without its us
 A far finer example:
 ____________________
 
-Here's an example of making 1000 calls to an api and storing the results in a list::
+Here's an example of making 1000 calls to an api and storing the results in a list. We'll use the ``HSession`` here because all of our requests are to the same top level domain!::
 
     # many_get.py
     # make a whole pile of api calls and store

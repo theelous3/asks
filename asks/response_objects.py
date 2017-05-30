@@ -171,3 +171,14 @@ class StreamBody:
                 self.hconnection.receive_data((await self.sock.recv(10000)))
                 continue
             return event
+
+    async def __aenter__(self):
+        return self
+
+    async def close(self):
+        if self.sock in self.session.checked_out_sockets:
+            self.sock._active = False
+            await self.session._replace_connection(self.sock)
+
+    async def __aexit__(self, *exc_info):
+        await self.close()

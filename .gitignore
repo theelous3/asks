@@ -11,3 +11,6 @@ env/
 /asks.egg-info/
 /build/
 /dist/
+
+# docs
+docs/build/

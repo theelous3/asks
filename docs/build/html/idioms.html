@@ -97,26 +97,52 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">url_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">await</span> <span class="n">curio</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
 
-<span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+<span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">())]</span>
 
 <span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">connections</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">url_list</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>In the above example, <code class="docutils literal"><span class="pre">sorted_results</span></code> is a list of response objects in the same order as <code class="docutils literal"><span class="pre">url_list</span></code>.</p>
-<p>There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio&#8217;s taskgroups.</p>
+<p>There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio&#8217;s taskgroups. Here&#8217;s an example of that:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
+<span class="kn">import</span> <span class="nn">curio</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">url_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;https://www.httpbin.org/get&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">)]</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">asks</span><span class="o">.</span><span class="n">DSession</span><span class="p">()</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">TaskGroup</span><span class="p">()</span> <span class="k">as</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">url_list</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">g</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="c1"># Here we iterate the TaskGroup, getting results as they come.</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;done with </span><span class="si">{results[-1][0]}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">sorted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">response</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">response</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">)]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sorted_results</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="handling-response-body-content-downloads-etc">
 <h2>Handling response body content (downloads etc.)<a class="headerlink" href="#handling-response-body-content-downloads-etc" title="Permalink to this headline">¶</a></h2>
-<p>The recommended way to handle this sort of thing, is by streaming, like so:</p>
+<p>The recommended way to handle this sort of thing, is by streaming. The following examples use a context manager on the response body to ensure the underlying connection is always handled properly:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asks</span>
 <span class="kn">import</span> <span class="nn">curio</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://httpbin.org/image/png&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;our_image.png&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
-        <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
-            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span> <span class="c1"># you can do the usual &quot;as x&quot; here if you like.</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+                <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
 
 <span class="n">curio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
@@ -129,8 +155,9 @@
 <span class="k">async</span> <span class="k">def</span> <span class="nf">downloader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
     <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">curio</span><span class="o">.</span><span class="n">aopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
-        <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
-            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">bytechunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+                <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bytechunk</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="k">for</span> <span class="n">indx</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;http://placehold.it/1000x1000&#39;</span><span class="p">,</span>

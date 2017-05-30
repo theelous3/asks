@@ -60,20 +60,44 @@ A handy way of dealing with this on an example ``url_list`` is to pass the enume
         for key, url in url_dict.items():
             await curio.spawn(worker(key, url))
 
-    sorted_results = [response for _, response in sorted(results.items()]
+    sorted_results = [response for _, response in sorted(results.items())]
 
     s = asks.Session(connections=10)
     curio.run(main(url_list))
 
 In the above example, ``sorted_results`` is a list of response objects in the same order as ``url_list``.
 
-There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio's taskgroups.
+There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio's taskgroups. Here's an example of that: ::
+
+    import asks
+    import curio
+
+    results = []
+    url_list = ["https://www.httpbin.org/get" for _ in range(50)]
+    s = asks.DSession()
+
+
+    async def worker(key, url):
+        r = await s.get(url)
+        results.append((key, r.body))
+
+
+    async def main():
+        async with curio.TaskGroup() as g:
+            for key, url in enumerate(url_list):
+                await g.spawn(worker, key, url)
+            # Here we iterate the TaskGroup, getting results as they come.
+            async for _ in g:
+                print(f"done with {results[-1][0]}")
+
+        sorted_results = [response for _, response in sorted(results)]
+        print(sorted_results)
 
 
 Handling response body content (downloads etc.)
 ___________________________________________________________
 
-The recommended way to handle this sort of thing, is by streaming, like so: ::
+The recommended way to handle this sort of thing, is by streaming. The following examples use a context manager on the response body to ensure the underlying connection is always handled properly: ::
 
 
     import asks
@@ -82,8 +106,9 @@ The recommended way to handle this sort of thing, is by streaming, like so: ::
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
         with open('our_image.png', 'ab') as out_file:
-            async for bytechunk in r.body:
-                out_file.write(bytechunk)
+            async with r.body: # you can do the usual "as x" here if you like.
+                async for bytechunk in r.body:
+                    out_file.write(bytechunk)
 
     curio.run(main())
 
@@ -96,8 +121,9 @@ An example of multiple downloads with streaming: ::
     async def downloader(filename, url):
         r = await asks.get(url, stream=True)
         async with curio.aopen(filename, 'ab') as out_file:
-            async for bytechunk in r.body:
-                out_file.write(bytechunk)
+            async with r.body:
+                async for bytechunk in r.body:
+                    out_file.write(bytechunk)
 
     async def main():
         for indx, url in enumerate(['http://placehold.it/1000x1000',
