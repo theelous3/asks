@@ -13,4 +13,4 @@ env/
 /dist/
 
 # docs
-docs/build/
+*.html
