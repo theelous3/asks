@@ -17,5 +17,6 @@ setup(
     url='https://github.com/theelous3/asks',
     packages=['asks'],
     install_requires=['curio', 'h11'],
+    tests_require=['pytest'],
     classifiers=['Programming Language :: Python :: 3']
 )
