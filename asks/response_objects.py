@@ -24,13 +24,7 @@ class Response:
         self.cookies = []
 
     def __repr__(self):
-        # pylint: disable=fixme
-        # TODO: include the name of the response here
-        # e.g. "201 Created" or "404 Not Found"
-        # maybe a status_text attribute or something could be nice too?
-        # requests has a status codes dictionary thingy, it can be used
-        # like requests.status_codes.codes['NOT_FOUND']
-        return "<Response {} at 0x{:x}>".format(self.status_code, id(self))
+        return '<Response {} {}>'.format(self.status_code, self.reason_phrase)
 
     def __iter__(self):
         for k, v in self.__dict__.items():
@@ -40,12 +34,9 @@ class Response:
         try:
             guess = self.headers['content-type'].split('=')[1]
             codecs.lookup(guess)
-        # pylint: disable=fixme,broad-except
-        # TODO: replace Exception with errors from first line
-        except (Exception, LookupError):
-            pass
-        else:
             self.encoding = guess
+        except LookupError: # IndexError and KeyError are subclasses of LookupError
+            pass
 
     def _parse_cookies(self, host):
         '''
