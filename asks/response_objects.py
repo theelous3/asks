@@ -24,13 +24,7 @@ class Response:
         self.cookies = []
 
     def __repr__(self):
-        # pylint: disable=fixme
-        # TODO: include the name of the response here
-        # e.g. "201 Created" or "404 Not Found"
-        # maybe a status_text attribute or something could be nice too?
-        # requests has a status codes dictionary thingy, it can be used
-        # like requests.status_codes.codes['NOT_FOUND']
-        return "<Response {} at 0x{:x}>".format(self.status_code, id(self))
+        return '<Response {} {}>'.format(self.status_code, self.reason_phrase)
 
     def __iter__(self):
         for k, v in self.__dict__.items():
