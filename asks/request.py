@@ -509,7 +509,9 @@ class Request:
             The most recent response object.
         '''
         response = await self._recv_event(hconnection)
-        resp_data = {'status_code': response.status_code,
+        resp_data = {'encoding': self.encoding,
+                     'method': self.method,
+                     'status_code': response.status_code,
                      'reason_phrase': str(response.reason, 'utf-8'),
                      'http_version': str(response.http_version, 'utf-8'),
                      'headers': c_i_dict(
@@ -559,8 +561,7 @@ class Request:
             endof = await self._recv_event(hconnection)
             assert isinstance(endof, h11.EndOfMessage)
 
-        return Response(
-            self.encoding, method=self.method, **resp_data)
+        return Response(**resp_data)
 
     async def _recv_event(self, hconnection):
         while True:

@@ -16,10 +16,21 @@ class Response:
     for accessing the status line, header, cookies, history and
     body of a response.
     '''
-    def __init__(self, encoding, **data):
-        for name, value in data.items():
-            setattr(self, name, value)
+    def __init__(self,
+                 encoding,
+                 http_version,
+                 status_code,
+                 reason_phrase,
+                 headers,
+                 body,
+                 method):
         self.encoding = encoding
+        self.http_version = http_version
+        self.status_code = status_code
+        self.reason_phrase = reason_phrase
+        self.headers = headers
+        self.body = body
+        self.method = method
         self.history = []
         self.cookies = []
 
@@ -35,7 +46,7 @@ class Response:
             guess = self.headers['content-type'].split('=')[1]
             codecs.lookup(guess)
             self.encoding = guess
-        except LookupError: # IndexError and KeyError are subclasses of LookupError
+        except LookupError:  # IndexError/KeyError are LookupError subclasses
             pass
 
     def _parse_cookies(self, host):
