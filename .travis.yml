@@ -12,9 +12,7 @@ install:
    - pip3 install git+git://github.com/PyCQA/astroid.git@12b673267dce7c899ca384792386ed9b657fe66a
 
 script:
-  - cd tests
   - pytest --verbose --tb=native
-  - cd ..
   - pylint asks tests/*.py
 
 notifications:
