@@ -8,14 +8,11 @@ python:
 
 install:
    - ./setup.py develop
-   - pip3 install git+git://github.com/PyCQA/pylint.git@79f45263a8904533160d3fa0d4e69b11d3d7d315
-   - pip3 install git+git://github.com/PyCQA/astroid.git@12b673267dce7c899ca384792386ed9b657fe66a
+   - pip3 install pylint
 
 script:
-  - cd tests
   - pytest --verbose --tb=native
-  - cd ..
-  - pylint asks tests/*.py
+  - pylint asks tests
 
 notifications:
   email:

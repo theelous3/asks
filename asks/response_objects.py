@@ -1,6 +1,3 @@
-# pylint: disable=no-else-return
-# pylint: disable=access-member-before-definition
-# pylint: disable=attribute-defined-outside-init
 import codecs
 from types import SimpleNamespace
 import json as _json

@@ -1,7 +1,3 @@
-# pylint: disable=wildcard-import
-# pylint: disable=no-else-return
-# pylint: disable=not-callable
-# pylint: disable=no-member
 from numbers import Number
 from os.path import basename
 from urllib.parse import urlparse, urlunparse, quote
@@ -591,6 +587,7 @@ class Request:
         (is a PreResponseAuth object) then we call the auth's __call__
         returning a dict to update the request's headers with.
         '''
+        # pylint: disable=not-callable
         if isinstance(self.auth, PreResponseAuth):
             return await self.auth(self)
         return {}
@@ -603,6 +600,7 @@ class Request:
         as there is an appropriate 401'd response object to calculate auth
         details from.
         '''
+        # pylint: disable=not-callable
         if isinstance(self.auth, PostResponseAuth):
             if self.history_objects:
                 authable_resp = self.history_objects[-1]
@@ -668,6 +666,7 @@ class Request:
         A callback func to be supplied if the user wants to do something
         directly with the response body's stream.
         '''
+        # pylint: disable=not-callable
         while True:
             next_event = await self._recv_event(hconnection)
             if isinstance(next_event, h11.Data):

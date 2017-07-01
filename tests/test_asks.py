@@ -1,3 +1,5 @@
+from os import path
+
 import curio
 import pytest
 
@@ -112,10 +114,14 @@ async def test_header_set():
 
 
 # File send test
+TEST_DIR = path.dirname(path.abspath(__file__))
+TEST_FILE1 = path.join(TEST_DIR, 'test_file1.txt')
+TEST_FILE2 = path.join(TEST_DIR, 'test_file2')
+
 @curio_run
 async def test_file_send_single():
     r = await asks.post('http://httpbin.org/post',
-                        files={'file_1': 'test_file.txt'})
+                        files={'file_1': TEST_FILE1})
     j = r.json()
     assert j['files']['file_1'] == 'Compooper'
 
@@ -123,8 +129,8 @@ async def test_file_send_single():
 @curio_run
 async def test_file_send_double():
     r = await asks.post('http://httpbin.org/post',
-                        files={'file_1': 'test_file.txt',
-                               'file_2': 'testr'})
+                        files={'file_1': TEST_FILE1,
+                               'file_2': TEST_FILE2})
     j = r.json()
     assert j['files']['file_2'] == 'My slug <3'
 
@@ -132,7 +138,7 @@ async def test_file_send_double():
 @curio_run
 async def test_file_and_data_send():
     r = await asks.post('http://httpbin.org/post',
-                        files={'file_1': 'test_file.txt',
+                        files={'file_1': TEST_FILE1,
                                'data_1': 'watwatwatwat'})
     j = r.json()
     assert j['form']['data_1'] == 'watwatwatwat'

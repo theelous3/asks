@@ -123,6 +123,6 @@ _____
 
 asks was created by Mark Jameson
 
-http://theelous3.net
+https://theelous3.net
 
 Shoutout to the fine folks of `8banana <https://github.com/8Banana>`_ and co.
