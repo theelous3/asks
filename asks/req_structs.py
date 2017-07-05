@@ -6,8 +6,8 @@ from collections import OrderedDict, MutableMapping, Mapping, deque
 
 class SocketQ(deque):
     '''
-    A funky little subclass of deque built for the DSession class.
-    Allows for connection pooling of sockets to different remote hosts.
+    A funky little subclass of deque built for the session classes.
+    Allows for connection pooling of sockets to remote hosts.
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)

@@ -2,6 +2,7 @@
 The two session classes.
 
 The disparate session (DSession) is for making requests to multiple locations.
+The homogeneous session (HSession) is for making requests to a single location.
 
 '''
 
