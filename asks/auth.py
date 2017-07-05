@@ -1,3 +1,4 @@
+# pylint: disable=abstract-method
 from abc import abstractmethod, ABCMeta
 
 import re
