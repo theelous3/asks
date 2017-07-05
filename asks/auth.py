@@ -1,3 +1,5 @@
+from abc import abstractmethod, ABCMeta
+
 import re
 
 import base64
@@ -13,15 +15,15 @@ __all__ = ['AuthBase',
            'DigestAuth']
 
 
-class AuthBase:
+class AuthBase(metaclass=ABCMeta):
     '''
     Base class for all auth classes. All user exposed auth classes
     should implement their own __call__ method, returning a dictionary
     for use in headers.
     '''
+    @abstractmethod
     def __call__(self):
-        return 'Ya dun goofed. Auth __call__ not implemented.'
-
+        '''Not Implemented'''
 
 class PreResponseAuth(AuthBase):
     '''
