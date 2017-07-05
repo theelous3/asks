@@ -102,7 +102,7 @@ class BaseSession:
                         max_redirects (int): The maximum number of redirects
                             allowed.
                         persist_cookies (True or None): Passing True
-                            instanciates a CookieTracker object to manage the
+                            instantiates a CookieTracker object to manage the
                             return of cookies to the server under the relevant
                             domains.
                         auth (child of AuthBase): An object for handling auth
@@ -123,8 +123,8 @@ class BaseSession:
             s = asks.HSession('https://example.org')
             s.get()
         ...both the method *and* url are passed implicitly. The url in this
-        case is the concatenation of .host and .endpoint. You may further
-        augment the url by explicitly using the `path` kw-arg.
+        case is the concatenation of .host and .endpoint. The url may be
+        further augmented by explicitly using the `path` kw-arg.
             s = asks.HSession('https://example.org')
             s.endpoint = '/chat'
             s.get(path='/chat-room-1')
@@ -241,7 +241,7 @@ class HSession(BaseSession):
 
         Args:
             off_base_loc (str): Passing a uri here indicates that we are
-                straying from the base location set on instanciation, and
+                straying from the base location set on instantiation, and
                 creates a new connection to the provided domain.
         '''
         if off_base_loc:
@@ -274,7 +274,7 @@ class HSession(BaseSession):
 
     async def _replace_connection(self, sock):
         '''
-        Unregisteres socket objects as checked out and returns them to pool.
+        Unregisters socket objects as checked out and returns them to pool.
         '''
         while True:
             if sock._active:
