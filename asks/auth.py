@@ -26,6 +26,7 @@ class AuthBase(metaclass=ABCMeta):
     def __call__(self):
         '''Not Implemented'''
 
+
 class PreResponseAuth(AuthBase):
     '''
     Auth class for response independant auth.
