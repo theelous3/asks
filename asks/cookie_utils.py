@@ -8,7 +8,6 @@ __all__ = ['CookieTracker']
 
 
 class CookieTracker:
-
     def __init__(self):
         self.domain_dict = {}
 
