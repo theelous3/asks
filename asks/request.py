@@ -7,7 +7,7 @@ import mimetypes
 import re
 
 import h11
-from curio.file import aopen
+from asks import _async_lib
 
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
@@ -455,7 +455,7 @@ class Request:
             k, v = kv
 
             try:
-                async with aopen(v, 'rb') as o_file:
+                async with _async_lib.aopen(v, 'rb') as o_file:
                     pkg_body = b''.join(await o_file.readlines()) + b'\r\n'
                 multip_pkg += bytes(hder_format.format(k) +
                                     hder_format_io.format(basename(v)),

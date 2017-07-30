@@ -4,6 +4,7 @@ import curio
 import pytest
 
 import asks
+asks.init('curio')
 from asks.sessions import HSession, DSession
 from asks.errors import TooManyRedirects, RequestTimeout
 

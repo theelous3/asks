@@ -11,8 +11,7 @@ The homogeneous session (HSession) is for making requests to a single location.
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
-import curio
-from curio import socket, open_connection
+from asks import _async_lib
 
 from .request import Request
 from .cookie_utils import CookieTracker
@@ -34,9 +33,9 @@ class BaseSession:
         '''
         Creates a normal async socket, returns it.
         '''
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        await sock.connect(location)
+        sock = await _async_lib.open_connection(location[0],
+                                                80,
+                                                ssl=False)
         sock._active = True
         return sock
 
@@ -44,10 +43,10 @@ class BaseSession:
         '''
         Creates an async SSL socket, returns it.
         '''
-        sock = await open_connection(location[0],
-                                     443,
-                                     ssl=True,
-                                     server_hostname=location[0])
+        sock = await _async_lib.open_connection(location[0],
+                                                443,
+                                                ssl=True,
+                                                server_hostname=location[0])
         sock._active = True
         return sock
 
@@ -151,11 +150,11 @@ class BaseSession:
         if timeout is None:
             sock, r = await req_obj.make_request()
         else:
-            response_task = await curio.spawn(req_obj.make_request())
+            response_task = await _async_lib.spawn(req_obj.make_request())
             try:
-                sock, r = await curio.timeout_after(
+                sock, r = await _async_lib.timeout_after(
                     timeout, response_task.join())
-            except curio.TaskTimeout:
+            except _async_lib.TaskTimeout:
                 await response_task.cancel()
                 raise RequestTimeout
 
@@ -226,7 +225,7 @@ class HSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.sema = curio.BoundedSemaphore(value=connections)
+        self.sema = _async_lib.BoundedSemaphore(value=connections)
         self.in_connection_counter = 0
 
     async def _grab_connection(self, off_base_loc=False):
@@ -252,7 +251,7 @@ class HSession(BaseSession):
                     self.in_connection_counter += 1
                     break
                 else:
-                    await curio.sleep(0)
+                    await _async_lib.sleep(0)
                     continue
             return sock, port
         while True:
@@ -267,7 +266,7 @@ class HSession(BaseSession):
                     sock, self.port = (await self._connect())
                     self.checked_out_sockets.append(sock)
                     break
-            await curio.sleep(0)
+            await _async_lib.sleep(0)
             continue
 
         return sock
@@ -286,7 +285,7 @@ class HSession(BaseSession):
                 self.checked_out_sockets.remove(sock)
                 self.conn_pool.appendleft(sock_new)
                 break
-            await curio.sleep(0)
+            await _async_lib.sleep(0)
             continue
         self.in_connection_counter -= 1
 
@@ -329,7 +328,7 @@ class DSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.sema = curio.BoundedSemaphore(value=1)
+        self.sema = _async_lib.BoundedSemaphore(value=1)
         self.in_connection_counter = 0
 
     def _checkout_connection(self, host_loc):
@@ -383,7 +382,7 @@ class DSession(BaseSession):
                 sock = await self._make_connection(host_loc)
                 self.checked_out_sockets.append(sock)
                 break
-            await curio.sleep(0)
+            await _async_lib.sleep(0)
             continue
 
         return sock
