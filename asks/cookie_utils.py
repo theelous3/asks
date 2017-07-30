@@ -28,14 +28,12 @@ class CookieTracker:
         domains = self.domain_dict.keys()
 
         if domains:
-            if endpoint in domains:
-                relevant_domains.append(self.domain_dict[endpoint])
-            parts = endpoint.split('/')
-
-            for index in range(1, len(parts)):
-                check_domain = '/'.join(parts[:-index])
+            paths = []
+            for path in endpoint.split('/'):
+                paths.append(path)
+                check_domain = '/'.join(paths)
                 if check_domain in domains:
-                    relevant_domains.append(self.domain_dict[check_domain])
+                    relevant_domains.append(check_domain)
         return self._get_cookies_to_send(relevant_domains)
 
     def _get_cookies_to_send(self, domain_list):
