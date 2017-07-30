@@ -1,13 +1,11 @@
-'''
-Class for holding cookies in sessions, adding statefullness to
-the otherwise stateless general http method functions.
-'''
-
-
 __all__ = ['CookieTracker']
 
 
 class CookieTracker:
+    '''
+    Class for holding cookies in sessions, adding statefullness to
+    the otherwise stateless general http method functions.
+    '''
     def __init__(self):
         self.domain_dict = {}
 
