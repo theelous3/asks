@@ -6,6 +6,8 @@ from zlib import decompress as zdecompress
 
 import h11
 
+from asks import _async_lib
+
 
 class Response:
     '''
@@ -167,7 +169,8 @@ class StreamBody:
         while True:
             event = self.hconnection.next_event()
             if event is h11.NEED_DATA:
-                self.hconnection.receive_data((await self.sock.recv(10000)))
+                self.hconnection.receive_data(
+                    (await _async_lib.recv(self.sock, 10000)))
                 continue
             return event
 

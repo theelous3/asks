@@ -455,8 +455,7 @@ class Request:
             k, v = kv
 
             try:
-                async with _async_lib.aopen(v, 'rb') as o_file:
-                    pkg_body = b''.join(await o_file.readlines()) + b'\r\n'
+                pkg_body = await self.file_manager(v)
                 multip_pkg += bytes(hder_format.format(k) +
                                     hder_format_io.format(basename(v)),
                                     self.encoding)
@@ -478,6 +477,16 @@ class Request:
             if index == num_of_parts:
                 multip_pkg += b'--' + boundary + b'--\r\n'
         return multip_pkg
+
+    async def file_manager(self, path):
+        try:
+            async with _async_lib.aopen(path, 'rb') as f:
+                return b''.join(await f.readlines()) + b'\r\n'
+        except AttributeError:
+            f = await _async_lib.aopen(path, 'rb')
+            file_data = b''.join(await f.readlines()) + b'\r\n'
+            await f.close()
+            return file_data
 
     def _queryify(self, query):
         '''
