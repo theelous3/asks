@@ -12,6 +12,8 @@ from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
 from asks import _async_lib
+from trio import Cancelled
+from curio import TaskTimeout
 
 from .request import Request
 from .cookie_utils import CookieTracker
@@ -150,12 +152,20 @@ class BaseSession:
         if timeout is None:
             sock, r = await req_obj.make_request()
         else:
-            response_task = await _async_lib.spawn(req_obj.make_request())
             try:
-                sock, r = await _async_lib.timeout_after(
-                    timeout, response_task.join())
-            except _async_lib.TaskTimeout:
-                await response_task.cancel()
+                async with _async_lib.timeout_after(timeout):
+                    async with _async_lib.task_manager() as m:
+                        try:
+                            response_task = await m.spawn(
+                                req_obj.make_request)
+                        except TypeError:
+                            response_task = m.spawn(
+                                req_obj.make_request)
+                try:
+                    sock, r = response_task.result.unwrap()
+                except AttributeError:
+                    sock, r = response_task.result
+            except (_async_lib.TaskTimeout):
                 raise RequestTimeout
 
         if sock is not None:
@@ -225,7 +235,6 @@ class HSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.sema = _async_lib.BoundedSemaphore(value=connections)
         self.in_connection_counter = 0
 
     async def _grab_connection(self, off_base_loc=False):
@@ -328,7 +337,6 @@ class DSession(BaseSession):
 
         self.conn_pool = SocketQ(maxlen=connections)
         self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.sema = _async_lib.BoundedSemaphore(value=1)
         self.in_connection_counter = 0
 
     def _checkout_connection(self, host_loc):
