@@ -152,21 +152,7 @@ class BaseSession:
         if timeout is None:
             sock, r = await req_obj.make_request()
         else:
-            try:
-                async with _async_lib.timeout_after(timeout):
-                    async with _async_lib.task_manager() as m:
-                        try:
-                            response_task = await m.spawn(
-                                req_obj.make_request)
-                        except TypeError:
-                            response_task = m.spawn(
-                                req_obj.make_request)
-                try:
-                    sock, r = response_task.result.unwrap()
-                except AttributeError:
-                    sock, r = response_task.result
-            except (_async_lib.TaskTimeout):
-                raise RequestTimeout
+            sock, r = await self.timeout_manager(timeout, req_obj)
 
         if sock is not None:
             try:
@@ -187,6 +173,30 @@ class BaseSession:
     put = partialmethod(request, 'PUT')
     delete = partialmethod(request, 'DELETE')
     options = partialmethod(request, 'OPTIONS')
+
+    async def timeout_manager(self, timeout, req_obj):
+        try:
+
+            try:
+                async with _async_lib.timeout_after(timeout):
+                    async with _async_lib.task_manager() as m:
+                            response_task = await m.spawn(
+                                req_obj.make_request)
+                    sock, r = response_task.result
+            except _async_lib.TaskTimeout:
+                raise RequestTimeout
+
+        except AttributeError:
+
+            try:
+                with _async_lib.timeout_after(timeout):
+                    async with _async_lib.task_manager() as m:
+                        response_task = m.spawn(req_obj.make_request)
+                    sock, r = response_task.result.unwrap()
+            except _async_lib.TaskTimeout:
+                raise RequestTimeout
+
+        return sock, r
 
 
 class HSession(BaseSession):
