@@ -1,7 +1,6 @@
 __all__ = ['trio_open_connection', 'trio_send_all', 'trio_receive_some',
            'curio_sendall', 'curio_recv']
 
-from contextlib import contextmanager
 
 import trio
 

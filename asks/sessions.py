@@ -12,8 +12,6 @@ from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
 from asks import _async_lib
-from trio import Cancelled
-from curio import TaskTimeout
 
 from .request import Request
 from .cookie_utils import CookieTracker
@@ -180,8 +178,8 @@ class BaseSession:
             try:
                 async with _async_lib.timeout_after(timeout):
                     async with _async_lib.task_manager() as m:
-                            response_task = await m.spawn(
-                                req_obj.make_request)
+                        response_task = await m.spawn(
+                            req_obj.make_request)
                     sock, r = response_task.result
             except _async_lib.TaskTimeout:
                 raise RequestTimeout

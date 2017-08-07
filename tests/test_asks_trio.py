@@ -1,11 +1,10 @@
+# pylint: disable=wrong-import-position
 from os import path
 
 import trio
 import pytest
 
 import asks
-asks.init('trio')
-from asks.sessions import HSession, DSession
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
@@ -15,9 +14,14 @@ def trio_run(func):
     return func_wrapper
 
 
+def awat():
+    asks.init('trio')
+
+
 # GET tests
 @trio_run
 async def test_https_get():
+    awat()
     r = await asks.get('https://www.reddit.com')
     assert r.status_code == 200
 
@@ -213,6 +217,7 @@ async def hsession_t_smallpool(s):
 
 @trio_run
 async def test_hsession_smallpool():
+    from asks.sessions import HSession
     s = HSession('http://httpbin.org', connections=2)
     async with trio.open_nursery() as n:
         for _ in range(10):
@@ -227,6 +232,7 @@ async def hsession_t_stateful(s):
 
 @trio_run
 async def test_session_stateful():
+    from asks.sessions import HSession
     s = HSession(
         'https://google.ie', persist_cookies=True)
     async with trio.open_nursery() as n:
@@ -245,6 +251,7 @@ async def session_t_smallpool(s):
 
 @trio_run
 async def test_Session_smallpool():
+    from asks.sessions import DSession
     s = DSession(connections=2)
     async with trio.open_nursery() as n:
         for _ in range(10):
