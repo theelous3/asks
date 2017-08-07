@@ -1,4 +1,6 @@
 # pylint: disable=wildcard-import
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=wrong-import-position
 
 
 class _AsyncLib:
@@ -14,7 +16,6 @@ _async_lib = _AsyncLib()
 
 
 def init(lib_name):
-    # TODO: add more error handling and checks
     if lib_name == 'curio':
         import curio
         from ._event_loop_wrappers import (curio_sendall,

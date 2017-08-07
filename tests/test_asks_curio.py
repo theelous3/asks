@@ -1,11 +1,10 @@
+# pylint: disable=wrong-import-position
 from os import path
 
 import curio
 import pytest
 
 import asks
-asks.init('curio')
-from asks.sessions import HSession, DSession
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
@@ -15,9 +14,14 @@ def curio_run(func):
     return func_wrapper
 
 
+def awat():
+    asks.init('curio')
+
+
 # GET tests
 @curio_run
 async def test_https_get():
+    awat()
     r = await asks.get('https://www.reddit.com')
     assert r.status_code == 200
 
@@ -212,6 +216,7 @@ async def hsession_t_smallpool(s):
 
 @curio_run
 async def test_hsession_smallpool():
+    from asks.sessions import HSession
     s = HSession('http://httpbin.org', connections=2)
     async with curio.TaskGroup() as g:
         for _ in range(10):
@@ -226,6 +231,7 @@ async def hsession_t_stateful(s):
 
 @curio_run
 async def test_session_stateful():
+    from asks.sessions import HSession
     s = HSession(
         'https://google.ie', persist_cookies=True)
     async with curio.TaskGroup() as g:
@@ -244,6 +250,7 @@ async def session_t_smallpool(s):
 
 @curio_run
 async def test_Session_smallpool():
+    from asks.sessions import DSession
     s = DSession(connections=2)
     for _ in range(10):
         await curio.spawn(session_t_smallpool(s))
