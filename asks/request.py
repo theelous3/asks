@@ -19,7 +19,7 @@ __all__ = ['Request']
 
 
 _BOUNDARY = "8banana133744910kmmr13ay5fa56" + str(randint(1e3, 9e3))
-_WWX_MATCH = re.compile(r'\Aww.\.')
+_WWX_MATCH = re.compile(r'\Aww.\.')  # careful now
 _MAX_BYTES = 4096
 
 

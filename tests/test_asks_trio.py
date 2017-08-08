@@ -1,4 +1,5 @@
 # pylint: disable=wrong-import-position
+# pylint: disable=no-member
 from os import path
 
 import trio

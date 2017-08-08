@@ -1,21 +1,60 @@
+'''
+Alright, you're probably having a heart attack looking at this right now.
+Just breathe, and it will be ok, I promise!
+
+asks was initially created just to support curio, until trio came along
+with its similar design and approach to async in python. Why not support both?
+
+So, the idea here is that asks, after import, must be told explicitly which
+event loop to use. Upon first import, asks has _AsyncLib which is an empty
+shell. Upon asks' initialisation the instance of _AsyncLib asks uses is
+populated either with functions and classes directly from the chosen async lib,
+or with wrappers around those functions and classes such that they share the
+same api to the extent asks requires.
+
+This results in a meeting point between the two libraries which asks can use
+arbitrarily. (You can even run a trio event loop, and then run the same
+functions with curio! Not recommended, but hey. It's fun.)
+
+For the sake of simplicity, where possible, the methods of _AsyncLib use the
+curio name. For example, TaskTimeout from curio rather than
+TooSlowError from trio. This is not indicative of any preference to the
+libraries themselves, it just required fewer changes to asks' internals to
+implement.
+'''
+
 # pylint: disable=wildcard-import
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=wrong-import-position
+# pylint: disable=no-member
 
 
 class _AsyncLib:
-
-    # when _async_lib.something is requested, _async_lib.__dict__['something']
-    # is checked before _async_lib.__getattr__('something')
+    '''
+    When _async_lib.something is requested, _async_lib.__dict__['something']
+    is checked before _async_lib.__getattr__('something')
+    '''
     def __getattr__(self, attr):
         # the __dict__ is empty when a new instance has just been created
         if not self.__dict__:
             raise RuntimeError("asks.init() wasn't called")
 
+
+# the instance asks uses internally
 _async_lib = _AsyncLib()
 
 
 def init(lib_name):
+    '''
+    Must be called at some point after asks import and before your event loop
+    is run.
+
+    Populates the _async_lib instance of _AsyncLib with methods relevant to the
+    async library you are using.
+
+    Args:
+        lib_name (str): Either 'curio' or 'trio'.
+    '''
     if lib_name == 'curio':
         import curio
         from ._event_loop_wrappers import (curio_sendall,
