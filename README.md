@@ -2,7 +2,7 @@
 
 
 # asks
-asks is an async requests-like http lib, for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) async lib.
+asks is an async requests-like http lib, for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) and [trio](https://github.com/python-trio/trio) async libs.
 
 asks aims to have a mostly familiar API, using simple functions/methods like `get()` for getting, `post()` for posting. At the heart of asks are two session classes, which make interacting with the web in a sustained and fluid way fast, efficient, and simple. Check out the examples!
 
@@ -27,6 +27,7 @@ Above you'll find detailed docs with a large number of simple examples to help y
 # A little silly to async one request, but not without its use!
 import asks
 import curio
+asks.init('curio')
 
 async def example():
     r = await asks.get('https://example.org')
@@ -40,7 +41,8 @@ curio.run(example())
 # in a list.
 
 import asks
-import curio
+import trio
+asks.init('trio')
 
 path_list = ['a', 'list', 'of', '1000', 'paths']
 
@@ -51,11 +53,12 @@ async def grabber(path):
     results.append(r)
 
 async def main(path_list):
-    for path in path_list:
-        curio.spawn(grabber(path))
+    async with trio.open_nursery() as n:
+        for path in path_list:
+            n.spawn(grabber(path))
 
-s = asks.DSession()
-curio.run(main(path_list))
+s = asks.Session()
+trio.run(main, path_list)
 ```
 
 

@@ -241,7 +241,7 @@ async def test_session_stateful():
     assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
 
 
-# Test Session with one pooled connections on four get requests.
+# Test Session with two pooled connections on four get requests.
 async def session_t_smallpool(s):
     r = await s.get('http://httpbin.org/get')
     assert r.status_code == 200
