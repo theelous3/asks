@@ -1,9 +1,5 @@
 '''
-The two session classes.
-
-The disparate session (DSession) is for making requests to multiple locations.
-The homogeneous session (HSession) is for making requests to a single location.
-
+The disparate session (Session) is for making requests to multiple locations.
 '''
 
 # pylint: disable=no-else-return
@@ -20,7 +16,7 @@ from .utils import get_netloc_port
 from .errors import RequestTimeout
 
 
-__all__ = ['HSession', 'DSession']
+__all__ = ['Session']
 
 
 class BaseSession:
@@ -50,16 +46,17 @@ class BaseSession:
         sock._active = True
         return sock
 
-    async def _connect(self, host_loc=None):
+    async def _connect(self, host_loc):
         '''
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
         '''
+        print('host loc is', host_loc)
         scheme, netloc, path, parameters, query, fragment = urlparse(
-            host_loc or self.host)
+            host_loc)
         if parameters or query or fragment:
             raise ValueError('Supplied info beyond scheme, netloc.' +
-                             ' Host should be top level only:\n', path)
+                             ' Host should be top level only: ', path)
 
         netloc, port = get_netloc_port(scheme, netloc)
         if scheme == 'http':
@@ -72,12 +69,14 @@ class BaseSession:
     async def request(self, method, url=None, *, path='', **kwargs):
         '''
         This is the template for all of the `http method` methods for
-        the HSession and DSession.
+        the Session.
 
         Args:
             method (str): A http method, such as 'GET' or 'POST'.
             url (str): The url the request should be made to.
-            path (str): An optional kw-arg for use in HSession method calls.
+            path (str): An optional kw-arg for use in Session method calls,
+                for specifying a particular path. Usually to be used in
+                conjunction with the base_location/endpoint paradigm.
             kwargs: Any number of the following:
                         data (dict or str): Info to be processed as a
                             body-bound query.
@@ -107,44 +106,27 @@ class BaseSession:
                         auth (child of AuthBase): An object for handling auth
                             construction.
 
-        When you call something like DSession.get() or asks.post(), you're
+        When you call something like Session.get() or asks.post(), you're
         really calling a partial method that has the 'method' argument
         pre-completed.
-
-        When this method is used in a DSession, like so:
-            s = asks.DSession()
-            s.get('https://example.org')
-        ...you're passing your url string under the `url` keyword positional
-        arg. All DSession methods bar a direct call to `request` pass the
-        `method` argument implicitly.
-
-        When this method is used in a HSession, like this:
-            s = asks.HSession('https://example.org')
-            s.get()
-        ...both the method *and* url are passed implicitly. The url in this
-        case is the concatenation of .host and .endpoint. The url may be
-        further augmented by explicitly using the `path` kw-arg.
-            s = asks.HSession('https://example.org')
-            s.endpoint = '/chat'
-            s.get(path='/chat-room-1')
-            # results in a call to 'https://example.org/chat/chat-room-1'
         '''
         timeout = kwargs.pop('timeout', None)
 
         if url is None:
             url = self._make_url() + path
-            sock = await self._grab_connection()
-            port = self.port
+            sock = await self._grab_connection(url)
+            port = sock.port
         else:
             sock = await self._grab_connection(url)
             port = sock.port
+
         req_obj = Request(self,
                           method,
                           url,
                           port,
                           encoding=self.encoding,
                           sock=sock,
-                          persist_cookies=self.cookie_tracker_obj,
+                          persist_cookies=self._cookie_tracker_obj,
                           **kwargs)
 
         if timeout is None:
@@ -197,131 +179,16 @@ class BaseSession:
         return sock, r
 
 
-class HSession(BaseSession):
+class Session(BaseSession):
     '''
-    The Homogeneous Session.
-    This type of session is built to deal with many requests to a single host.
-    An example of this, would be dealing with an api or scraping all of the
-    comics from xkdc.
-
-    You instance it with the top level domain you'll be working with, and
-    can basically just start calling methods on it right away.
-    '''
-    def __init__(self,
-                 host,
-                 endpoint=None,
-                 encoding='utf-8',
-                 persist_cookies=None,
-                 connections=1):
-        '''
-        Args:
-            host (str): The top level domain to which all of the
-                requests will be made. Example: 'https://example.org'
-            endpoint (str): The base uri can be augmented further. Example:
-                '/chat'. Calling one of the http method methods without a
-                further path, like .get(), would result in a request to
-                'https://example.org/chat'
-            encoding (str): The encoding asks'll try to use on response bodies.
-            persist_cookies (bool): Passing True turns on browserishlike
-                stateful cookie behaviour, returning cookies to the host when
-                appropriate.
-            connections (int): The max number of concurrent connections to the
-                host asks will allow its self to have. The default number of
-                connections is ONE. You *WILL* want to change this value to
-                suit your application and the limits of the remote host you're
-                working with.
-        '''
-        self.encoding = encoding
-        self.endpoint = endpoint
-        self.host = host
-        self.port = None
-
-        if persist_cookies is True:
-            self.cookie_tracker_obj = CookieTracker()
-        else:
-            self.cookie_tracker_obj = persist_cookies
-
-        self.conn_pool = SocketQ(maxlen=connections)
-        self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.in_connection_counter = 0
-
-    async def _grab_connection(self, off_base_loc=False):
-        '''
-        The connection pool handler. Returns a connection
-        to the caller. If there are no connections ready, and
-        as many connections checked out as there are available total,
-        we yield control to the event loop.
-
-        If there is a connection ready or space to create a new one, we
-        pop it, register it as checked out, and return it.
-
-        Args:
-            off_base_loc (str): Passing a uri here indicates that we are
-                straying from the base location set on instantiation, and
-                creates a new connection to the provided domain.
-        '''
-        if off_base_loc:
-            while True:
-                if self.in_connection_counter < self.conn_pool.maxlen:
-                    sock, port = await self._connect(host_loc=off_base_loc)
-                    self.checked_out_sockets.append(sock)
-                    self.in_connection_counter += 1
-                    break
-                else:
-                    await _async_lib.sleep(0)
-                    continue
-            return sock, port
-        while True:
-            try:
-                sock = self.conn_pool.pop()
-                self.checked_out_sockets.append(sock)
-                self.in_connection_counter += 1
-                break
-            except IndexError:
-                if self.in_connection_counter < self.conn_pool.maxlen:
-                    self.in_connection_counter += 1
-                    sock, self.port = (await self._connect())
-                    self.checked_out_sockets.append(sock)
-                    break
-            await _async_lib.sleep(0)
-            continue
-
-        return sock
-
-    async def _replace_connection(self, sock):
-        '''
-        Unregisters socket objects as checked out and returns them to pool.
-        '''
-        while True:
-            if sock._active:
-                self.checked_out_sockets.remove(sock)
-                self.conn_pool.appendleft(sock)
-                break
-            else:
-                sock_new, _ = await self._connect()
-                self.checked_out_sockets.remove(sock)
-                self.conn_pool.appendleft(sock_new)
-                break
-            await _async_lib.sleep(0)
-            continue
-        self.in_connection_counter -= 1
-
-    def _make_url(self):
-        '''
-        Puts together the hostloc and current endpoint for use in request uri.
-        '''
-        return self.host + (self.endpoint or '')
-
-
-class DSession(BaseSession):
-    '''
-    The disparate session class, for handling piles of unrelated requests.
-    This is just like requests' Session.
+    The Session class, for handling piles of requests.
 
     This class inherits from BaseSession, where all of the 'http method'
     methods are defined.
     '''
     def __init__(self,
+                 base_location=None,
+                 endpoint=None,
                  encoding='utf-8',
                  persist_cookies=None,
                  connections=20):
@@ -337,38 +204,42 @@ class DSession(BaseSession):
                 as you see fit.
         '''
         self.encoding = encoding
+        self.base_location = base_location
+        self.endpoint = endpoint
 
         if persist_cookies is True:
-            self.cookie_tracker_obj = CookieTracker()
+            self._cookie_tracker_obj = CookieTracker()
         else:
-            self.cookie_tracker_obj = persist_cookies
+            self._cookie_tracker_obj = persist_cookies
 
-        self.conn_pool = SocketQ(maxlen=connections)
-        self.checked_out_sockets = SocketQ(maxlen=connections)
-        self.in_connection_counter = 0
+        self._conn_pool = SocketQ(maxlen=connections)
+        self._checked_out_sockets = SocketQ(maxlen=connections)
+        self._in_connection_counter = 0
 
     def _checkout_connection(self, host_loc):
         try:
-            index = self.conn_pool.index(host_loc)
+            index = self._conn_pool.index(host_loc)
         except ValueError:
             return None
-        sock = self.conn_pool.pull(index)
-        self.checked_out_sockets.append(sock)
-        self.in_connection_counter += 1
+        sock = self._conn_pool.pull(index)
+        self._checked_out_sockets.append(sock)
+        self._in_connection_counter += 1
         return sock
 
     async def _replace_connection(self, sock):
         if sock._active:
-            self.checked_out_sockets.remove(sock)
+            self._checked_out_sockets.remove(sock)
         else:
-            self.checked_out_sockets.remove(sock)
+            self._checked_out_sockets.remove(sock)
             sock = (await self._make_connection(sock.host))
 
-        self.conn_pool.appendleft(sock)
-        self.in_connection_counter -= 1
+        self._conn_pool.appendleft(sock)
+        self._in_connection_counter -= 1
 
     async def _make_connection(self, host_loc):
-        sock, port = await self._connect(host_loc=host_loc)
+        print(host_loc)
+        sock, port = await self._connect(host_loc)
+        print(sock, port)
         sock.host, sock.port = host_loc, port
         return sock
 
@@ -380,7 +251,7 @@ class DSession(BaseSession):
         we yield control to the event loop.
 
         If there is a connection ready or space to create a new one, we
-        pop it, register it as checked out, and return it.
+        pop/create it, register it as checked out, and return it.
 
         Args:
             url (str): breaks the url down and uses the top level location
@@ -389,16 +260,23 @@ class DSession(BaseSession):
         '''
         scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
+
         while True:
             sock = self._checkout_connection(host_loc)
             if sock is not None:
                 break
-            if self.in_connection_counter < self.conn_pool.maxlen:
-                self.in_connection_counter += 1
+            if self._in_connection_counter < self._conn_pool.maxlen:
+                self._in_connection_counter += 1
                 sock = await self._make_connection(host_loc)
-                self.checked_out_sockets.append(sock)
+                self._checked_out_sockets.append(sock)
                 break
             await _async_lib.sleep(0)
             continue
 
         return sock
+
+    def _make_url(self):
+        '''
+        Puts together the hostloc and current endpoint for use in request uri.
+        '''
+        return self.base_location or '' + self.endpoint or ''

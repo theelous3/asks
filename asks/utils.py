@@ -10,4 +10,7 @@ def get_netloc_port(scheme, netloc):
             port = '443'
         else:
             port = '80'
+    except TypeError:
+        print(scheme, netloc)
+        raise RuntimeError
     return netloc, port

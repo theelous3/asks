@@ -1,11 +1,11 @@
 '''
 These functions are for making small amounts of async requests.
-They construct temporary DSessions, returning the resulting response object
+They construct a temporary Session, returning the resulting response object
 to the caller.
 '''
 from functools import partial
 
-from asks.sessions import DSession
+from asks.sessions import Session
 
 
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
@@ -25,7 +25,7 @@ async def request(method, uri, **kwargs):
         Response: An asks.Response object.
     '''
     c_interact = kwargs.pop('persist_cookies', None)
-    s = DSession(persist_cookies=c_interact)
+    s = Session(persist_cookies=c_interact)
     r = await s.request(method, url=uri, **kwargs)
     return r
 
