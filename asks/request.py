@@ -485,7 +485,6 @@ class Request:
         except AttributeError:
             f = await _async_lib.aopen(path, 'rb')
             file_data = b''.join(await f.readlines()) + b'\r\n'
-            await f.close()
             return file_data
 
     def _queryify(self, query):
