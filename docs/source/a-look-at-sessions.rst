@@ -63,7 +63,7 @@ _________________________________
 
 Often you'll want to programatically make many quite similar calls to a webservice. Worrying about constructing and reconstructing urls can be a pain, so asks has support for a different approach.
 
-``Session``s have a ``base_location`` and ``endpoint`` attribute which can be programatically set, and augmented using a http method's ``path`` parameter.
+``Session`` 's have a ``base_location`` and ``endpoint`` attribute which can be programatically set, and augmented using a http method's ``path`` parameter.
 
 In the next example, we’ll make 1k calls over fifty connections to http://echo.jsontest.com. We’ll do much of the same as above, except we’ll set a base location of ``http://echo.jsontest.com`` an ``endpoint`` of ``/asks/test`` and in each request pass a number as a ``path``, like ``/1``.
 
@@ -83,7 +83,8 @@ Please don't actually do this or the jsontest.com website will be very unhappy. 
         print(r.text)
 
     async def main():
-        s = Session(base_location='http://echo.jsontest.com', connections=50)
+        s = Session(connections=50)
+        s.base_location = 'http://echo.jsontest.com'
         s.endpoint = '/asks/test'
         for i in range(1, 1001):
             await curio.spawn(worker(i))

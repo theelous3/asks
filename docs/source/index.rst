@@ -25,6 +25,7 @@ asks is compatible with `curio` and `trio`.
 It is important to note that the code examples in this documentation are to showcase asks, and not curio or trio. In real code, it would be benificial to use things like taskgroups/nurserys and other neat tools to manage your requests. Here's a link to curio and trio's docs for refrence:
 
 http://curio.rtfd.io/
+
 http://trio.rtfd.io
 
 
@@ -39,7 +40,7 @@ The easiest way to install asks is to pip it::
 
 Internally asks uses the excellent `h11 <https://github.com/njsmith/h11>`_. It will be installed automatically.
 
-asks was built for use with `Curio <https://github.com/dabeaz/curio>`_ and `trio <https://github.com/python-trio/trio>`_
+asks was built for use with `curio <https://github.com/dabeaz/curio>`_ and `trio <https://github.com/python-trio/trio>`_
 
 Importing asks
 ______________
