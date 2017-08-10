@@ -20,11 +20,13 @@ _____________
 
 asks is an async http lib that can best be described as an effort to bring the same level of usable abstraction that requests offers synchronous python, to asynchronous python programming. Ideal for api interactions, webscraping etc.
 
-It is important to note that the code examples in this documentation are to showcase asks, and not curio. In real code, it would be benificial to use things like curio's taskgroups and other neat tools to manage your requests. Here's a link to curio's docs for refrence:
+asks is compatible with `curio` and `trio`.
+
+It is important to note that the code examples in this documentation are to showcase asks, and not curio or trio. In real code, it would be benificial to use things like taskgroups/nurserys and other neat tools to manage your requests. Here's a link to curio and trio's docs for refrence:
 
 http://curio.rtfd.io/
+http://trio.rtfd.io
 
-(The most useful thing to know when dealing with asks is a BoundedSemaphore, `for which I've written an example with asks <http://asks.readthedocs.io/en/latest/idioms.html#sanely-making-many-requests-with-semaphores>`_ )
 
 Installation:
 _____________
@@ -35,8 +37,34 @@ The easiest way to install asks is to pip it::
 
     pip install asks
 
-asks was built for use with `Curio <https://github.com/dabeaz/curio>`_.
-Internally asks uses the excellent `h11 <https://github.com/njsmith/h11>`_.
+Internally asks uses the excellent `h11 <https://github.com/njsmith/h11>`_. It will be installed automatically.
+
+asks was built for use with `Curio <https://github.com/dabeaz/curio>`_ and `trio <https://github.com/python-trio/trio>`_
+
+Importing asks
+______________
+
+You must specify what event loop asks should use after importing asks, and at some point before you run any code that uses asks. The event loop is set with ``asks.init()``. The following code will run the ``example`` coroutine once with curio and once with trio: ::
+
+    import asks
+    import curio
+    import trio
+
+    async def example():
+        r = asks.get('https://example.org')
+
+    asks.init('curio')
+    curio.run(example)
+
+    asks.init('trio')
+    trio.run(example)
+
+If you forget to initialise asks with an eventloop you'll get a ``RuntimeError``.
+
+A quick note on the examples in these docs
+__________________________________________
+
+asks began by only supporting curio, and the code examples use curio throughout. At any point in the examples you could switch say, ``async with curio.TaskGroup`` to ``async with trio.open_nursery``, and everything would be the same bar curio/trio's api differences. Internally, asks has no bias for either library. Both are beautiful creatures.
 
 A dirty little example:
 _______________________
@@ -46,6 +74,7 @@ Here's how to grab a single request and print it's content::
     # single_get.py
     import asks
     import curio
+    asks.init('curio')
 
     async def grabber(url):
         r = await asks.get(url)
@@ -62,7 +91,7 @@ Making one request in an async program is a little weird, but not without its us
 A far finer example:
 ____________________
 
-Here's an example of making 1000 calls to an api and storing the results in a list. We'll use the ``HSession`` here because all of our requests are to the same top level domain!::
+Here's an example of making 1000 calls to an api and storing the results in a list. We'll use the ``Session`` class here to take advantage of connection pooling.::
 
     # many_get.py
     # make a whole pile of api calls and store
@@ -71,12 +100,13 @@ Here's an example of making 1000 calls to an api and storing the results in a li
 
     import asks
     import curio
+    asks.init('curio')
 
     path_list = ['a', 'list', 'of', '1000', 'paths']
 
     retrieved_responses = []
 
-    s = asks.HSession('https://some-web-service.com',
+    s = asks.Session('https://some-web-service.com',
                       connections=20)
 
     async def grabber(a_path):
@@ -97,9 +127,9 @@ A thousand requests running async at the drop of a hat, using clean burning conn
 Why asks?
 _________
 
-If you like async, but don't like the spaghetti-docs furture-laden many-looped asyncio lib, you'll probably love curio. If you wish you could marry curio and requests, you'll probably love asks.
+If you like async, but don't like the spaghetti-docs furture-laden many-looped asyncio lib, you'll probably love curio and trio. If you wish you could marry them with requests, you'll probably love asks.
 
-Nice libs like aiohttp suffer the side effect of uglyness due to being specifically for asyncio. Inspired by requests and curio, I wanted to take that lovely ultra abstraction and apply it to an async http lib to eleviate some of the pain in dealing with async http.
+Nice libs like aiohttp suffer the side effect of uglyness due to being specifically for asyncio. Inspired by requests and the fancy new-age async libs, I wanted to take that lovely ultra abstraction and apply it to an async http lib to eleviate some of the pain in dealing with async http.
 
 
 Features
@@ -107,11 +137,11 @@ ________
 
 asks packs most if not all of the features requests does. The usual ``.json()`` ing of responses and such. You can take a more in depth look `here <https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html>`_.
 
-However, because asks is aimed at crunching large piles of requests it takes a different approach to sessions. Sessions in asks are the main focus. More detail can be found `here <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
+Because asks is aimed at crunching large piles of requests its Session has some features you may not be aware of. Sessions in asks are the main focus. More detail can be found `here <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
 The Future
 __________
-As soon as `trio <https://github.com/python-trio/trio>`_ supports async file i/o, asks will be available for trio too :)
+Now that's trio support has been implemented, it's housecleaning time. asks has some cobwebs that need clearing, and refactoring those in to a nice silk dress is the current focus.
 
 Contributing
 ____________

@@ -3,9 +3,9 @@ asks - An overview of the functions and kw/argumetns.
 
 asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
-The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``DSession`` and ``HSession`` classes as methods.
+The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
 
-(Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``DSession``.)
+(Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``Session``.)
 
 
 General HTTP methods
