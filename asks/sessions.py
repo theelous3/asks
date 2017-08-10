@@ -51,7 +51,6 @@ class BaseSession:
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
         '''
-        print('host loc is', host_loc)
         scheme, netloc, path, parameters, query, fragment = urlparse(
             host_loc)
         if parameters or query or fragment:
@@ -237,9 +236,7 @@ class Session(BaseSession):
         self._in_connection_counter -= 1
 
     async def _make_connection(self, host_loc):
-        print(host_loc)
         sock, port = await self._connect(host_loc)
-        print(sock, port)
         sock.host, sock.port = host_loc, port
         return sock
 
