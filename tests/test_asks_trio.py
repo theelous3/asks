@@ -78,7 +78,7 @@ async def test_http_timeout_error():
 
 @trio_run
 async def test_http_timeout():
-    r = await asks.get('http://httpbin.org/delay/1', timeout=2)
+    r = await asks.get('http://httpbin.org/delay/1', timeout=10)
     assert r.status_code == 200
 
 
