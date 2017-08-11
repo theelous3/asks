@@ -25,22 +25,22 @@ class BaseSession:
     Contains methods for creating sockets, figuring out which type of
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     '''
-    async def _open_connection_http(self, location):
+    async def _open_connection_http(self, location, port=None):
         '''
         Creates a normal async socket, returns it.
         '''
         sock = await _async_lib.open_connection(location[0],
-                                                80,
+                                                location[1],
                                                 ssl=False)
         sock._active = True
         return sock
 
-    async def _open_connection_https(self, location):
+    async def _open_connection_https(self, location, port=None):
         '''
         Creates an async SSL socket, returns it.
         '''
         sock = await _async_lib.open_connection(location[0],
-                                                443,
+                                                location[1],
                                                 ssl=True,
                                                 server_hostname=location[0])
         sock._active = True
@@ -190,7 +190,7 @@ class Session(BaseSession):
                  endpoint=None,
                  encoding='utf-8',
                  persist_cookies=None,
-                 connections=20):
+                 connections=1):
         '''
         Args:
             encoding (str): The encoding asks'll try to use on response bodies.
