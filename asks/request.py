@@ -361,16 +361,11 @@ class Request:
         '''
         c_type, body = None, ''
         multipart_ctype = 'multipart/form-data; boundary={}'.format(_BOUNDARY)
-        if self.files is not None and self.data is not None:
-            c_type = multipart_ctype
-            wombo_combo = {**self.files, **self.data}
-            body = await self._multipart(wombo_combo)
 
-        elif self.files is not None:
-            c_type = multipart_ctype
-            body = await self._multipart(self.files)
-
-        elif self.data is not None:
+        if self.data is not None:
+            if any(x is not None for x in [self.files, self.json]):
+                raise TypeError('data arg cannot be used in conjunction with'
+                                'files or json arg.')
             c_type = 'application/x-www-form-urlencoded'
             try:
                 body = self._dict_to_query(self.data, params=False)
@@ -378,7 +373,17 @@ class Request:
                 body = self.data
                 c_type = ' text/html'
 
+        elif self.files is not None:
+            if any(x is not None for x in [self.data, self.json]):
+                raise TypeError('files arg cannot be used in conjunction with'
+                                'data or json arg.')
+            c_type = multipart_ctype
+            body = await self._multipart(self.files)
+
         elif self.json is not None:
+            if any(x is not None for x in [self.data, self.files]):
+                raise TypeError('json arg cannot be used in conjunction with'
+                                'data or files arg.')
             c_type = 'application/json'
             body = _json.dumps(self.json)
 
