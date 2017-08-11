@@ -7,6 +7,7 @@ import mimetypes
 import re
 
 import h11
+from h11._util import RemoteProtocolError
 from asks import _async_lib
 
 from .auth import PreResponseAuth, PostResponseAuth
@@ -285,7 +286,7 @@ class Request:
             If it does redirect, it calls the appropriate method with the
             redirect location, returning the response object. Furthermore,
             if there is a redirect, this function is recursive in a roundabout
-            way, storingthe previous response object in `.history_objects`.
+            way, storing the previous response object in `.history_objects`.
         '''
         redirect, force_get, location = False, None, None
         if 300 <= response_obj.status_code < 400:
@@ -317,7 +318,7 @@ class Request:
                 self.uri = location
                 l_scheme, l_netloc, *_ = urlparse(location)
                 if l_scheme != self.scheme or l_netloc != self.netloc:
-                    await self._get_new_sock(off_base_loc=self.uri)
+                    await self._get_new_sock()
 
             # follow redirect with correct http method type
             if force_get:
@@ -336,7 +337,7 @@ class Request:
                 _, response_obj = await self.make_request()
         return response_obj
 
-    async def _get_new_sock(self, off_base_loc=False):
+    async def _get_new_sock(self):
         '''
         On 'Connetcion: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo, dunking
@@ -344,17 +345,8 @@ class Request:
         '''
         self.sock._active = False
         await self.session._replace_connection(self.sock)
-        from asks.sessions import Session
-        if isinstance(self.session, Session):
-            self.sock = await self.session._grab_connection(
-                self.uri)
-            self.port = self.sock.port
-        else:
-            if not off_base_loc:
-                self.sock = await self.session._grab_connection()
-            else:
-                self.sock, self.port = await self.session._grab_connection(
-                    off_base_loc=off_base_loc)
+        self.sock = await self.session._grab_connection(self.uri)
+        self.port = self.sock.port
 
     async def _formulate_body(self):
         '''
@@ -511,7 +503,11 @@ class Request:
         Returns:
             The most recent response object.
         '''
-        response = await self._recv_event(hconnection)
+        try:
+            response = await self._recv_event(hconnection)
+        except RemoteProtocolError:
+            await self._get_new_sock()
+            response = await self._recv_event(hconnection)
         resp_data = {'encoding': self.encoding,
                      'method': self.method,
                      'status_code': response.status_code,
@@ -557,8 +553,6 @@ class Request:
                     if isinstance(data, h11.Data):
                         resp_data['body'] += data.data
                     elif isinstance(data, h11.EndOfMessage):
-                        endof = data
-                        assert isinstance(endof, h11.EndOfMessage)
                         break
         else:
             endof = await self._recv_event(hconnection)

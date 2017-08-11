@@ -62,13 +62,14 @@ You must specify what event loop asks should use after importing asks, and at so
 
 If you forget to initialise asks with an eventloop you'll get a ``RuntimeError``.
 
+
 A quick note on the examples in these docs
 __________________________________________
 
 asks began by only supporting curio, and the code examples use curio throughout. At any point in the examples you could switch say, ``async with curio.TaskGroup`` to ``async with trio.open_nursery``, and everything would be the same bar curio/trio's api differences. Internally, asks has no bias for either library. Both are beautiful creatures.
 
-A dirty little example:
-_______________________
+A little example:
+_________________
 
 Here's how to grab a single request and print it's content::
 
@@ -89,8 +90,8 @@ Here's how to grab a single request and print it's content::
 Making one request in an async program is a little weird, but not without its use. This sort of basic ``asks.get()`` would slot in quite nicely in a greater program that makes some calls here and there.
 
 
-A far finer example:
-____________________
+A bigger little example:
+________________________
 
 Here's an example of making 1000 calls to an api and storing the results in a list. We'll use the ``Session`` class here to take advantage of connection pooling.::
 
