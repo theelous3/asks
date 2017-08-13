@@ -5,7 +5,6 @@ __all__ = ['get_netloc_port']
 def get_netloc_port(scheme, netloc):
     try:
         netloc, port = netloc.split(':')
-        print('NL PT:', netloc, port)
     except ValueError:
         if scheme == 'https':
             port = '443'
