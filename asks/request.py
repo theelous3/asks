@@ -348,7 +348,7 @@ class Request:
 
     async def _get_new_sock(self):
         '''
-        On 'Connetcion: close' headers we've to create a new connection.
+        On 'Connection: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         '''
