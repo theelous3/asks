@@ -74,11 +74,11 @@ def init(lib_name):
                                            trio_send_all,
                                            trio_receive_some)
         _async_lib.aopen = trio.open_file
+        _async_lib.open_connection = trio_open_connection
         _async_lib.sleep = trio.sleep
         _async_lib.task_manager = trio.open_nursery
         _async_lib.TaskTimeout = trio.TooSlowError
         _async_lib.timeout_after = trio.fail_after
-        _async_lib.open_connection = trio_open_connection
         _async_lib.sendall = trio_send_all
         _async_lib.recv = trio_receive_some
 
