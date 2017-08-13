@@ -51,7 +51,7 @@ You may also pass strings and iterables, asks will attempt to format them correc
     # sends in request body:
     b'?Elmo+wants+data'
 
-*Note: the ``data`` arg is incompatible with the ``files`` or ``json`` args.*
+*Note: the* ``data`` *arg is incompatible with the* ``files`` *and* ``json`` *args.*
 
 Custom Headers
 ______________
@@ -75,7 +75,7 @@ Note that if your workflow here involves opening a json file, you should use cur
     async def example():
         r = await asks.post('www.example.com', json=dict_to_send))
 
-*Note: the ``json`` arg is incompatible with the ``data`` or ``files`` args.*
+*Note: the* ``json`` *arg is incompatible with the* ``data`` *and* ``files`` *args.*
 
 
 Sending Files
@@ -93,7 +93,7 @@ Pass a dict in the form ``{filename: filepath}`` (as many as you like) and asks 
                             files={'file_1': 'my_file.txt',
                                    'some_data': 'I am multipart hear me roar'})
 
-*Note: the ``files`` arg is incompatible with the ``data`` or ``json`` args.*
+*Note: the* ``files`` *arg is incompatible with the* ``data`` *and* ``json`` *args.*
 
 
 Sending Cookies
