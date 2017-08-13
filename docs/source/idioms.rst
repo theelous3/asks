@@ -11,6 +11,7 @@ If we wanted to request two thousand urls, we wouldn't want to spawn two thousan
 
     import asks
     import curio
+    asks.init('curio')
 
     async def worker(sema, url):
         async with sema:
