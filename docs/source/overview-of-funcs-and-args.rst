@@ -3,9 +3,9 @@ asks - An overview of the functions and kw/argumetns.
 
 asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
 
-The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``DSession`` and ``HSession`` classes as methods.
+The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
 
-(Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``DSession``.)
+(Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``Session``.)
 
 
 General HTTP methods
@@ -51,6 +51,7 @@ You may also pass strings and iterables, asks will attempt to format them correc
     # sends in request body:
     b'?Elmo+wants+data'
 
+*Note: the* ``data`` *arg is incompatible with the* ``files`` *and* ``json`` *args.*
 
 Custom Headers
 ______________
@@ -66,13 +67,16 @@ Sending JSON
 ____________
 
 Pass python dict objects to the ``json`` argument to send them as json in your request.
-Note that if your workflow here involves opening a json file, you should use curio's ``aopen()`` to avoid stalling the program on disk reads. ::
+Note that if your workflow here involves opening a json file, you should use curio's ``aopen()`` or trio's ``open_file()`` to avoid stalling the program on disk reads. ::
 
     dict_to_send = {'Data_1': 'Important thing',
                     'Data_2': 'Really important thing'}
 
     async def example():
         r = await asks.post('www.example.com', json=dict_to_send))
+
+*Note: the* ``json`` *arg is incompatible with the* ``data`` *and* ``files`` *args.*
+
 
 Sending Files
 _____________
@@ -89,6 +93,7 @@ Pass a dict in the form ``{filename: filepath}`` (as many as you like) and asks 
                             files={'file_1': 'my_file.txt',
                                    'some_data': 'I am multipart hear me roar'})
 
+*Note: the* ``files`` *arg is incompatible with the* ``data`` *and* ``json`` *args.*
 
 
 Sending Cookies

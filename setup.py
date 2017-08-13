@@ -10,13 +10,13 @@ if ver < (3, 6):
 setup(
     name='asks',
     description='asks - async http',
-    long_description='asks is an async http lib for curio',
+    long_description='asks is an async http lib for curio and trio',
     license='MIT',
-    version='0.2.1',
+    version='1.2.1',
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
-    install_requires=['curio', 'h11'],
+    install_requires=['h11'],
     tests_require=['pytest'],
     classifiers=['Programming Language :: Python :: 3']
 )

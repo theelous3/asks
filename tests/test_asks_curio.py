@@ -1,10 +1,10 @@
+# pylint: disable=wrong-import-position
 from os import path
 
 import curio
 import pytest
 
 import asks
-from asks.sessions import HSession, DSession
 from asks.errors import TooManyRedirects, RequestTimeout
 
 
@@ -14,9 +14,14 @@ def curio_run(func):
     return func_wrapper
 
 
+def awat():
+    asks.init('curio')
+
+
 # GET tests
 @curio_run
 async def test_https_get():
+    awat()
     r = await asks.get('https://www.reddit.com')
     assert r.status_code == 200
 
@@ -72,7 +77,7 @@ async def test_http_timeout_error():
 
 @curio_run
 async def test_http_timeout():
-    r = await asks.get('http://httpbin.org/delay/1', timeout=2)
+    r = await asks.get('http://httpbin.org/delay/1', timeout=10)
     assert r.status_code == 200
 
 
@@ -200,10 +205,10 @@ async def test_callback():
     assert len(callback_data) == 8090
 
 
-# HSession Tests
+# Session Tests
 # =============
 
-# Test HSession with two pooled connections on four get requests.
+# Test Session with two pooled connections on four get requests.
 async def hsession_t_smallpool(s):
     r = await s.get(path='/get')
     assert r.status_code == 200
@@ -211,13 +216,14 @@ async def hsession_t_smallpool(s):
 
 @curio_run
 async def test_hsession_smallpool():
-    s = HSession('http://httpbin.org', connections=2)
+    from asks.sessions import Session
+    s = Session('http://httpbin.org', connections=2)
     async with curio.TaskGroup() as g:
         for _ in range(10):
             await g.spawn(hsession_t_smallpool(s))
 
 
-# Test stateful HSession
+# Test stateful Session
 async def hsession_t_stateful(s):
     r = await s.get()
     assert r.status_code == 200
@@ -225,17 +231,18 @@ async def hsession_t_stateful(s):
 
 @curio_run
 async def test_session_stateful():
-    s = HSession(
+    from asks.sessions import Session
+    s = Session(
         'https://google.ie', persist_cookies=True)
     async with curio.TaskGroup() as g:
         await g.spawn(hsession_t_stateful(s))
-    assert 'www.google.ie' in s.cookie_tracker_obj.domain_dict.keys()
+    assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
 
 
-# DSession Tests
+# Session Tests
 # ==============
 
-# Test Session with one pooled connections on four get requests.
+# Test Session with two pooled connections on four get requests.
 async def session_t_smallpool(s):
     r = await s.get('http://httpbin.org/get')
     assert r.status_code == 200
@@ -243,6 +250,7 @@ async def session_t_smallpool(s):
 
 @curio_run
 async def test_Session_smallpool():
-    s = DSession(connections=2)
+    from asks.sessions import Session
+    s = Session(connections=2)
     for _ in range(10):
         await curio.spawn(session_t_smallpool(s))
