@@ -155,7 +155,6 @@ class BaseSession:
 
     async def timeout_manager(self, timeout, req_obj):
         try:
-
             try:
                 async with _async_lib.timeout_after(timeout):
                     async with _async_lib.task_manager() as m:
@@ -164,9 +163,7 @@ class BaseSession:
                     sock, r = response_task.result
             except _async_lib.TaskTimeout:
                 raise RequestTimeout
-
         except AttributeError:
-
             try:
                 with _async_lib.timeout_after(timeout):
                     async with _async_lib.task_manager() as m:
@@ -174,7 +171,6 @@ class BaseSession:
                     sock, r = response_task.result.unwrap()
             except _async_lib.TaskTimeout:
                 raise RequestTimeout
-
         return sock, r
 
 
