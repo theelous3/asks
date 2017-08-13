@@ -22,7 +22,8 @@ class Response:
                  reason_phrase,
                  headers,
                  body,
-                 method):
+                 method,
+                 url):
         self.encoding = encoding
         self.http_version = http_version
         self.status_code = status_code
@@ -30,6 +31,7 @@ class Response:
         self.headers = headers
         self.body = body
         self.method = method
+        self.url = url
         self.history = []
         self.cookies = []
 

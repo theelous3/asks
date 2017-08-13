@@ -107,3 +107,15 @@ If any redirects or 401-requiring auth attempts were handled during the request,
         # [<Response 302 at 0xb6a807cc>, <Response 302 at 0xb...
         # 302
 
+
+URL
+___
+
+Find the url that the request was made to.::
+
+    async def main():
+        r = asks.get('http://example.com')
+        print(r.url)
+
+    # Results in:
+    # 'http://example.com'

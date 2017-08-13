@@ -38,7 +38,7 @@ class Request:
     session passes the required info and calls `make_request`.
 
     Args:
-        session (child of BaseSession): A refrence to the calling session.
+        session (child of BaseSession): A reference to the calling session.
 
         method (str): The HTTP method to be used in the request.
 
@@ -71,7 +71,7 @@ class Request:
 
         max_redirects (int): The maximum number of redirects allowed.
 
-        persist_cookies (True or None): Passing True instanciates a
+        persist_cookies (True or None): Passing True instantiates a
             CookieTracker object to manage the return of cookies to the server
             under the relevant domains.
 
@@ -348,7 +348,7 @@ class Request:
 
     async def _get_new_sock(self):
         '''
-        On 'Connetcion: close' headers we've to create a new connection.
+        On 'Connection: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         '''
@@ -359,7 +359,7 @@ class Request:
 
     async def _formulate_body(self):
         '''
-        Takes user suppied data / files and forms it / them
+        Takes user supplied data / files and forms it / them
         appropriately, returning the contents type, len,
         and the request body its self.
 
@@ -501,12 +501,12 @@ class Request:
 
     async def _catch_response(self, hconnection):
         '''
-        Instanciates the parser which manages incoming data, first getting
+        Instantiates the parser which manages incoming data, first getting
         the headers, storing cookies, and then parsing the response's body,
         if any.
 
         This function also instances the Response class in which the response
-        satus line, headers, cookies, and body is stored.
+        status line, headers, cookies, and body is stored.
 
         It should be noted that in order to remain preformant, if the user
         wishes to do any file IO it should use async files or risk long wait
@@ -530,7 +530,8 @@ class Request:
                      'headers': c_i_dict(
                         [(str(name, 'utf-8'), str(value, 'utf-8'))
                          for name, value in response.headers]),
-                     'body': b''
+                     'body': b'',
+                     'url': self.uri
                      }
         for header in response.headers:
             if header[0] == b'set-cookie':
@@ -629,7 +630,7 @@ class Request:
 
     async def _auth_handler_post_check_retry(self, response_obj):
         '''
-        The other half of _auth_handler_post_check_retry (what a mouthfull).
+        The other half of _auth_handler_post_check_retry (what a mouthful).
         If auth has not yet been attempted and the most recent response
         object is a 401, we store that response object and retry the request
         in exactly the same manner as before except with the correct auth.

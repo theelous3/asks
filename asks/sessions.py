@@ -276,4 +276,4 @@ class Session(BaseSession):
         '''
         Puts together the hostloc and current endpoint for use in request uri.
         '''
-        return self.base_location or '' + self.endpoint or ''
+        return (self.base_location or '') + (self.endpoint or '')
