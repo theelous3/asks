@@ -25,9 +25,12 @@ class BaseSession:
     Contains methods for creating sockets, figuring out which type of
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     '''
-    async def _open_connection_http(self, location, port=None):
+    async def _open_connection_http(self, location):
         '''
         Creates a normal async socket, returns it.
+        Args:
+            location (tuple(str, int)): A tuple of net location (eg
+                '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
         sock = await _async_lib.open_connection(location[0],
                                                 location[1],
@@ -35,9 +38,12 @@ class BaseSession:
         sock._active = True
         return sock
 
-    async def _open_connection_https(self, location, port=None):
+    async def _open_connection_https(self, location):
         '''
         Creates an async SSL socket, returns it.
+        Args:
+            location (tuple(str, int)): A tuple of net location (eg
+                '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
         sock = await _async_lib.open_connection(location[0],
                                                 location[1],

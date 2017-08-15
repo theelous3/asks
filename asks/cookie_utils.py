@@ -13,7 +13,7 @@ class CookieTracker:
         self.domain_dict = {}
 
     def get_additional_cookies(self, netloc, path):
-        netloc = netloc.replace('www.', '')
+        netloc = netloc.replace('://www.', '://', 1)
         return self._check_cookies(netloc + path)
 
     def _store_cookies(self, response_obj):

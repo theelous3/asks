@@ -18,7 +18,7 @@ import mimetypes
 import re
 
 import h11
-from h11._util import RemoteProtocolError
+from h11 import RemoteProtocolError
 from asks import _async_lib
 
 from .auth import PreResponseAuth, PostResponseAuth
@@ -417,7 +417,7 @@ class Request:
                 continue
             if isinstance(v, (str, Number)):
                 query.append(self._queryify(
-                    (k + '=' + '+'.join(str(v).split()))))
+                    (k + '=' + str(v))))
             elif isinstance(v, dict):
                 for key in v:
                     query.append(self._queryify((k + '=' + key)))

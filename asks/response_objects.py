@@ -38,10 +38,6 @@ class Response:
     def __repr__(self):
         return '<Response {} {}>'.format(self.status_code, self.reason_phrase)
 
-    def __iter__(self):
-        for k, v in self.__dict__.items():
-            yield k, v
-
     def _guess_encoding(self):
         try:
             guess = self.headers['content-type'].split('=')[1]

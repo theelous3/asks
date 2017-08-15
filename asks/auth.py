@@ -111,6 +111,7 @@ class DigestAuth(PostResponseAuth):
                 else:
                     self.nonce_count = 1
         except KeyError:
+            # if an algorithm wasn't specified, we move on
             pass
 
         if ha1 is None:
