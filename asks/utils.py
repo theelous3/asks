@@ -1,4 +1,3 @@
-
 __all__ = ['get_netloc_port']
 
 
