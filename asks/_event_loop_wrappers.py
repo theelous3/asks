@@ -8,9 +8,6 @@ __all__ = ['trio_open_connection', 'trio_send_all', 'trio_receive_some',
            'curio_sendall', 'curio_recv']
 
 
-from trio import open_tcp_stream, open_ssl_over_tcp_stream
-
-
 # trio wrappers
 
 async def trio_open_connection(host, port, *, ssl=False, **kwargs):
@@ -26,10 +23,11 @@ async def trio_open_connection(host, port, *, ssl=False, **kwargs):
         kwargs: A catch all to soak up curio's additional kwargs and
             ignore them.
     '''
+    import trio
     if not ssl:
-        sock = await open_tcp_stream(host, port)
+        sock = await trio.open_tcp_stream(host, port)
     else:
-        sock = await open_ssl_over_tcp_stream(host, port)
+        sock = await trio.open_ssl_over_tcp_stream(host, port)
         await sock.do_handshake()
     return sock
 
