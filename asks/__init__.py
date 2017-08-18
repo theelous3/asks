@@ -10,9 +10,10 @@ with its similar design and approach to async in python. Why not support both?
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=wrong-import-position
 # pylint: disable=no-member
+import threading
 
 
-class _AsyncLib:
+class _AsyncLib(threading.local):
     '''
     When _async_lib.something is requested, _async_lib.__dict__['something']
     is checked before _async_lib.__getattr__('something')
