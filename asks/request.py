@@ -99,6 +99,7 @@ class Request:
         self.max_redirects = 20
         self.sock = None
         self.persist_cookies = None
+        self.mimetype = None
 
         # IS THIS SUCH A SIN? Maybe. Hacky at best but hey.
         # All of the above instance vars are valid args/kwargs.
@@ -184,17 +185,19 @@ class Request:
                 cookie_str += '{}={}; '.format(k, v)
             asks_headers['Cookie'] = cookie_str[:-1]
 
-        # Construct h11 request object.
-        req = h11.Request(method=self.method,
-                          target=self.path,
-                          headers=asks_headers.items())
         # Construct h11 body object, if any body.
         if body:
             if not isinstance(body, bytes):
                 body = bytes(body, self.encoding)
+                asks_headers['Content-Length'] = str(len(body))
             req_body = h11.Data(data=body)
         else:
             req_body = None
+
+        # Construct h11 request object.
+        req = h11.Request(method=self.method,
+                          target=self.path,
+                          headers=asks_headers.items())
 
         # call i/o handling func
         response_obj = await self._request_io(req, req_body, hconnection)
@@ -380,7 +383,7 @@ class Request:
                 body = self._dict_to_query(self.data, params=False)
             except AttributeError:
                 body = self.data
-                c_type = ' text/html'
+                c_type = self.mimetype or 'text/plain'
 
         elif self.files is not None:
             if self.data or self.json:
