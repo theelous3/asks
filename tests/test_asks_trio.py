@@ -241,6 +241,20 @@ async def test_session_stateful():
     assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
 
 
+async def session_t_stateful_double_worker(s):
+    r = await s.get()
+    assert r.status_code == 200
+
+
+@trio_run
+async def test_session_stateful_double():
+    from asks.sessions import Session
+    s = Session('https://google.ie', persist_cookies=True)
+    async with trio.open_nursery() as n:
+        for _ in range(2):
+            n.spawn(session_t_stateful_double_worker, s)
+
+
 # Test Session with two pooled connections on four get requests.
 async def session_t_smallpool(s):
     r = await s.get('http://httpbin.org/get')

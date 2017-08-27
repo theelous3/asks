@@ -61,6 +61,8 @@ class Response:
                 for item in rest:
                     try:
                         name, value = item.split('=')
+                        if value.startswith('.'):
+                            value = value[1:]
                         cookie_jar[name.lower().lstrip()] = value
                     except ValueError:
                         cookie_jar[item.lower().lstrip()] = True

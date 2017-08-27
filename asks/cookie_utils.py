@@ -36,6 +36,6 @@ class CookieTracker:
     def _get_cookies_to_send(self, domain_list):
         cookies_to_go = {}
         for domain in domain_list:
-            for cookie_obj in domain:
+            for cookie_obj in self.domain_dict[domain]:
                 cookies_to_go[cookie_obj.name] = cookie_obj.value
         return cookies_to_go
