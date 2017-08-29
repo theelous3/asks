@@ -46,6 +46,18 @@ The ``Session``'s ``connections`` argument dictates the maximum number of concur
 
     curio.run(main(a_list_of_many_urls))
 
+Session Headers
+_______________
+
+You can provide session wide headers to your requests with the ``headers`` kwargument on ``Session`` instantiation, or by manually modifying the ``.headers`` attribute of your session. ::
+
+    from asks import Session
+
+    async def main():
+        s = Session('https://example.com', headers={'Applies-to': 'all requests'})
+        s.headers.update({'also-applies-to': 'all requests'})
+
+If you send headers with a http method's ``headers`` kwargument, it will take precedence. For example, in the above example; doing ``s.get(headers={'Applies-to': 'this request only'})`` will overwrite the session wide header ``'Applies-to'`` for that single request.
 
 Persistent Cookies
 __________________

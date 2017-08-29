@@ -155,7 +155,6 @@ async def test_json_send():
     r = await asks.post('http://httpbin.org/post',
                         json={'key_1': True,
                               'key_2': 'cheesestring'})
-    print(r.text)
     j = r.json()
     assert j['json']['key_1'] is True
     assert j['json']['key_2'] == 'cheesestring'
