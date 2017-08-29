@@ -4,6 +4,7 @@ The disparate session (Session) is for making requests to multiple locations.
 
 # pylint: disable=no-else-return
 # pylint: disable=no-member
+from copy import copy
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
@@ -25,6 +26,18 @@ class BaseSession:
     Contains methods for creating sockets, figuring out which type of
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     '''
+    def __init__(self, headers=None):
+        '''
+        Args:
+            headers (dict): Headers to be applied to all requests.
+                headers set by http method call will take precedence and
+                overwrite headers set by the headers arg.
+        '''
+        if headers is not None:
+            self.headers = headers
+        else:
+            self.headers = {}
+
     async def _open_connection_http(self, location):
         '''
         Creates a normal async socket, returns it.
@@ -116,16 +129,24 @@ class BaseSession:
         pre-completed.
         '''
         timeout = kwargs.pop('timeout', None)
+        req_headers = kwargs.pop('headers', None)
 
         if url is None:
             url = self._make_url() + path
         sock = await self._grab_connection(url)
         port = sock.port
 
+        if self.headers is not None:
+            headers = copy(self.headers)
+            if req_headers is not None:
+                headers.update(req_headers)
+            req_headers = headers
+
         req_obj = Request(self,
                           method,
                           url,
                           port,
+                          headers=req_headers,
                           encoding=self.encoding,
                           sock=sock,
                           persist_cookies=self._cookie_tracker_obj,
@@ -191,6 +212,7 @@ class Session(BaseSession):
     def __init__(self,
                  base_location=None,
                  endpoint=None,
+                 headers=None,
                  encoding='utf-8',
                  persist_cookies=None,
                  connections=1):
@@ -207,6 +229,7 @@ class Session(BaseSession):
         self.encoding = encoding
         self.base_location = base_location
         self.endpoint = endpoint
+        super().__init__(headers)
 
         if persist_cookies is True:
             self._cookie_tracker_obj = CookieTracker()
