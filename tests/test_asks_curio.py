@@ -249,7 +249,7 @@ async def test_session_stateful_double():
     s = Session('https://google.ie', persist_cookies=True)
     async with curio.TaskGroup() as g:
         for _ in range(4):
-            await curio.spawn(session_t_stateful_double_worker(s))
+            await g.spawn(session_t_stateful_double_worker(s))
 
 
 # Session Tests
