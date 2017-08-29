@@ -119,11 +119,8 @@ class BaseSession:
 
         if url is None:
             url = self._make_url() + path
-            sock = await self._grab_connection(url)
-            port = sock.port
-        else:
-            sock = await self._grab_connection(url)
-            port = sock.port
+        sock = await self._grab_connection(url)
+        port = sock.port
 
         req_obj = Request(self,
                           method,
@@ -233,11 +230,10 @@ class Session(BaseSession):
     async def _replace_connection(self, sock):
         if sock._active:
             self._checked_out_sockets.remove(sock)
+            self._conn_pool.appendleft(sock)
         else:
             self._checked_out_sockets.remove(sock)
-            sock = (await self._make_connection(sock.host))
 
-        self._conn_pool.appendleft(sock)
         self._in_connection_counter -= 1
 
     async def _make_connection(self, host_loc):
