@@ -224,8 +224,7 @@ class Session(BaseSession):
                 appropriate.
             connections (int): The max number of concurrent connections to the
                 host asks will allow its self to have. The default number of
-                connections is 20. You may increase or decrease this value
-                as you see fit.
+                connections is 1. You may increase this value as you see fit.
         '''
         self.encoding = encoding
         self.base_location = base_location
