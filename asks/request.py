@@ -544,13 +544,20 @@ class Request:
                 except (KeyError, AttributeError):
                     resp_data['headers']['set-cookie'] = [str(header[1],
                                                           'utf-8')]
+
+        # check whether we should receive body according to RFC 7230
+        # https://tools.ietf.org/html/rfc7230#section-3.3.3
         get_body = False
         try:
             if int(resp_data['headers']['content-length']) > 0:
                 get_body = True
         except KeyError:
-            if resp_data['headers']['transfer-encoding'] == 'chunked':
-                get_body = True
+            try:
+                if resp_data['headers']['transfer-encoding'] == 'chunked':
+                    get_body = True
+            except KeyError:
+                if resp_data['headers']['connection'] == 'close':
+                    get_body = True
 
         if get_body:
             if self.callback is not None:

@@ -193,6 +193,13 @@ async def test_stream():
     assert len(img) == 8090
 
 
+# Test connection close without content-length and transfer-encoding
+@trio_run
+async def test_connection_close():
+    r = await asks.get('https://www.ua-region.com.ua/search/?q=rrr')
+    assert r.text
+
+
 # Test callback
 callback_data = b''
 async def callback_example(chunk):
