@@ -7,13 +7,22 @@ with its similar design and approach to async in python. Why not support both?
 '''
 
 # pylint: disable=wildcard-import
-# pylint: disable=attribute-defined-outside-init
 # pylint: disable=wrong-import-position
-# pylint: disable=no-member
 import threading
 
 
 class _AsyncLib(threading.local):
+    def __init__(self):
+        self.aopen = None
+        self.open_connection = None
+        self.sleep = None
+        self.task_manager = None
+        self.TaskTimeout = None
+        self.timeout_after = None
+        self.sendall = None
+        self.recv = None
+        super().__init__()
+
     '''
     When _async_lib.something is requested, _async_lib.__dict__['something']
     is checked before _async_lib.__getattr__('something')
@@ -29,17 +38,17 @@ class _AsyncLib(threading.local):
 # shell. Upon asks' initialisation the instance of _AsyncLib asks uses is
 # populated either with functions and classes directly from the chosen async
 # lib, or with wrappers around those functions and classes such that they share
-# the same api to the extent asks requires.
+# the same API to the extent asks requires.
 
 # This results in a meeting point between the two libraries which asks can use
 # arbitrarily. (You can even run a trio event loop, and then run the same
 # functions with curio! Not recommended, but hey. It's fun.)
 
 # For the sake of simplicity, where possible, the methods of _AsyncLib use the
-# curio name. For example, TaskTimeout from curio rather than
-# TooSlowError from trio. This is not indicative of any preference to the
-# libraries themselves, it just required fewer changes to asks' internals to
-# implement.
+# curio name. For example, TaskTimeout from curio rather than TooSlowError from
+# trio. This is not indicative of any preference to the libraries themselves;
+# it just required fewer changes to asks' internals to implement.
+
 # the instance asks uses internally
 _async_lib = _AsyncLib()
 

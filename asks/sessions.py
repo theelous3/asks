@@ -2,8 +2,6 @@
 The disparate session (Session) is for making requests to multiple locations.
 '''
 
-# pylint: disable=no-else-return
-# pylint: disable=no-member
 from copy import copy
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
@@ -37,6 +35,9 @@ class BaseSession:
             self.headers = headers
         else:
             self.headers = {}
+
+        self.encoding = None
+        self._cookie_tracker_obj = None
 
     async def _open_connection_http(self, location):
         '''
@@ -201,6 +202,14 @@ class BaseSession:
 
         return sock, r
 
+    def _make_url(self):
+        raise NotImplementedError
+
+    async def _grab_connection(self, url):
+        raise NotImplementedError
+
+    async def _replace_connection(self, sock):
+        raise NotImplementedError
 
 class Session(BaseSession):
     '''
@@ -226,10 +235,10 @@ class Session(BaseSession):
                 host asks will allow its self to have. The default number of
                 connections is 1. You may increase this value as you see fit.
         '''
+        super().__init__(headers)
         self.encoding = encoding
         self.base_location = base_location
         self.endpoint = endpoint
-        super().__init__(headers)
 
         if persist_cookies is True:
             self._cookie_tracker_obj = CookieTracker()
