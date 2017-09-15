@@ -9,7 +9,6 @@ with its similar design and approach to async in python. Why not support both?
 # pylint: disable=wildcard-import
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=wrong-import-position
-# pylint: disable=no-member
 import threading
 
 
