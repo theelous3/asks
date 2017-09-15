@@ -2,7 +2,6 @@
 The disparate session (Session) is for making requests to multiple locations.
 '''
 
-# pylint: disable=no-else-return
 from copy import copy
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
