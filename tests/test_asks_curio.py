@@ -32,20 +32,23 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
     @curio_run
     async def test_session_stateful(self):
         from asks.sessions import Session
-        s = Session(
-            'https://google.ie', persist_cookies=True)
+        s = Session(self.httpbin.url, persist_cookies=True)
         async with curio.TaskGroup() as g:
             await g.spawn(base_tests.hsession_t_stateful(s))
-        assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
+        domain = f'{self.httpbin.host}:{self.httpbin.port}'
+        cookies = s._cookie_tracker_obj.domain_dict[domain]
+        assert len(cookies) == 1
+        assert cookies[0].name == 'cow'
+        assert cookies[0].value == 'moo'
 
 
     @curio_run
     async def test_session_stateful_double(self):
         from asks.sessions import Session
-        s = Session('https://google.ie', persist_cookies=True)
+        s = Session(self.httpbin.url, persist_cookies=True)
         async with curio.TaskGroup() as g:
             for _ in range(4):
-                await g.spawn(base_tests.session_t_stateful_double_worker(s))
+                await g.spawn(base_tests.hsession_t_stateful(s))
 
 
     # Session Tests

@@ -32,20 +32,23 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
     @trio_run
     async def test_session_stateful(self):
         from asks.sessions import Session
-        s = Session(
-            'https://google.ie', persist_cookies=True)
+        s = Session(self.httpbin.url, persist_cookies=True)
         async with trio.open_nursery() as n:
             n.spawn(base_tests.hsession_t_stateful, s)
-        assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
+        domain = f'{self.httpbin.host}:{self.httpbin.port}'
+        cookies = s._cookie_tracker_obj.domain_dict[domain]
+        assert len(cookies) == 1
+        assert cookies[0].name == 'cow'
+        assert cookies[0].value == 'moo'
 
 
     @trio_run
     async def test_session_stateful_double(self):
         from asks.sessions import Session
-        s = Session('https://google.ie', persist_cookies=True)
+        s = Session(self.httpbin.url, persist_cookies=True)
         async with trio.open_nursery() as n:
             for _ in range(4):
-                n.spawn(base_tests.session_t_stateful_double_worker, s)
+                n.spawn(base_tests.hsession_t_stateful, s)
 
 
     # Session Tests

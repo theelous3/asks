@@ -185,12 +185,7 @@ async def hsession_t_smallpool(s):
 
 # Test stateful Session
 async def hsession_t_stateful(s):
-    r = await s.get()
-    assert r.status_code == 200
-
-
-async def session_t_stateful_double_worker(s):
-    r = await s.get()
+    r = await s.get(path='/cookies/set?cow=moo')
     assert r.status_code == 200
 
 
