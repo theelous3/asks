@@ -1,3 +1,4 @@
+import pytest_httpbin
 import trio
 
 import asks
@@ -10,6 +11,7 @@ def trio_run(func):
     return func_wrapper
 
 
+@pytest_httpbin.use_class_based_httpbin
 class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
     run = trio_run
 
@@ -21,7 +23,7 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
     @trio_run
     async def test_hsession_smallpool(self):
         from asks.sessions import Session
-        s = Session('http://httpbin.org', connections=2)
+        s = Session(self.httpbin.url, connections=2)
         async with trio.open_nursery() as n:
             for _ in range(10):
                 n.spawn(base_tests.hsession_t_smallpool, s)
@@ -56,4 +58,4 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
         s = Session(connections=2)
         async with trio.open_nursery() as n:
             for _ in range(10):
-                n.spawn(base_tests.session_t_smallpool, s)
+                n.spawn(base_tests.session_t_smallpool, s, self.httpbin)

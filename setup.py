@@ -17,6 +17,6 @@ setup(
     url='https://github.com/theelous3/asks',
     packages=['asks'],
     install_requires=['h11'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'pytest-httpbin', 'curio', 'trio'],
     classifiers=['Programming Language :: Python :: 3']
 )
