@@ -8,7 +8,7 @@ from functools import partialmethod
 
 from asks import _async_lib
 
-from .request import Request
+from .request_object import Request
 from .cookie_utils import CookieTracker
 from .req_structs import SocketQ
 from .utils import get_netloc_port

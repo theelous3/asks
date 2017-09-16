@@ -6,11 +6,14 @@ python:
   - "3.6"
   - "nightly"
 
+cache: pip
+
 install:
    - ./setup.py develop
-   - pip3 install pylint
+   - pip3 install pytest-httpbin
    - pip3 install git+https://github.com/python-trio/trio.git
    - pip3 install git+https://github.com/dabeaz/curio.git
+   - pip3 install pylint
 
 script:
   - pytest --verbose --tb=native
