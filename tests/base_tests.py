@@ -164,12 +164,6 @@ class BaseTests:
         assert len(img) == 8090
 
 
-    # Test connection close without content-length and transfer-encoding
-    async def test_connection_close(self):
-        r = await asks.get('https://www.ua-region.com.ua/search/?q=rrr')
-        assert r.text
-
-
     async def test_callback(self):
         callback_data = b''
         async def callback_example(chunk):
