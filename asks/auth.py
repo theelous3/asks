@@ -5,7 +5,7 @@ import re
 
 import base64
 from hashlib import md5
-from random import choices
+from random import choice
 from string import ascii_lowercase, digits
 
 
@@ -54,7 +54,7 @@ class BasicAuth(PreResponseAuth):
         usrname, psword = [bytes(x, self.encoding) for x in self.auth_info]
         encoded_auth = str(base64.b64encode(usrname + b':' + psword),
                            self.encoding)
-        return {'Authorization': f'Basic {encoded_auth}'}
+        return {'Authorization': 'Basic {}'.format(encoded_auth)}
 
 
 class DigestAuth(PostResponseAuth):
@@ -89,7 +89,7 @@ class DigestAuth(PostResponseAuth):
         for match in value_list:
             k, v = [x for x in match if x != '']
             auth_dict[k.lower()] = bytes(v, self.encoding)
-        cnonce = bytes(''.join(choices(ascii_lowercase + digits, k=16)),
+        cnonce = bytes(''.join(choice(ascii_lowercase + digits) for _ in range(16)),
                        self.encoding)
         ha1 = None
         ha2 = None
