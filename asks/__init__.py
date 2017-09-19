@@ -92,7 +92,7 @@ def init(lib_name):
         _async_lib.recv = trio_receive_some
 
     else:
-        raise RuntimeError(f'{lib_name} is not a supported library.')
+        raise RuntimeError('{} is not a supported library.'.format(lib_name))
 
 
 from .base_funcs import *

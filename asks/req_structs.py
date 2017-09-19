@@ -17,7 +17,7 @@ class SocketQ(deque):
             return next(index for index, i in enumerate(self)
                         if i.host == host_loc)
         except StopIteration:
-            raise ValueError(f'{host_loc} not in SocketQ') from None
+            raise ValueError('{} not in SocketQ'.format(host_loc)) from None
 
     def pull(self, index):
         x = self[index]

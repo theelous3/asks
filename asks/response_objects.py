@@ -4,6 +4,7 @@ import json as _json
 from gzip import decompress as gdecompress
 from zlib import decompress as zdecompress
 
+from async_generator import async_generator, yield_
 import h11
 
 from asks import _async_lib
@@ -156,11 +157,12 @@ class StreamBody:
         self.hconnection = hconnection
         self.sock = sock
 
+    @async_generator
     async def __aiter__(self):
         while True:
             event = await self._recv_event()
             if isinstance(event, h11.Data):
-                yield event.data
+                await yield_(event.data)
             elif isinstance(event, h11.EndOfMessage):
                 await self.session._replace_connection(self.sock)
                 break

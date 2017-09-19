@@ -35,7 +35,7 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
         s = Session(self.httpbin.url, persist_cookies=True)
         async with curio.TaskGroup() as g:
             await g.spawn(base_tests.hsession_t_stateful(s))
-        domain = f'{self.httpbin.host}:{self.httpbin.port}'
+        domain = '{}:{}'.format(self.httpbin.host, self.httpbin.port)
         cookies = s._cookie_tracker_obj.domain_dict[domain]
         assert len(cookies) == 1
         assert cookies[0].name == 'cow'
