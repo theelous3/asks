@@ -556,7 +556,7 @@ class Request:
                 if resp_data['headers']['transfer-encoding'] == 'chunked':
                     get_body = True
             except KeyError:
-                if resp_data['headers']['connection'] == 'close':
+                if resp_data['headers']['connection'].lower() == 'close':
                     get_body = True
 
         if get_body:
@@ -566,7 +566,7 @@ class Request:
                 if 199 < resp_data['status_code'] < 300:
                     if not ((self.scheme == self.initial_scheme and
                             self.netloc == self.initial_netloc) or
-                            resp_data['headers']['connection'] == 'close'):
+                            resp_data['headers']['connection'].lower() == 'close'):
                         self.sock._active = False
                     resp_data['body'] = StreamBody(self.session,
                                                    hconnection,
