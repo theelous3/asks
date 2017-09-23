@@ -26,7 +26,7 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
         s = Session(self.httpbin.url, connections=2)
         async with trio.open_nursery() as n:
             for _ in range(10):
-                n.spawn(base_tests.hsession_t_smallpool, s)
+                n.start_soon(base_tests.hsession_t_smallpool, s)
 
 
     @trio_run
@@ -34,7 +34,7 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
         from asks.sessions import Session
         s = Session(self.httpbin.url, persist_cookies=True)
         async with trio.open_nursery() as n:
-            n.spawn(base_tests.hsession_t_stateful, s)
+            n.start_soon(base_tests.hsession_t_stateful, s)
         domain = '{}:{}'.format(self.httpbin.host, self.httpbin.port)
         cookies = s._cookie_tracker_obj.domain_dict[domain]
         assert len(cookies) == 1
@@ -48,7 +48,7 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
         s = Session(self.httpbin.url, persist_cookies=True)
         async with trio.open_nursery() as n:
             for _ in range(4):
-                n.spawn(base_tests.hsession_t_stateful, s)
+                n.start_soon(base_tests.hsession_t_stateful, s)
 
 
     # Session Tests
@@ -61,4 +61,4 @@ class TestAsksTrio(metaclass=base_tests.TestAsksMeta):
         s = Session(connections=2)
         async with trio.open_nursery() as n:
             for _ in range(10):
-                n.spawn(base_tests.session_t_smallpool, s, self.httpbin)
+                n.start_soon(base_tests.session_t_smallpool, s, self.httpbin)

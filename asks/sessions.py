@@ -183,10 +183,7 @@ class BaseSession:
 
             try:
                 async with _async_lib.timeout_after(timeout):
-                    async with _async_lib.task_manager() as m:
-                        response_task = await m.spawn(
-                            req_obj.make_request)
-                    sock, r = response_task.result
+                    sock, r = await req_obj.make_request()
             except _async_lib.TaskTimeout:
                 raise RequestTimeout
 
@@ -194,9 +191,7 @@ class BaseSession:
 
             try:
                 with _async_lib.timeout_after(timeout):
-                    async with _async_lib.task_manager() as m:
-                        response_task = m.spawn(req_obj.make_request)
-                    sock, r = response_task.result.unwrap()
+                    sock, r = await req_obj.make_request()
             except _async_lib.TaskTimeout:
                 raise RequestTimeout
 
