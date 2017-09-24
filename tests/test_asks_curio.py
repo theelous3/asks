@@ -1,13 +1,14 @@
 import curio
+import multio
 import pytest_httpbin
 
-import asks
 from . import base_tests
 
 
 def curio_run(func):
     def func_wrapper(*args, **kwargs):
         return curio.run(func(*args, **kwargs))
+
     return func_wrapper
 
 
@@ -17,8 +18,7 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
 
     @classmethod
     def setup_class(cls):
-        asks.init('curio')
-
+        multio.init('curio')
 
     @curio_run
     async def test_hsession_smallpool(self):
@@ -27,7 +27,6 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
         async with curio.TaskGroup() as g:
             for _ in range(10):
                 await g.spawn(base_tests.hsession_t_smallpool(s))
-
 
     @curio_run
     async def test_session_stateful(self):
@@ -41,7 +40,6 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
         assert cookies[0].name == 'cow'
         assert cookies[0].value == 'moo'
 
-
     @curio_run
     async def test_session_stateful_double(self):
         from asks.sessions import Session
@@ -49,7 +47,6 @@ class TestAsksCurio(metaclass=base_tests.TestAsksMeta):
         async with curio.TaskGroup() as g:
             for _ in range(4):
                 await g.spawn(base_tests.hsession_t_stateful(s))
-
 
     # Session Tests
     # ==============

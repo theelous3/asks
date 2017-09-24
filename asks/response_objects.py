@@ -7,7 +7,7 @@ from zlib import decompress as zdecompress
 from async_generator import async_generator, yield_
 import h11
 
-from asks import _async_lib
+from multio import asynclib
 
 
 class Response:
@@ -172,7 +172,7 @@ class StreamBody:
             event = self.hconnection.next_event()
             if event is h11.NEED_DATA:
                 self.hconnection.receive_data(
-                    (await _async_lib.recv(self.sock, 10000)))
+                    (await asynclib.recv(self.sock, 10000)))
                 continue
             return event
 

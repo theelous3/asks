@@ -15,7 +15,7 @@ Above you'll find detailed docs with a large number of simple examples to help y
 
 ## Installation
 
-*Requires: Python 3.6.*
+*Requires: Python 3.5.*
 
 `pip install asks`
 
@@ -29,7 +29,8 @@ Note: Currently supports trio's development branch. You can install this by doin
 # A little silly to async one request, but not without its use!
 import asks
 import curio
-asks.init('curio')
+import multio
+multio.init('curio')
 
 async def example():
     r = await asks.get('https://example.org')
@@ -44,7 +45,8 @@ curio.run(example())
 
 import asks
 import trio
-asks.init('trio')
+import multio
+multio.init('trio')
 
 path_list = ['a', 'list', 'of', '1000', 'paths']
 

@@ -19,7 +19,7 @@ import re
 
 import h11
 from h11 import RemoteProtocolError
-from asks import _async_lib
+from multio import asynclib
 
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
@@ -489,10 +489,10 @@ class Request:
 
     async def _file_manager(self, path):
         try:
-            async with _async_lib.aopen(path, 'rb') as f:
+             async with asynclib.aopen(path, 'rb') as f:
                 return b''.join(await f.readlines()) + b'\r\n'
         except AttributeError:
-            async with await _async_lib.aopen(path, 'rb') as f:
+            async with await asynclib.aopen(path, 'rb') as f:
                 return b''.join(await f.readlines()) + b'\r\n'
 
     def _queryify(self, query):
@@ -590,7 +590,7 @@ class Request:
             event = hconnection.next_event()
             if event is h11.NEED_DATA:
                 hconnection.receive_data(
-                    (await _async_lib.recv(self.sock, 10000)))
+                    (await asynclib.recv(self.sock, 10000)))
                 continue
             return event
 
@@ -603,10 +603,10 @@ class Request:
             package (list of str): The header package.
             body (str): The str representation of the body.
         '''
-        await _async_lib.sendall(self.sock, hconnection.send(request_bytes))
+        await asynclib.sendall(self.sock, hconnection.send(request_bytes))
         if body_bytes is not None:
-            await _async_lib.sendall(self.sock, hconnection.send(body_bytes))
-        await _async_lib.sendall(
+            await asynclib.sendall(self.sock, hconnection.send(body_bytes))
+        await asynclib.sendall(
             self.sock, hconnection.send(h11.EndOfMessage()))
 
     async def _auth_handler_pre(self):

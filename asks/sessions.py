@@ -3,17 +3,16 @@ The disparate session (Session) is for making requests to multiple locations.
 '''
 
 from copy import copy
-from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
+from urllib.parse import urlparse, urlunparse
 
-from asks import _async_lib
+from multio import asynclib
 
-from .request_object import Request
 from .cookie_utils import CookieTracker
-from .req_structs import SocketQ
-from .utils import get_netloc_port
 from .errors import RequestTimeout
-
+from .req_structs import SocketQ
+from .request_object import Request
+from .utils import get_netloc_port
 
 __all__ = ['Session']
 
@@ -24,6 +23,7 @@ class BaseSession:
     Contains methods for creating sockets, figuring out which type of
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     '''
+
     def __init__(self, headers=None):
         '''
         Args:
@@ -46,9 +46,9 @@ class BaseSession:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await _async_lib.open_connection(location[0],
-                                                location[1],
-                                                ssl=False)
+        sock = await asynclib.open_connection(location[0],
+                                              location[1],
+                                              ssl=False)
         sock._active = True
         return sock
 
@@ -59,10 +59,10 @@ class BaseSession:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await _async_lib.open_connection(location[0],
-                                                location[1],
-                                                ssl=True,
-                                                server_hostname=location[0])
+        sock = await asynclib.open_connection(location[0],
+                                              location[1],
+                                              ssl=True,
+                                              server_hostname=location[0])
         sock._active = True
         return sock
 
@@ -180,21 +180,10 @@ class BaseSession:
 
     async def timeout_manager(self, timeout, req_obj):
         try:
-
-            try:
-                async with _async_lib.timeout_after(timeout):
-                    sock, r = await req_obj.make_request()
-            except _async_lib.TaskTimeout:
-                raise RequestTimeout
-
-        except AttributeError:
-
-            try:
-                with _async_lib.timeout_after(timeout):
-                    sock, r = await req_obj.make_request()
-            except _async_lib.TaskTimeout:
-                raise RequestTimeout
-
+            async with asynclib.timeout_after(timeout):
+                sock, r = await req_obj.make_request()
+        except asynclib.TaskTimeout as e:
+            raise RequestTimeout from e
         return sock, r
 
     def _make_url(self):
@@ -206,6 +195,7 @@ class BaseSession:
     async def _replace_connection(self, sock):
         raise NotImplementedError
 
+
 class Session(BaseSession):
     '''
     The Session class, for handling piles of requests.
@@ -213,6 +203,7 @@ class Session(BaseSession):
     This class inherits from BaseSession, where all of the 'http method'
     methods are defined.
     '''
+
     def __init__(self,
                  base_location=None,
                  endpoint=None,
@@ -295,7 +286,7 @@ class Session(BaseSession):
                 sock = await self._make_connection(host_loc)
                 self._checked_out_sockets.append(sock)
                 break
-            await _async_lib.sleep(0)
+            await asynclib.sleep(0)
             continue
 
         return sock
