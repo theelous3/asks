@@ -29,8 +29,7 @@ Note: Currently supports trio's development branch. You can install this by doin
 # A little silly to async one request, but not without its use!
 import asks
 import curio
-import multio
-multio.init('curio')
+asks.init('curio')
 
 async def example():
     r = await asks.get('https://example.org')
@@ -45,8 +44,7 @@ curio.run(example())
 
 import asks
 import trio
-import multio
-multio.init('trio')
+asks.init('trio')
 
 path_list = ['a', 'list', 'of', '1000', 'paths']
 
