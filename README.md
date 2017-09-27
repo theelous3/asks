@@ -15,7 +15,7 @@ Above you'll find detailed docs with a large number of simple examples to help y
 
 ## Installation
 
-*Requires: Python 3.6.*
+*Requires: Python 3.5.*
 
 `pip install asks`
 

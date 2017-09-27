@@ -16,7 +16,7 @@ setup(
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
-    install_requires=['h11', 'async_generator'],
+    install_requires=['h11', 'async_generator', 'multio'],
     tests_require=['pytest', 'pytest-httpbin', 'curio', 'trio'],
     classifiers=['Programming Language :: Python :: 3']
 )
