@@ -32,7 +32,7 @@ http://trio.rtfd.io
 Installation:
 _____________
 
-asks requires `Python 3.6 <www.python.org>`_ .
+asks requires `Python 3.5.2 <https://www.python.org>`_ or newer.
 
 The easiest way to install asks is to pip it::
 
