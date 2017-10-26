@@ -81,7 +81,7 @@ class Request:
     def __init__(self, session, method, uri, port, **kwargs):
         # These are kwargsable attribs.
         self.session = session
-        self.method = method
+        self.method = method.upper()
         self.uri = uri
         self.port = port
         self.auth = None
