@@ -1,4 +1,4 @@
-asks - An overview of the functions and kw/argumetns.
+asks - An overview of the functions and kw/arguments.
 =====================================================
 
 asks is *heavily* influenced by requests, and as such pretty much everything that works in requests works in asks. So, if you're familiar with the format you can pretty much skip to the distinctions regarding `sessions <https://asks.readthedocs.io/en/latest/a-look-at-sessions.html>`_
@@ -52,6 +52,7 @@ You may also pass strings and iterables, asks will attempt to format them correc
     b'?Elmo+wants+data'
 
 *Note: the* ``data`` *arg is incompatible with the* ``files`` *and* ``json`` *args.*
+
 
 Custom Headers
 ______________
@@ -135,7 +136,6 @@ You can limit the number of redirects by setting ``max_redirects``. By default, 
         r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
 
 
-
 Set Timeout
 ___________
 
@@ -166,6 +166,7 @@ To add auth in asks, you pass a tuple of ``('username', 'password')`` to the ``_
 
 **Note**: asks will not pass auth along to connections that switch from http to https, or off domain locations, unless you pass ``auth_off_domain=True`` to the call.
 
+
 Streaming response data
 _______________________
 
@@ -173,6 +174,7 @@ You can stream the body of a response by setting ``stream=True`` , and iterating
 
     import asks
     import curio
+    asks.init('curio')
 
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
@@ -182,10 +184,12 @@ You can stream the body of a response by setting ``stream=True`` , and iterating
 
     curio.run(main())
 
+
 It is important to note that if you do not iterate the ``.body`` to completion, bad things may happen as the connection sits there and isn't returned to the connection pool. You can get around this by context-managering the ``.body`` if there is a chance you might not iter fully. ::
 
     import asks
     import curio
+    asks.init('curio')
 
     async def main():
         r = await asks.get('http://httpbin.com/image/png', stream=True)
@@ -201,6 +205,7 @@ This way, once you leave the ``async with`` block, the asks will automatically e
 The streaming body can also be used for streaming feeds and stuff of twitter and the likes.
 
 For some examples of how to use this, `look here <https://asks.readthedocs.io/en/latest/idioms.html#handling-response-body-content-downloads-etc>`_
+
 
 Callbacks
 _________

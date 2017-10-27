@@ -31,20 +31,23 @@ The ``Session``'s ``connections`` argument dictates the maximum number of concur
 
 **The default number of connections in the pool for a Session is a measly ONE.** If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%. ::
 
-    from asks import Session
+    import asks
+    import curio
+    asks.init('curio')
 
     a_list_of_many_urls = ['wow', 'so', 'many', 'urls']
 
-    async def worker(url):
+    async def worker(s, url):
         r = await s.get(url)
         print(r.text)
 
     async def main(url_list):
-        s = Session(connections=20)
+        s = asks.Session(connections=20)
         for url in url_list:
-            await curio.spawn(worker(url))
+            await curio.spawn(worker(s, url))
 
     curio.run(main(a_list_of_many_urls))
+
 
 Session Headers
 _______________
@@ -88,18 +91,20 @@ The result will be a bunch of calls that look like
 
 Please don't actually do this or the jsontest.com website will be very unhappy. ::
 
-    from asks import Session
+    import asks
+    import curio
+    asks.init('curio')
 
-    async def worker(num):
+    async def worker(s, num):
         r = await s.get(path='/' + str(num))
         print(r.text)
 
     async def main():
-        s = Session(connections=50)
+        s = asks.Session(connections=50)
         s.base_location = 'http://echo.jsontest.com'
         s.endpoint = '/asks/test'
         for i in range(1, 1001):
-            await curio.spawn(worker(i))
+            await curio.spawn(worker(s, i))
 
     curio.run(main())
 
