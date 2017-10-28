@@ -69,11 +69,11 @@ For something slightly more human readable, you may want to try the ``.text`` pr
 To view the body exactly as it was sent, just use the ``.body`` attribute. Note that this may be compressed madness, so don't worry if you can't read it with your poor wee eyes. ::
 
     async def main():
-            r = asks.get('http://example.com')
+        r = asks.get('http://example.com')
 
-            r.content
-            r.text
-            r.body
+        r.content
+        r.text
+        r.body
 
 If the request was made with ``stream=True``, the ``.body`` attribute will be an iterable from which you can stream data.
 
@@ -99,13 +99,13 @@ ________________
 If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object's ``.history`` attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes. ::
 
     async def main():
-            r = asks.get('http://httpbin.org/redirect/3')
-            print(r.history)
-            print(r.history[1].status_code)
+        r = asks.get('http://httpbin.org/redirect/3')
+        print(r.history)
+        print(r.history[1].status_code)
 
-        # Results in:
-        # [<Response 302 at 0xb6a807cc>, <Response 302 at 0xb...
-        # 302
+    # Results in:
+    # [<Response 302 at 0xb6a807cc>, <Response 302 at 0xb...
+    # 302
 
 
 URL

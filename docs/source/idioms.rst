@@ -11,15 +11,15 @@ If we wanted to request two thousand urls, we wouldn't want to spawn two thousan
 
     import asks
     import curio
+    asks.init('curio')
 
     async def worker(sema, url):
         async with sema:
             r = await asks.get(url)
             print('got ', url)
 
-
     async def main(url_list):
-        sema = curio.BoundedSemaphore(value=2) # Set sofa size.
+        sema = curio.BoundedSemaphore(value=2)  # Set sofa size.
         for url in url_list:
             await curio.spawn(worker(sema, url))
 
@@ -37,12 +37,17 @@ The result of running this is that the first and second url ('delay/5' and 'dela
 * After three seconds, 'delay/2' finishes.
 * After five seconds, 'delay/5' finishes.
 
+
 Maintaining Order
 _________________
 
 Due to the nature of async, if you feed a list of urls to asks in some fashion, and store the responses in a list, there is no gaurantee the responses will be in the same order as the list of urls.
 
 A handy way of dealing with this on an example ``url_list`` is to pass the enumerated list as a dict ``dict(enumerate(url_list))`` and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look: ::
+
+    import asks
+    import curio
+    asks.init('curio')
 
     results = {}
 
@@ -66,16 +71,18 @@ In the above example, ``sorted_results`` is a list of response objects in the sa
 
 There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio's taskgroups. Here's an example of that: ::
 
+    import asks
+    import curio
+    asks.init('curio')
+
     results = []
     url_list = ["https://www.httpbin.org/get" for _ in range(50)]
 
     s = asks.Session()
 
-
     async def worker(key, url):
         r = await s.get(url)
         results.append((key, r.body))
-
 
     async def main():
         async with curio.TaskGroup() as g:
@@ -94,6 +101,10 @@ ___________________________________________________________
 
 The recommended way to handle this sort of thing, is by streaming. The following examples use a context manager on the response body to ensure the underlying connection is always handled properly: ::
 
+    import asks
+    import curio
+    asks.init('curio')
+
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
         with open('our_image.png', 'ab') as out_file:
@@ -104,6 +115,10 @@ The recommended way to handle this sort of thing, is by streaming. The following
     curio.run(main())
 
 An example of multiple downloads with streaming: ::
+
+    import asks
+    import curio
+    asks.init('curio')
 
     from functools import partial
 
@@ -129,6 +144,10 @@ Below you'll find an example of a single download of an image with a given filen
 
 We define a callback function ``downloader`` that takes bytes and saves 'em, and pass it in. ::
 
+    import asks
+    import curio
+    asks.init('curio')
+
     async def downloader(bytechunk):
         async with curio.aopen('our_image.png', 'ab') as out_file:
             await out_file.write(bytechunk)
@@ -139,6 +158,10 @@ We define a callback function ``downloader`` that takes bytes and saves 'em, and
     curio.run(main())
 
 What about downloading a whole bunch of images, and naming them sequentially? ::
+
+    import asks
+    import curio
+    asks.init('curio')
 
     from functools import partial
 
@@ -159,6 +182,10 @@ Resending an asks.Cookie
 ________________________
 
 Simply refrence the ``Cookie`` 's ``.name`` and ``.value`` attributes as you pass them in to the ``cookies`` argument. ::
+
+    import asks
+    import curio
+    asks.init('curio')
 
     a_cookie = previous_response_object.cookies[0]
 
