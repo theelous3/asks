@@ -274,7 +274,8 @@ class Request:
         if not self.path:
             self.path = '/'
         if self.query:
-            self.path = self.path + '?' + self.query
+            self.path = (self._queryify(self.path) + '?' +
+                         self._queryify(self.query))
         if self.params:
             try:
                 if self.query:
