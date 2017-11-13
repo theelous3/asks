@@ -21,6 +21,7 @@ import h11
 from h11 import RemoteProtocolError
 from multio import asynclib
 
+from .utils import requote_uri
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
 from .response_objects import Response, StreamBody
@@ -274,8 +275,9 @@ class Request:
         if not self.path:
             self.path = '/'
         if self.query:
-            self.path = (self._queryify(self.path) + '?' +
-                         self._queryify(self.query))
+            self.path = requote_uri(self.path + '?' +
+                                     self.query)
+            print(self.path)
         if self.params:
             try:
                 if self.query:
@@ -284,7 +286,7 @@ class Request:
                 else:
                     self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
-                self.path = self.path + '?' + self._queryify(self.params)
+                self.path = self.path + '?' + requote_uri(self.params)
 
     async def _redirect(self, response_obj):
         '''
@@ -420,15 +422,15 @@ class Request:
             if not v:
                 continue
             if isinstance(v, (str, Number)):
-                query.append(self._queryify(
+                query.append(requote_uri(
                     (k + '=' + str(v))))
             elif isinstance(v, dict):
                 for key in v:
-                    query.append(self._queryify((k + '=' + key)))
+                    query.append(requote_uri((k + '=' + key)))
             elif hasattr(v, '__iter__'):
                 for elm in v:
                     query.append(
-                        self._queryify((k + '=' +
+                        requote_uri((k + '=' +
                                        '+'.join(str(elm).split()))))
 
         if params and query:
@@ -495,13 +497,6 @@ class Request:
         except AttributeError:
             async with await asynclib.aopen(path, 'rb') as f:
                 return b''.join(await f.readlines()) + b'\r\n'
-
-    def _queryify(self, query):
-        '''
-        Turns stuff in to a valid url query.
-        '''
-        return quote(query.encode(self.encoding, errors='strict'),
-                     safe='/=+?&')
 
     async def _catch_response(self, hconnection):
         '''
