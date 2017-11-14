@@ -61,4 +61,3 @@ def requote_uri(uri):
         # there may be unquoted '%'s in the URI. We need to make sure they're
         # properly quoted so they do not cause issues elsewhere.
         return quote(uri, safe=safe_without_percent)
-

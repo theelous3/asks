@@ -11,7 +11,7 @@ __all__ = ['Request']
 
 from numbers import Number
 from os.path import basename
-from urllib.parse import urlparse, urlunparse, quote
+from urllib.parse import urlparse, urlunparse, quote_plus
 import json as _json
 from random import randint
 import mimetypes
@@ -421,16 +421,14 @@ class Request:
             if not v:
                 continue
             if isinstance(v, (str, Number)):
-                query.append(requote_uri(
-                    (k + '=' + str(v))))
+                query.append((k + '=' + quote_plus(str(v))))
             elif isinstance(v, dict):
                 for key in v:
-                    query.append(requote_uri((k + '=' + key)))
+                    query.append((k + '=' + quote_plus(key)))
             elif hasattr(v, '__iter__'):
                 for elm in v:
-                    query.append(
-                        requote_uri((k + '=' +
-                                       '+'.join(str(elm).split()))))
+                    query.append((k + '=' +
+                                  quote_plus('+'.join(str(elm).split()))))
 
         if params and query:
             if not base_query:
