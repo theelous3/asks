@@ -275,9 +275,7 @@ class Request:
         if not self.path:
             self.path = '/'
         if self.query:
-            self.path = requote_uri(self.path + '?' +
-                                     self.query)
-            print(self.path)
+            self.path = (self.path + '?' + self.query)
         if self.params:
             try:
                 if self.query:
@@ -286,7 +284,8 @@ class Request:
                 else:
                     self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
-                self.path = self.path + '?' + requote_uri(self.params)
+                self.path = self.path + '?' + self.params
+        self.path = requote_uri(self.path)
 
     async def _redirect(self, response_obj):
         '''
