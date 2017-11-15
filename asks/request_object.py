@@ -527,7 +527,7 @@ class Request:
                         [(str(name, 'utf-8'), str(value, 'utf-8'))
                          for name, value in response.headers]),
                      'body': b'',
-                     'url': self.uri[:-1] + '' or self.path
+                     'url': self.uri[:-1] + self.path or ''
                      }
         for header in response.headers:
             if header[0] == b'set-cookie':
