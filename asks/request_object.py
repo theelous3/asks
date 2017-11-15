@@ -421,14 +421,14 @@ class Request:
             if not v:
                 continue
             if isinstance(v, (str, Number)):
-                query.append((k + '=' + quote_plus(str(v))))
+                query.append('='.join(quote_plus(x) for x in (k, str(v))))
             elif isinstance(v, dict):
                 for key in v:
-                    query.append((k + '=' + quote_plus(key)))
+                    query.append('='.join(quote_plus(x) for x in (k, key)))
             elif hasattr(v, '__iter__'):
                 for elm in v:
-                    query.append((k + '=' +
-                                  quote_plus('+'.join(str(elm).split()))))
+                    query.append('='.join(quote_plus(x) for x in (k,
+                                 quote_plus('+'.join(str(elm).split())))))
 
         if params and query:
             if not base_query:
@@ -527,7 +527,7 @@ class Request:
                         [(str(name, 'utf-8'), str(value, 'utf-8'))
                          for name, value in response.headers]),
                      'body': b'',
-                     'url': self.uri
+                     'url': self.uri[:-1] + self.path
                      }
         for header in response.headers:
             if header[0] == b'set-cookie':
