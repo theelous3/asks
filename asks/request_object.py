@@ -528,7 +528,7 @@ class Request:
                          for name, value in response.headers]),
                      'body': b'',
                      'url': (self.netloc[:-1] if self.netloc.endswith('/')
-                             else self.netloc) + self.path or ''
+                             else self.netloc) + (self.path or '')
                      }
         for header in response.headers:
             if header[0] == b'set-cookie':
