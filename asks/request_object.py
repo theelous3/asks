@@ -275,10 +275,8 @@ class Request:
         '''
         if not self.path:
             self.path = '/'
-        else:
-            self.path = requote_uri(self.path)
         if self.query:
-            self.path = (self.path + '?' + requote_uri(self.query))
+            self.path = (self.path + '?' + self.query)
         if self.params:
             try:
                 if self.query:
@@ -288,6 +286,7 @@ class Request:
                     self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
                 self.path = self.path + '?' + self.params
+        self.path = requote_uri(self.path)
         self.req_url = urlunparse(
             (self.scheme, self.netloc, (self.path or ''), '', '', ''))
 
