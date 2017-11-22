@@ -113,6 +113,7 @@ class Request:
         self.path = None
         self.query = None
         self.target_netloc = None
+        self.req_url = None
 
         self.initial_scheme = None
         self.initial_netloc = None
@@ -285,7 +286,8 @@ class Request:
                     self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
                 self.path = self.path + '?' + self.params
-        self.path = requote_uri(self.path)
+        self.req_url = urlunparse(
+            (self.scheme, self.netloc, (self.path or ''), '', '', ''))
 
     async def _redirect(self, response_obj):
         '''
@@ -432,11 +434,11 @@ class Request:
 
         if params and query:
             if not base_query:
-                return '?' + '&'.join(query)
+                return requote_uri('?' + '&'.join(query))
             else:
-                return '&' + '&'.join(query)
+                return requote_uri('&' + '&'.join(query))
 
-        return '&'.join(query)
+        return requote_uri('&'.join(query))
 
     async def _multipart(self, files_dict):
         '''
@@ -518,6 +520,7 @@ class Request:
         except RemoteProtocolError:
             await self._get_new_sock()
             response = await self._recv_event(hconnection)
+
         resp_data = {'encoding': self.encoding,
                      'method': self.method,
                      'status_code': response.status_code,
@@ -527,9 +530,9 @@ class Request:
                         [(str(name, 'utf-8'), str(value, 'utf-8'))
                          for name, value in response.headers]),
                      'body': b'',
-                     'url': (self.netloc[:-1] if self.netloc.endswith('/')
-                             else self.netloc) + (self.path or '')
+                     'url': self.req_url
                      }
+
         for header in response.headers:
             if header[0] == b'set-cookie':
                 try:

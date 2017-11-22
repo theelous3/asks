@@ -15,6 +15,7 @@ def get_netloc_port(scheme, netloc):
         raise RuntimeError('Something is goofed. Contact the author!')
     return netloc, port
 
+
 # The unreserved URI characters (RFC 3986)
 UNRESERVED_SET = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
                   "0123456789-._~")
