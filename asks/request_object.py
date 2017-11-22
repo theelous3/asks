@@ -275,8 +275,10 @@ class Request:
         '''
         if not self.path:
             self.path = '/'
+        else:
+            self.path = requote_uri(self.path)
         if self.query:
-            self.path = (self.path + '?' + self.query)
+            self.path = (self.path + '?' + requote_uri(self.query))
         if self.params:
             try:
                 if self.query:
