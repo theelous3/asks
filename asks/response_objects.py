@@ -180,7 +180,7 @@ class StreamBody:
         return self
 
     async def close(self):
-        if self.sock in self.session.checked_out_sockets:
+        if self.sock in self.session._checked_out_sockets:
             self.sock._active = False
             await self.session._replace_connection(self.sock)
 
