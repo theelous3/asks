@@ -1,3 +1,4 @@
+# pylint: disable=wrong-import-order
 import multio
 import pytest_httpbin
 import trio

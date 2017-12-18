@@ -1,3 +1,4 @@
+# pylint: disable=arguments-differ
 '''
 Some structures used throughout asks.
 '''

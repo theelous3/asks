@@ -19,7 +19,9 @@ install:
 
 script:
   - pytest --verbose --tb=native
-  - pylint asks tests
+  # - pylint asks tests
+  # temp disable until bugfix for
+  # AttributeError: 'FunctionDef' object has no attribute 'ancestors'
 
 notifications:
   email:
