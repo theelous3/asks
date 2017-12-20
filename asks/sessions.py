@@ -156,6 +156,7 @@ class BaseSession:
                               sock=sock,
                               persist_cookies=self._cookie_tracker_obj,
                               **kwargs)
+            print('sending request')
             if timeout is None:
                 sock, r = await req_obj.make_request()
             else:
@@ -236,7 +237,6 @@ class Session(BaseSession):
 
         self._conn_pool = SocketQ(maxlen=connections)
         self._checked_out_sockets = SocketQ(maxlen=connections)
-        self._in_connection_counter = 0
 
         self.sema = asynclib.Semaphore(connections)
 
@@ -245,9 +245,9 @@ class Session(BaseSession):
             index = self._conn_pool.index(host_loc)
         except ValueError:
             return None
+        print('using pooled connection')
         sock = self._conn_pool.pull(index)
         self._checked_out_sockets.append(sock)
-        self._in_connection_counter += 1
         return sock
 
     async def _replace_connection(self, sock):
@@ -257,9 +257,8 @@ class Session(BaseSession):
         else:
             self._checked_out_sockets.remove(sock)
 
-        self._in_connection_counter -= 1
-
     async def _make_connection(self, host_loc):
+        print('making new connection')
         sock, port = await self._connect(host_loc)
         sock.host, sock.port = host_loc, port
         return sock
@@ -282,17 +281,12 @@ class Session(BaseSession):
         scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
 
-        while True:
-            sock = self._checkout_connection(host_loc)
-            if sock is not None:
-                break
-            if self._in_connection_counter < self._conn_pool.maxlen:
-                self._in_connection_counter += 1
-                sock = await self._make_connection(host_loc)
-                self._checked_out_sockets.append(sock)
-                break
-            await asynclib.sleep(0)
-            continue
+        sock = self._checkout_connection(host_loc)
+        if sock is not None:
+            return sock
+        else:
+            sock = await self._make_connection(host_loc)
+            self._checked_out_sockets.append(sock)
 
         return sock
 
