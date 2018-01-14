@@ -10,8 +10,6 @@ class SocketQ(deque):
     A funky little subclass of deque built for the session classes.
     Allows for connection pooling of sockets to remote hosts.
     '''
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
 
     def index(self, host_loc):
         try:

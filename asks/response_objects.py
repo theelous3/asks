@@ -164,7 +164,6 @@ class StreamBody:
             if isinstance(event, h11.Data):
                 await yield_(event.data)
             elif isinstance(event, h11.EndOfMessage):
-                await self.session._replace_connection(self.sock)
                 break
 
     async def _recv_event(self):
@@ -177,12 +176,11 @@ class StreamBody:
             return event
 
     async def __aenter__(self):
+        self.session._checked_out_sockets.remove(self.sock)
         return self
 
     async def close(self):
-        if self.sock in self.session._checked_out_sockets:
-            self.sock._active = False
-            await self.session._replace_connection(self.sock)
+        await self.sock.close()
 
     async def __aexit__(self, *exc_info):
         await self.close()

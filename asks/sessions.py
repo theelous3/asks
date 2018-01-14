@@ -156,7 +156,7 @@ class BaseSession:
                               sock=sock,
                               persist_cookies=self._cookie_tracker_obj,
                               **kwargs)
-            print('sending request')
+
             if timeout is None:
                 sock, r = await req_obj.make_request()
             else:
@@ -170,7 +170,7 @@ class BaseSession:
                     pass
                 await self._replace_connection(sock)
 
-            return r
+        return r
 
     # These be the actual http methods!
     # They are partial methods of `request`. See the `request` docstring
@@ -245,7 +245,7 @@ class Session(BaseSession):
             index = self._conn_pool.index(host_loc)
         except ValueError:
             return None
-        print('using pooled connection')
+
         sock = self._conn_pool.pull(index)
         self._checked_out_sockets.append(sock)
         return sock
@@ -258,7 +258,6 @@ class Session(BaseSession):
             self._checked_out_sockets.remove(sock)
 
     async def _make_connection(self, host_loc):
-        print('making new connection')
         sock, port = await self._connect(host_loc)
         sock.host, sock.port = host_loc, port
         return sock
