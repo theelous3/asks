@@ -39,6 +39,8 @@ class BaseSession:
         self.encoding = None
         self._cookie_tracker_obj = None
 
+        self.sema = NotImplementedError
+
     async def _open_connection_http(self, location):
         '''
         Creates a normal async socket, returns it.
@@ -129,42 +131,44 @@ class BaseSession:
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
-        timeout = kwargs.pop('timeout', None)
-        req_headers = kwargs.pop('headers', None)
+        async with self.sema:
+            timeout = kwargs.pop('timeout', None)
+            req_headers = kwargs.pop('headers', None)
 
-        if url is None:
-            url = self._make_url() + path
-        sock = await self._grab_connection(url)
-        port = sock.port
+            if url is None:
+                url = self._make_url() + path
 
-        if self.headers is not None:
-            headers = copy(self.headers)
-            if req_headers is not None:
-                headers.update(req_headers)
-            req_headers = headers
+            sock = await self._grab_connection(url)
+            port = sock.port
 
-        req_obj = Request(self,
-                          method,
-                          url,
-                          port,
-                          headers=req_headers,
-                          encoding=self.encoding,
-                          sock=sock,
-                          persist_cookies=self._cookie_tracker_obj,
-                          **kwargs)
+            if self.headers is not None:
+                headers = copy(self.headers)
+                if req_headers is not None:
+                    headers.update(req_headers)
+                req_headers = headers
 
-        if timeout is None:
-            sock, r = await req_obj.make_request()
-        else:
-            sock, r = await self.timeout_manager(timeout, req_obj)
+            req_obj = Request(self,
+                              method,
+                              url,
+                              port,
+                              headers=req_headers,
+                              encoding=self.encoding,
+                              sock=sock,
+                              persist_cookies=self._cookie_tracker_obj,
+                              **kwargs)
 
-        if sock is not None:
-            try:
-                if r.headers['connection'].lower() == 'close':
-                    sock._active = False
-            except KeyError:
-                pass
-            await self._replace_connection(sock)
+            if timeout is None:
+                sock, r = await req_obj.make_request()
+            else:
+                sock, r = await self.timeout_manager(timeout, req_obj)
+
+            if sock is not None:
+                try:
+                    if r.headers['connection'].lower() == 'close':
+                        sock._active = False
+                except KeyError:
+                    pass
+                await self._replace_connection(sock)
 
         return r
 
@@ -233,16 +237,17 @@ class Session(BaseSession):
 
         self._conn_pool = SocketQ(maxlen=connections)
         self._checked_out_sockets = SocketQ(maxlen=connections)
-        self._in_connection_counter = 0
+
+        self.sema = asynclib.Semaphore(connections)
 
     def _checkout_connection(self, host_loc):
         try:
             index = self._conn_pool.index(host_loc)
         except ValueError:
             return None
+
         sock = self._conn_pool.pull(index)
         self._checked_out_sockets.append(sock)
-        self._in_connection_counter += 1
         return sock
 
     async def _replace_connection(self, sock):
@@ -251,8 +256,6 @@ class Session(BaseSession):
             self._conn_pool.appendleft(sock)
         else:
             self._checked_out_sockets.remove(sock)
-
-        self._in_connection_counter -= 1
 
     async def _make_connection(self, host_loc):
         sock, port = await self._connect(host_loc)
@@ -277,17 +280,12 @@ class Session(BaseSession):
         scheme, netloc, _, _, _, _ = urlparse(url)
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
 
-        while True:
-            sock = self._checkout_connection(host_loc)
-            if sock is not None:
-                break
-            if self._in_connection_counter < self._conn_pool.maxlen:
-                self._in_connection_counter += 1
-                sock = await self._make_connection(host_loc)
-                self._checked_out_sockets.append(sock)
-                break
-            await asynclib.sleep(0)
-            continue
+        sock = self._checkout_connection(host_loc)
+        if sock is not None:
+            return sock
+        else:
+            sock = await self._make_connection(host_loc)
+            self._checked_out_sockets.append(sock)
 
         return sock
 
