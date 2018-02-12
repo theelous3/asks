@@ -180,7 +180,11 @@ class StreamBody:
         return self
 
     async def close(self):
-        await self.sock.close()
+        try:
+            await self.sock.close()
+        except AttributeError:
+            # account for trio's name-things-whatever
+            await self.sock.aclose()
 
     async def __aexit__(self, *exc_info):
         await self.close()

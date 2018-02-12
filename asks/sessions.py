@@ -235,8 +235,8 @@ class Session(BaseSession):
         else:
             self._cookie_tracker_obj = persist_cookies
 
-        self._conn_pool = SocketQ(maxlen=connections)
-        self._checked_out_sockets = SocketQ(maxlen=connections)
+        self._conn_pool = SocketQ()
+        self._checked_out_sockets = SocketQ()
 
         self.sema = asynclib.Semaphore(connections)
 
