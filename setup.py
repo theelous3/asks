@@ -21,5 +21,9 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 3',
         'Framework :: Trio',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Internet :: WWW/HTTP',
     ]
 )
