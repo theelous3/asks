@@ -112,6 +112,7 @@ class Request:
         self.netloc = None
         self.path = None
         self.query = None
+        self.uri_parameters = None
         self.target_netloc = None
         self.req_url = None
 
@@ -134,8 +135,12 @@ class Request:
                 response object's `.history`.
         '''
         hconnection = h11.Connection(our_role=h11.CLIENT)
-        self.scheme, self.netloc, self.path, _, self.query, _ = urlparse(
-            self.uri)
+        (self.scheme,
+            self.netloc,
+            self.path,
+            self.uri_parameters,
+            self.query,
+            _) = urlparse(self.uri)
 
         if not redirect:
             self.initial_scheme = self.scheme
@@ -275,8 +280,13 @@ class Request:
         '''
         if not self.path:
             self.path = '/'
+
+        if self.uri_parameters:
+            self.path = self.path + ';' + requote_uri(self.uri_parameters)
+
         if self.query:
             self.path = (self.path + '?' + self.query)
+
         if self.params:
             try:
                 if self.query:
@@ -286,7 +296,9 @@ class Request:
                     self.path = self.path + self._dict_to_query(self.params)
             except AttributeError:
                 self.path = self.path + '?' + self.params
+
         self.path = requote_uri(self.path)
+
         self.req_url = urlunparse(
             (self.scheme, self.netloc, (self.path or ''), '', '', ''))
 
