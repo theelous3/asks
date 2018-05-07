@@ -37,6 +37,7 @@ class BaseSession:
             self.headers = {}
 
         self.encoding = None
+        self.source_address = None
         self._cookie_tracker_obj = None
 
         self.sema = NotImplementedError
@@ -50,7 +51,8 @@ class BaseSession:
         '''
         sock = await asynclib.open_connection(location[0],
                                               location[1],
-                                              ssl=False)
+                                              ssl=False,
+                                              source_addr=self.source_address)
         sock._active = True
         return sock
 
@@ -64,7 +66,8 @@ class BaseSession:
         sock = await asynclib.open_connection(location[0],
                                               location[1],
                                               ssl=True,
-                                              server_hostname=location[0])
+                                              server_hostname=location[0],
+                                              source_addr=self.source_address)
         sock._active = True
         return sock
 
