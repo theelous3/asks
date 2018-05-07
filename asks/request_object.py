@@ -566,7 +566,7 @@ class Request:
                 if resp_data['headers']['transfer-encoding'] == 'chunked':
                     get_body = True
             except KeyError:
-                if resp_data['headers']['connection'].lower() == 'close':
+                if resp_data['headers'].get('connection', '').lower() == 'close':
                     get_body = True
 
         if get_body:
