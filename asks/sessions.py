@@ -142,36 +142,42 @@ class BaseSession:
                 url = self._make_url() + path
 
             sock = await self._grab_connection(url)
-            port = sock.port
+            try:
+                port = sock.port
 
-            if self.headers is not None:
-                headers = copy(self.headers)
-                if req_headers is not None:
-                    headers.update(req_headers)
-                req_headers = headers
+                if self.headers is not None:
+                    headers = copy(self.headers)
+                    if req_headers is not None:
+                        headers.update(req_headers)
+                    req_headers = headers
 
-            req_obj = Request(self,
-                              method,
-                              url,
-                              port,
-                              headers=req_headers,
-                              encoding=self.encoding,
-                              sock=sock,
-                              persist_cookies=self._cookie_tracker_obj,
-                              **kwargs)
+                req_obj = Request(self,
+                                  method,
+                                  url,
+                                  port,
+                                  headers=req_headers,
+                                  encoding=self.encoding,
+                                  sock=sock,
+                                  persist_cookies=self._cookie_tracker_obj,
+                                  **kwargs)
 
-            if timeout is None:
-                sock, r = await req_obj.make_request()
-            else:
-                sock, r = await self.timeout_manager(timeout, req_obj)
+                if timeout is None:
+                    sock, r = await req_obj.make_request()
+                else:
+                    sock, r = await self.timeout_manager(timeout, req_obj)
 
-            if sock is not None:
-                try:
-                    if r.headers['connection'].lower() == 'close':
-                        sock._active = False
-                except KeyError:
-                    pass
-                await self._replace_connection(sock)
+                if sock is not None:
+                    try:
+                        if r.headers['connection'].lower() == 'close':
+                            sock._active = False
+                    except KeyError:
+                        pass
+
+            finally:
+                # Unless sock was set to None (streaming mode), put it back
+                # no matter the kind of error that happened.
+                if sock:
+                    await self._replace_connection(sock)
 
         return r
 
