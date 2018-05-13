@@ -5,7 +5,7 @@ sudo: false
 python:
   - "3.5"
   - "3.6"
-  - "nightly"
+  - "3.7"
 
 install:
    - ./setup.py develop
