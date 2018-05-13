@@ -528,11 +528,8 @@ class Request:
         Returns:
             The most recent response object.
         '''
-        try:
-            response = await self._recv_event(hconnection)
-        except RemoteProtocolError:
-            await self._get_new_sock()
-            response = await self._recv_event(hconnection)
+
+        response = await self._recv_event(hconnection)
 
         resp_data = {'encoding': self.encoding,
                      'method': self.method,

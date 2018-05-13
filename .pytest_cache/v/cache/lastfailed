@@ -1,0 +1,4 @@
+{
+  "tests/test_asks_curio.py::TestAsksCurio::()::test_header_set": true,
+  "tests/test_asks_curio.py::TestAsksCurio::()::test_http_get": true
+}

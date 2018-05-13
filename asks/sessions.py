@@ -2,6 +2,8 @@
 The disparate session (Session) is for making requests to multiple locations.
 '''
 
+from h11 import RemoteProtocolError
+
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
@@ -9,7 +11,7 @@ from urllib.parse import urlparse, urlunparse
 from multio import asynclib
 
 from .cookie_utils import CookieTracker
-from .errors import RequestTimeout
+from .errors import RequestTimeout, BadHttpResponse
 from .req_structs import SocketQ
 from .request_object import Request
 from .utils import get_netloc_port
@@ -90,7 +92,7 @@ class BaseSession:
             return await self._open_connection_https(
                 (netloc, int(port))), port
 
-    async def request(self, method, url=None, *, path='', **kwargs):
+    async def request(self, method, url=None, *, path='', retries=1, **kwargs):
         '''
         This is the template for all of the `http method` methods for
         the Session.
@@ -135,14 +137,16 @@ class BaseSession:
         pre-completed.
         '''
         async with self.sema:
-            timeout = kwargs.pop('timeout', None)
+            timeout = kwargs.get('timeout', None)
             req_headers = kwargs.pop('headers', None)
 
             if url is None:
                 url = self._make_url() + path
 
-            sock = await self._grab_connection(url)
+            retry = False
+
             try:
+                sock = await self._grab_connection(url)
                 port = sock.port
 
                 if self.headers is not None:
@@ -172,12 +176,27 @@ class BaseSession:
                             sock._active = False
                     except KeyError:
                         pass
-
-            finally:
-                # Unless sock was set to None (streaming mode), put it back
-                # no matter the kind of error that happened.
-                if sock:
                     await self._replace_connection(sock)
+
+            except RemoteProtocolError as e:
+                sock._active = False
+                await self._replace_connection(sock)
+                raise BadHttpResponse('Invalid HTTP response from server.') from e
+
+            except ConnectionError as e:
+                if retries > 0:
+                    retry = True
+                    retries -= 1
+                else:
+                    raise e
+
+        if retry:
+            return (await self.request(method,
+                                       url,
+                                       path=path,
+                                       retries=retries,
+                                       headers=headers,
+                                       **kwargs))
 
         return r
 
