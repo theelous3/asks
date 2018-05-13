@@ -4,6 +4,7 @@ import h11
 
 from asks.request_object import Request
 
+
 def _catch_response(monkeypatch, headers, data):
     req = Request(None, 'get', "toot-toot", None)
     events = [
@@ -22,9 +23,11 @@ def _catch_response(monkeypatch, headers, data):
         response = e.value
     return response
 
+
 def test_http1_1(monkeypatch):
     response = _catch_response(monkeypatch, [('Content-Length', '5')], b'hello')
     assert response.body == b'hello'
+
 
 def test_http1_0(monkeypatch):
     response = _catch_response(monkeypatch, [('Connection', 'close')], b'hello')

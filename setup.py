@@ -17,7 +17,7 @@ setup(
     url='https://github.com/theelous3/asks',
     packages=['asks'],
     install_requires=['h11', 'async_generator', 'multio'],
-    tests_require=['curio', 'trio'],
+    tests_require=['pytest', 'curio', 'trio'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'Framework :: Trio',
