@@ -2,11 +2,12 @@
 The disparate session (Session) is for making requests to multiple locations.
 '''
 
-from h11 import RemoteProtocolError
-
+from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
+
+from h11 import RemoteProtocolError
 
 from multio import asynclib
 
@@ -19,7 +20,7 @@ from .utils import get_netloc_port
 __all__ = ['Session']
 
 
-class BaseSession:
+class BaseSession(metaclass=ABCMeta):
     '''
     The base class for asks' sessions.
     Contains methods for creating sockets, figuring out which type of
@@ -42,7 +43,13 @@ class BaseSession:
         self.source_address = None
         self._cookie_tracker_obj = None
 
-        self.sema = NotImplementedError
+    @property
+    @abstractmethod
+    def sema(self):
+        """
+        A semaphore-like context manager.
+        """
+        ...
 
     async def _open_connection_http(self, location):
         '''
@@ -136,7 +143,7 @@ class BaseSession:
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
-        async with self.sema:
+        async with self._sema:
             timeout = kwargs.get('timeout', None)
             req_headers = kwargs.pop('headers', None)
 
@@ -218,14 +225,26 @@ class BaseSession:
             raise RequestTimeout from e
         return sock, r
 
+    @abstractmethod
     def _make_url(self):
-        raise NotImplementedError
+        """
+        A method who's result is concated with a uri path.
+        """
+        ...
 
+    @abstractmethod
     async def _grab_connection(self, url):
-        raise NotImplementedError
+        """
+        A method that will return a socket-like object.
+        """
+        ...
 
+    @abstractmethod
     async def _replace_connection(self, sock):
-        raise NotImplementedError
+        """
+        A method that will accept a socket-like object.
+        """
+        ...
 
 
 class Session(BaseSession):
@@ -266,7 +285,11 @@ class Session(BaseSession):
         self._conn_pool = SocketQ()
         self._checked_out_sockets = SocketQ()
 
-        self.sema = asynclib.Semaphore(connections)
+        self._sema = asynclib.Semaphore(connections)
+
+    @property
+    def sema(self):
+        return self._sema
 
     def _checkout_connection(self, host_loc):
         try:
