@@ -52,7 +52,7 @@ You must specify what event loop asks should use after importing asks, and at so
     import trio
 
     async def example():
-        r = asks.get('https://example.org')
+        r = await asks.get('https://example.org')
 
     asks.init('curio')
     curio.run(example)

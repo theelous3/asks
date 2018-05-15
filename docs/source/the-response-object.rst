@@ -15,7 +15,7 @@ The response object will try to glean encoding from the response headers if avai
 You can override the response-set or default encoding with either a built-in encoding or one you've registered locally with your codecs module by accessing the response's ``.encoding`` attribute. ::
 
     async def main():
-        r = asks.get('http://example.com')
+        r = await asks.get('http://example.com')
         r.encoding = 'latin-1'
 
 Status Line
@@ -24,7 +24,7 @@ ___________
 The three parts of the status line, are the HTTP-Version, Status-Code and Reason-Phrase. They can be accessed as attributes of the response object like so::
 
     async def main():
-        r = asks.get('http://example.com')
+        r = await asks.get('http://example.com')
 
         r.http_version  # -> '1.1'
         r.status_code   # -> 200
@@ -36,7 +36,7 @@ _______
 The headers are available as a dict through ``Response.headers`` ::
 
     async def main():
-        r = asks.get('http://example.com')
+        r = await asks.get('http://example.com')
         print(r.headers)
 
     # Results in:
@@ -51,7 +51,7 @@ If the response body is valid JSON you can load it as a python dict by calling t
 If the response was compressed, it will be decompressed. ::
 
     async def main():
-        r = asks.get('http://httpbin.org/get')
+        r = await asks.get('http://httpbin.org/get')
         j = r.json()
         print(j)
 
@@ -69,7 +69,7 @@ For something slightly more human readable, you may want to try the ``.text`` pr
 To view the body exactly as it was sent, just use the ``.body`` attribute. Note that this may be compressed madness, so don't worry if you can't read it with your poor wee eyes. ::
 
     async def main():
-        r = asks.get('http://example.com')
+        r = await asks.get('http://example.com')
 
         r.content
         r.text
@@ -99,7 +99,7 @@ ________________
 If any redirects or 401-requiring auth attempts were handled during the request, the response objects for those requests will be stored in the final response object's ``.history`` attribute in a list. Any response objects found in there are exactly like your main response object, and have all of the above methods, properties, and attributes. ::
 
     async def main():
-        r = asks.get('http://httpbin.org/redirect/3')
+        r = await asks.get('http://httpbin.org/redirect/3')
         print(r.history)
         print(r.history[1].status_code)
 
@@ -114,7 +114,7 @@ ___
 Find the url that the request was made to.::
 
     async def main():
-        r = asks.get('http://example.com')
+        r = await asks.get('http://example.com')
         print(r.url)
 
     # Results in:
