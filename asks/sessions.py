@@ -180,12 +180,14 @@ class BaseSession(metaclass=ABCMeta):
                 if sock is not None:
                     try:
                         if r.headers['connection'].lower() == 'close':
+                            await sock.close()
                             sock._active = False
                     except KeyError:
                         pass
                     await self._replace_connection(sock)
 
             except RemoteProtocolError as e:
+                await sock.close()
                 sock._active = False
                 await self._replace_connection(sock)
                 raise BadHttpResponse('Invalid HTTP response from server.') from e
@@ -345,3 +347,9 @@ class Session(BaseSession):
         Puts together the hostloc and current endpoint for use in request uri.
         '''
         return (self.base_location or '') + (self.endpoint or '')
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self._conn_pool.free_pool()

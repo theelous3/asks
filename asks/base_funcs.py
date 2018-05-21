@@ -25,9 +25,9 @@ async def request(method, uri, **kwargs):
         Response (asks.Response): The Response object.
     '''
     c_interact = kwargs.pop('persist_cookies', None)
-    s = Session(persist_cookies=c_interact)
-    r = await s.request(method, url=uri, **kwargs)
-    return r
+    async with Session(persist_cookies=c_interact) as s:
+        r = await s.request(method, url=uri, **kwargs)
+        return r
 
 # The functions below are the exact same as the ``request`` function
 # above, with the method argument already passed.

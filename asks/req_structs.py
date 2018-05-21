@@ -23,6 +23,11 @@ class SocketQ(deque):
         del self[index]
         return x
 
+    async def free_pool(self):
+        while self:
+            sock = self.pop()
+            await sock.close()
+
     def __contains__(self, host_loc):
         for i in self:
             if i.host == host_loc:
