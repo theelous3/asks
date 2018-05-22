@@ -5,6 +5,10 @@ asks is *heavily* influenced by requests, and as such pretty much everything tha
 
 The examples here use the base one-request-functions for verbosities sake, but all of these functions are completely transferrable to the ``Session`` class as methods.
 
+*Warning!*
+
+If you don't use a ``Session`` you can easily max out your OS's socket resources against highly performant servers (usually local to the machine or LAN). When using the base functions you'll be creating a new connection for every request.
+
 (Calling ``asks.get('https://some-url.io'))`` really makes a temporary ``Session``.)
 
 
@@ -143,6 +147,15 @@ Don't want to wait forever? Me neither. You may set a timeout with the timeout a
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
+
+
+Retry limiting
+___________
+
+You can set a maximum number of retries with ``retries``. This defaults to ``1``, to catch sockets that die in the connection pool, or generally misbehave. There is no upper limit. Be careful :D ::
+
+    async def example():
+        r = await asks.get('www.beat_dead_horses.org/neverworks', retries=9999999))
 
 
 Authing
