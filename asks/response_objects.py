@@ -8,6 +8,7 @@ from async_generator import async_generator, yield_
 import h11
 
 from multio import asynclib
+from .utils import close_socket
 
 
 class Response:
@@ -180,7 +181,7 @@ class StreamBody:
         return self
 
     async def close(self):
-        await self.sock.close()
+        await close_socket(self.sock)
 
     async def __aexit__(self, *exc_info):
         await self.close()

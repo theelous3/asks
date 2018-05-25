@@ -62,3 +62,11 @@ def requote_uri(uri):
         # there may be unquoted '%'s in the URI. We need to make sure they're
         # properly quoted so they do not cause issues elsewhere.
         return quote(uri, safe=safe_without_percent)
+
+
+async def close_socket(sock):
+    try:
+        await sock.close()
+    except AttributeError:
+        # account for trio's name-things-whatever
+        await sock.aclose()
