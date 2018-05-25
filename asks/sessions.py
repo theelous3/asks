@@ -15,7 +15,7 @@ from .cookie_utils import CookieTracker
 from .errors import RequestTimeout, BadHttpResponse
 from .req_structs import SocketQ
 from .request_object import Request
-from .utils import get_netloc_port
+from .utils import get_netloc_port, close_socket
 
 __all__ = ['Session']
 
@@ -180,14 +180,14 @@ class BaseSession(metaclass=ABCMeta):
                 if sock is not None:
                     try:
                         if r.headers['connection'].lower() == 'close':
-                            await sock.close()
+                            await close_socket(sock)
                             sock._active = False
                     except KeyError:
                         pass
                     await self._replace_connection(sock)
 
             except RemoteProtocolError as e:
-                await sock.close()
+                await close_socket(sock)
                 sock._active = False
                 await self._replace_connection(sock)
                 raise BadHttpResponse('Invalid HTTP response from server.') from e
