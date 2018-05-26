@@ -12,11 +12,11 @@ setup(
     description='asks - async http',
     long_description='asks is an async http lib for curio and trio',
     license='MIT',
-    version='1.5.11',
+    version='1.5.12',
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
-    install_requires=['h11', 'async_generator', 'multio'],
+    install_requires=['h11', 'async_generator', 'multio>=0.2.3'],
     tests_require=['pytest', 'curio', 'trio'],
     classifiers=[
         'Programming Language :: Python :: 3',
