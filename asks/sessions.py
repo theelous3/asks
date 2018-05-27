@@ -186,7 +186,7 @@ class BaseSession(metaclass=ABCMeta):
                         pass
                     await self._replace_connection(sock)
 
-            except RemoteProtocolError as e:
+            except (RemoteProtocolError, AssertionError) as e:
                 await sock.close()
                 sock._active = False
                 await self._replace_connection(sock)

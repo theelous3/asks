@@ -560,7 +560,7 @@ class Request:
                 get_body = True
         except KeyError:
             try:
-                if resp_data['headers']['transfer-encoding'] == 'chunked':
+                if 'chunked' in resp_data['headers']['transfer-encoding'].lower():
                     get_body = True
             except KeyError:
                 if resp_data['headers'].get('connection', '').lower() == 'close':
@@ -575,9 +575,12 @@ class Request:
                             self.netloc == self.initial_netloc) or
                             resp_data['headers']['connection'].lower() == 'close'):
                         self.sock._active = False
-                    resp_data['body'] = StreamBody(self.session,
-                                                   hconnection,
-                                                   self.sock)
+                    resp_data['body'] = StreamBody(
+                        self.session,
+                        hconnection,
+                        self.sock,
+                        resp_data['headers'].get('content-encoding', None),
+                        resp_data['encoding'])
                     self.streaming = True
             else:
                 while True:

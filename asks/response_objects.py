@@ -9,6 +9,8 @@ import h11
 
 from multio import asynclib
 
+from .http_utils import decompress, parse_content_encoding
+
 
 class Response:
     '''
@@ -72,25 +74,26 @@ class Response:
         except KeyError:
             pass
 
-    def _decompress(self, body):
-        try:
-            resp_encoding = self.headers['Content-Encoding'].strip()
-        except KeyError:
+    def _decompress(self, body, encoding=None):
+        content_encoding = self.headers.get('Content-Encoding', None)
+        if content_encoding is not None:
+            decompressor = decompress(parse_content_encoding(content_encoding),
+                                      encoding)
+            next(decompressor)
+            r = decompressor.send(body)
+            print('DEKOMPREST', r)
+            return r
+        else:
             return body
-        if resp_encoding == 'gzip':
-            return gdecompress(body)
-        elif resp_encoding == 'deflate':
-            return zdecompress(body)
-        return body
 
     def json(self):
         '''
         If the response's body is valid json, we load it as a python dict
         and return it.
         '''
-        body = self._decompress(self.body)
+        body = self._decompress(self.body, self.encoding)
         try:
-            return _json.loads(body.decode(self.encoding, errors='replace'))
+            return _json.loads(body)
         except AttributeError:
             return None
 
@@ -99,11 +102,7 @@ class Response:
         '''
         Returns the (maybe decompressed) decoded version of the body.
         '''
-        try:
-            return self._decompress(self.body).decode(self.encoding,
-                                                      errors='replace')
-        except AttributeError:
-            return self._decompress(self.body)
+        return self._decompress(self.body, self.encoding)
 
     @property
     def content(self):
@@ -152,16 +151,24 @@ class Cookie(SimpleNamespace):
 
 class StreamBody:
 
-    def __init__(self, session, hconnection, sock):
+    def __init__(self, session, hconnection, sock, content_encoding=None, encoding=None):
         self.session = session
         self.hconnection = hconnection
         self.sock = sock
+        self.content_encoding = content_encoding
+        self.encoding = encoding
 
     @async_generator
     async def __aiter__(self):
+        if self.content_encoding is not None:
+            decompressor = decompress(parse_content_encoding(self.content_encoding),
+                                      self.encoding)
+            next(decompressor)
         while True:
             event = await self._recv_event()
             if isinstance(event, h11.Data):
+                if self.content_encoding is not None:
+                    event.data = decompressor.send(event.data)
                 await yield_(event.data)
             elif isinstance(event, h11.EndOfMessage):
                 break
