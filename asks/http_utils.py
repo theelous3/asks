@@ -9,6 +9,8 @@ __all__ = ['decompress', 'parse_content_encoding']
 from gzip import decompress as gdecompress
 from zlib import decompress as zdecompress
 
+from .utils import processor
+
 
 _compression_mapping = {
     'gzip': gdecompress,
@@ -21,6 +23,7 @@ def parse_content_encoding(content_encoding: str) -> [str]:
     return compressions
 
 
+@processor
 def decompress(compressions, encoding=None):
     data = b''
     while True:

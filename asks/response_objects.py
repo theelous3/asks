@@ -11,8 +11,6 @@ from multio import asynclib
 
 from .http_utils import decompress, parse_content_encoding
 
-from json.decoder import JSONDecodeError
-
 
 class Response:
     '''
@@ -81,7 +79,6 @@ class Response:
         if content_encoding is not None:
             decompressor = decompress(parse_content_encoding(content_encoding),
                                       encoding)
-            next(decompressor)
             r = decompressor.send(body)
             return r
         else:
@@ -163,7 +160,6 @@ class StreamBody:
     async def __aiter__(self):
         if self.content_encoding is not None:
             decompressor = decompress(parse_content_encoding(self.content_encoding))
-            next(decompressor)
         while True:
             event = await self._recv_event()
             if isinstance(event, h11.Data):

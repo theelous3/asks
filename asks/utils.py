@@ -1,6 +1,8 @@
 __all__ = ['get_netloc_port', 'requote_uri']
 
+
 from urllib.parse import  quote
+from functools import wraps
 
 
 def get_netloc_port(scheme, netloc):
@@ -62,3 +64,12 @@ def requote_uri(uri):
         # there may be unquoted '%'s in the URI. We need to make sure they're
         # properly quoted so they do not cause issues elsewhere.
         return quote(uri, safe=safe_without_percent)
+
+
+def processor(gen):
+    @wraps(gen)
+    def wrapper(*args, **kwargs):
+        g = gen(*args, **kwargs)
+        next(g)
+        return g
+    return wrapper
