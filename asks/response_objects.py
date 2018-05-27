@@ -81,10 +81,12 @@ class Response:
                                       encoding)
             next(decompressor)
             r = decompressor.send(body)
-            print('DEKOMPREST', r)
             return r
         else:
-            return body
+            if encoding is not None:
+                return body.decode(encoding, errors='replace')
+            else:
+                return body
 
     def json(self):
         '''
@@ -161,8 +163,7 @@ class StreamBody:
     @async_generator
     async def __aiter__(self):
         if self.content_encoding is not None:
-            decompressor = decompress(parse_content_encoding(self.content_encoding),
-                                      self.encoding)
+            decompressor = decompress(parse_content_encoding(self.content_encoding))
             next(decompressor)
         while True:
             event = await self._recv_event()
