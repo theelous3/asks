@@ -11,6 +11,8 @@ from multio import asynclib
 
 from .http_utils import decompress, parse_content_encoding
 
+from json.decoder import JSONDecodeError
+
 
 class Response:
     '''
@@ -94,10 +96,7 @@ class Response:
         and return it.
         '''
         body = self._decompress(self.body, self.encoding)
-        try:
-            return _json.loads(body)
-        except AttributeError:
-            return None
+        return _json.loads(body)
 
     @property
     def text(self):
