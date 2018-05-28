@@ -143,9 +143,16 @@ class BaseSession(metaclass=ABCMeta):
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
+        timeout = kwargs.get('timeout', None)
+        req_headers = kwargs.pop('headers', None)
+
+        if self.headers is not None:
+            headers = copy(self.headers)
+        if req_headers is not None:
+            headers.update(req_headers)
+        req_headers = headers
+
         async with self._sema:
-            timeout = kwargs.get('timeout', None)
-            req_headers = kwargs.pop('headers', None)
 
             if url is None:
                 url = self._make_url() + path
@@ -155,12 +162,6 @@ class BaseSession(metaclass=ABCMeta):
             try:
                 sock = await self._grab_connection(url)
                 port = sock.port
-
-                if self.headers is not None:
-                    headers = copy(self.headers)
-                    if req_headers is not None:
-                        headers.update(req_headers)
-                    req_headers = headers
 
                 req_obj = Request(self,
                                   method,
