@@ -188,10 +188,12 @@ class BaseSession(metaclass=ABCMeta):
                     await self._replace_connection(sock)
 
             except (RemoteProtocolError, AssertionError) as e:
-                await sock.close()
-                sock._active = False
-                await self._replace_connection(sock)
+                await self._handle_socket_on_exception(sock)
                 raise BadHttpResponse('Invalid HTTP response from server.') from e
+
+            except RequestTimeout as e:
+                await self._handle_socket_on_exception(sock)
+                raise e
 
             except ConnectionError as e:
                 if retries > 0:
@@ -227,6 +229,11 @@ class BaseSession(metaclass=ABCMeta):
         except asynclib.TaskTimeout as e:
             raise RequestTimeout from e
         return sock, r
+
+    async def _handle_socket_on_exception(self, sock):
+        await sock.close()
+        sock._active = False
+        await self._replace_connection(sock)
 
     @abstractmethod
     def _make_url(self):
