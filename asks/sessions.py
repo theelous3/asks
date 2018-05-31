@@ -145,6 +145,9 @@ class BaseSession(metaclass=ABCMeta):
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
+        if self._murdered:
+            await self.cleanup()
+
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
 
@@ -403,3 +406,4 @@ class Session(BaseSession):
                 sock._active = False
                 await self._replace_connection(sock)
                 index += 1
+            self._murdered = False
