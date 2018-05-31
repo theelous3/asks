@@ -43,6 +43,8 @@ class BaseSession(metaclass=ABCMeta):
         self.source_address = None
         self._cookie_tracker_obj = None
 
+        self._murdered = False
+
     @property
     @abstractmethod
     def sema(self):
@@ -153,7 +155,6 @@ class BaseSession(metaclass=ABCMeta):
         req_headers = headers
 
         async with self._sema:
-
             if url is None:
                 url = self._make_url() + path
 
@@ -187,20 +188,24 @@ class BaseSession(metaclass=ABCMeta):
                         pass
                     await self._replace_connection(sock)
 
-            except (RemoteProtocolError, AssertionError) as e:
-                await self._handle_socket_on_exception(sock)
-                raise BadHttpResponse('Invalid HTTP response from server.') from e
-
-            except RequestTimeout as e:
-                await self._handle_socket_on_exception(sock)
-                raise e
-
+            # ConnectionErrors are special. They are the only kind of exception
+            # we ever want to suppress. All other exceptions are re-raised or
+            # raised through another exception.
             except ConnectionError as e:
                 if retries > 0:
                     retry = True
                     retries -= 1
                 else:
                     raise e
+
+            except Exception as e:
+                await self._handle_exception(e, sock)
+
+            # any BaseException is considered unlawful murder, and
+            # Session.cleanup should be called to tidy up sockets.
+            except BaseException as e:
+                self._murdered = True
+                raise e
 
         if retry:
             return (await self.request(method,
@@ -230,10 +235,33 @@ class BaseSession(metaclass=ABCMeta):
             raise RequestTimeout from e
         return sock, r
 
-    async def _handle_socket_on_exception(self, sock):
+    async def _handle_exception(self, e, sock):
+        """
+        Given an exception, we want to handle it appropriately. Some exceptions we
+        prefer to shadow with an asks exception, and some we want to raise directly.
+        In all cases we clean up the underlying socket.
+        """
+        if isinstance(e, (RemoteProtocolError, AssertionError)):
+            await self._close_socket_and_raise(
+                e, sock, BadHttpResponse('Invalid HTTP response from server.'))
+        if isinstance(e, (Exception, BaseException)):
+            await self._close_socket_and_raise(e, sock)
+
+    async def _close_socket_and_raise(self, e, sock, raise_instead=None):
         await sock.close()
         sock._active = False
         await self._replace_connection(sock)
+        if raise_instead is not None:
+            raise raise_instead from e
+        else:
+            raise e
+
+    @abstractmethod
+    async def cleanup(self):
+        """
+        A method to clean up open sockets after a violent cancellation.
+        """
+        ...
 
     @abstractmethod
     def _make_url(self):
@@ -361,3 +389,17 @@ class Session(BaseSession):
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self._conn_pool.free_pool()
+
+    async def cleanup(self):
+        """
+        Mostly here to assist trio users employing task controllers that
+        may raise a trio.Cancelled exception.
+        """
+        if self._murdered:
+            index = 0
+            while self._checked_out_sockets:
+                sock = self._checked_out_sockets[index]
+                await sock.close()
+                sock._active = False
+                await self._replace_connection(sock)
+                index += 1
