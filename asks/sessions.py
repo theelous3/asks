@@ -163,6 +163,7 @@ class BaseSession(metaclass=ABCMeta):
 
             retry = False
 
+            sock = None
             try:
                 sock = await self._grab_connection(url)
                 port = sock.port
@@ -202,7 +203,8 @@ class BaseSession(metaclass=ABCMeta):
                     raise e
 
             except Exception as e:
-                await self._handle_exception(e, sock)
+                if sock:
+                    await self._handle_exception(e, sock)
 
             # any BaseException is considered unlawful murder, and
             # Session.cleanup should be called to tidy up sockets.
