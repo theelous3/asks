@@ -399,11 +399,9 @@ class Session(BaseSession):
         may raise a trio.Cancelled exception.
         """
         if self._murdered:
-            index = 0
             while self._checked_out_sockets:
-                sock = self._checked_out_sockets[index]
+                sock = self._checked_out_sockets[0]
                 await sock.close()
                 sock._active = False
                 await self._replace_connection(sock)
-                index += 1
             self._murdered = False
