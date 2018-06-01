@@ -145,9 +145,6 @@ class BaseSession(metaclass=ABCMeta):
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
-        if self._murdered:
-            await self.cleanup()
-
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
 
@@ -207,7 +204,14 @@ class BaseSession(metaclass=ABCMeta):
             # any BaseException is considered unlawful murder, and
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
-                self._murdered = True
+                print(type(e))
+                print('Closing socket')
+                await sock.close()
+                print('Socket closed')
+                sock._active = False
+                print('Replacing connection')
+                await self._replace_connection(sock)
+                print('Connection replaced')
                 raise e
 
         if retry:
