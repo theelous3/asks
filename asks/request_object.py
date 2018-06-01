@@ -372,8 +372,6 @@ class Request:
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         '''
-        self.sock._active = False
-        await self.session._replace_connection(self.sock)
         self.sock = await self.session._grab_connection(self.uri)
         self.port = self.sock.port
 
