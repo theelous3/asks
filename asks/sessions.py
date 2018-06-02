@@ -145,9 +145,6 @@ class BaseSession(metaclass=ABCMeta):
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
-        if self._murdered:
-            await self.cleanup()
-
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
 
@@ -187,10 +184,9 @@ class BaseSession(metaclass=ABCMeta):
                     try:
                         if r.headers['connection'].lower() == 'close':
                             await sock.close()
-                            sock._active = False
                     except KeyError:
                         pass
-                    await self._replace_connection(sock)
+                    await self.return_to_pool(sock)
 
             # ConnectionErrors are special. They are the only kind of exception
             # we ever want to suppress. All other exceptions are re-raised or
@@ -209,7 +205,7 @@ class BaseSession(metaclass=ABCMeta):
             # any BaseException is considered unlawful murder, and
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
-                self._murdered = True
+                await sock.close()
                 raise e
 
         if retry:
@@ -247,26 +243,12 @@ class BaseSession(metaclass=ABCMeta):
         In all cases we clean up the underlying socket.
         """
         if isinstance(e, (RemoteProtocolError, AssertionError)):
-            await self._close_socket_and_raise(
-                e, sock, BadHttpResponse('Invalid HTTP response from server.'))
+            await sock.close()
+            raise BadHttpResponse('Invalid HTTP response from server.') from e
+
         if isinstance(e, (Exception, BaseException)):
-            await self._close_socket_and_raise(e, sock)
-
-    async def _close_socket_and_raise(self, e, sock, raise_instead=None):
-        await sock.close()
-        sock._active = False
-        await self._replace_connection(sock)
-        if raise_instead is not None:
-            raise raise_instead from e
-        else:
+            await sock.close()
             raise e
-
-    @abstractmethod
-    async def cleanup(self):
-        """
-        A method to clean up open sockets after a violent cancellation.
-        """
-        ...
 
     @abstractmethod
     def _make_url(self):
@@ -283,7 +265,7 @@ class BaseSession(metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    async def _replace_connection(self, sock):
+    async def return_to_pool(self, sock):
         """
         A method that will accept a socket-like object.
         """
@@ -326,7 +308,6 @@ class Session(BaseSession):
             self._cookie_tracker_obj = persist_cookies
 
         self._conn_pool = SocketQ()
-        self._checked_out_sockets = SocketQ()
 
         self._sema = asynclib.Semaphore(connections)
 
@@ -341,15 +322,11 @@ class Session(BaseSession):
             return None
 
         sock = self._conn_pool.pull(index)
-        self._checked_out_sockets.append(sock)
         return sock
 
-    async def _replace_connection(self, sock):
+    async def return_to_pool(self, sock):
         if sock._active:
-            self._checked_out_sockets.remove(sock)
             self._conn_pool.appendleft(sock)
-        else:
-            self._checked_out_sockets.remove(sock)
 
     async def _make_connection(self, host_loc):
         sock, port = await self._connect(host_loc)
@@ -379,7 +356,6 @@ class Session(BaseSession):
             return sock
         else:
             sock = await self._make_connection(host_loc)
-            self._checked_out_sockets.append(sock)
 
         return sock
 
@@ -394,16 +370,3 @@ class Session(BaseSession):
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self._conn_pool.free_pool()
-
-    async def cleanup(self):
-        """
-        Mostly here to assist trio users employing task controllers that
-        may raise a trio.Cancelled exception.
-        """
-        if self._murdered:
-            while self._checked_out_sockets:
-                sock = self._checked_out_sockets[0]
-                await sock.close()
-                sock._active = False
-                await self._replace_connection(sock)
-            self._murdered = False
