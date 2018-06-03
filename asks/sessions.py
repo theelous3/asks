@@ -43,7 +43,6 @@ class BaseSession(metaclass=ABCMeta):
         self.source_address = None
         self._cookie_tracker_obj = None
 
-        self._murdered = False
 
     @property
     @abstractmethod
@@ -183,6 +182,7 @@ class BaseSession(metaclass=ABCMeta):
                 if sock is not None:
                     try:
                         if r.headers['connection'].lower() == 'close':
+                            sock._active = False
                             await sock.close()
                     except KeyError:
                         pass
@@ -205,7 +205,8 @@ class BaseSession(metaclass=ABCMeta):
             # any BaseException is considered unlawful murder, and
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
-                await sock.close()
+                if sock:
+                    await sock.close()
                 raise e
 
         if retry:
@@ -331,6 +332,7 @@ class Session(BaseSession):
     async def _make_connection(self, host_loc):
         sock, port = await self._connect(host_loc)
         sock.host, sock.port = host_loc, port
+
         return sock
 
     async def _grab_connection(self, url):
@@ -352,9 +354,8 @@ class Session(BaseSession):
         host_loc = urlunparse((scheme, netloc, '', '', '', ''))
 
         sock = self._checkout_connection(host_loc)
-        if sock is not None:
-            return sock
-        else:
+
+        if sock is None:
             sock = await self._make_connection(host_loc)
 
         return sock
