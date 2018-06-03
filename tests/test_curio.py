@@ -242,7 +242,7 @@ async def test_session_stateful():
         'https://google.ie', persist_cookies=True)
     async with curio.TaskGroup() as g:
         await g.spawn(hsession_t_stateful(s))
-    assert 'www.google.ie' in s._cookie_tracker_obj.domain_dict.keys()
+    assert 'www.google.ie' in s._cookie_tracker.domain_dict.keys()
 
 async def session_t_stateful_double_worker(s):
     r = await s.get()
