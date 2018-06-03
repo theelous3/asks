@@ -41,8 +41,7 @@ class BaseSession(metaclass=ABCMeta):
 
         self.encoding = None
         self.source_address = None
-        self._cookie_tracker_obj = None
-
+        self._cookie_tracker = None
 
     @property
     @abstractmethod
@@ -131,6 +130,8 @@ class BaseSession(metaclass=ABCMeta):
                         timeout (int or float): A numeric representation of the
                             longest time to wait on a complete response once a
                             request has been sent.
+                        retries (int): The number of attempts to try against
+                            connection errors.
                         max_redirects (int): The maximum number of redirects
                             allowed.
                         persist_cookies (True or None): Passing True
@@ -171,7 +172,7 @@ class BaseSession(metaclass=ABCMeta):
                                   headers=req_headers,
                                   encoding=self.encoding,
                                   sock=sock,
-                                  persist_cookies=self._cookie_tracker_obj,
+                                  persist_cookies=self._cookie_tracker,
                                   **kwargs)
 
                 if timeout is None:
@@ -247,7 +248,7 @@ class BaseSession(metaclass=ABCMeta):
             await sock.close()
             raise BadHttpResponse('Invalid HTTP response from server.') from e
 
-        if isinstance(e, (Exception, BaseException)):
+        if isinstance(e, Exception):
             await sock.close()
             raise e
 
@@ -304,9 +305,9 @@ class Session(BaseSession):
         self.endpoint = endpoint
 
         if persist_cookies is True:
-            self._cookie_tracker_obj = CookieTracker()
+            self._cookie_tracker = CookieTracker()
         else:
-            self._cookie_tracker_obj = persist_cookies
+            self._cookie_tracker = persist_cookies
 
         self._conn_pool = SocketQ()
 
