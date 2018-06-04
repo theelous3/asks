@@ -85,19 +85,20 @@ class BaseSession(metaclass=ABCMeta):
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
         '''
-        scheme, netloc, path, parameters, query, fragment = urlparse(
+        scheme, host, path, parameters, query, fragment = urlparse(
             host_loc)
         if parameters or query or fragment:
-            raise ValueError('Supplied info beyond scheme, netloc.' +
+            raise ValueError('Supplied info beyond scheme, host.' +
                              ' Host should be top level only: ', path)
 
-        netloc, port = get_netloc_port(scheme, netloc)
+        host, port = get_netloc_port(scheme, host)
+        print('HOST IS', host, 'PORT IS', port)
         if scheme == 'http':
             return await self._open_connection_http(
-                (netloc, int(port))), port
+                (host, int(port))), port
         else:
             return await self._open_connection_https(
-                (netloc, int(port))), port
+                (host, int(port))), port
 
     async def request(self, method, url=None, *, path='', retries=1, **kwargs):
         '''
@@ -351,8 +352,8 @@ class Session(BaseSession):
                 info to see if we have any connections to the location already
                 lying around.
         '''
-        scheme, netloc, _, _, _, _ = urlparse(url)
-        host_loc = urlunparse((scheme, netloc, '', '', '', ''))
+        scheme, host, _, _, _, _ = urlparse(url)
+        host_loc = urlunparse((scheme, host, '', '', '', ''))
 
         sock = self._checkout_connection(host_loc)
 

@@ -15,7 +15,7 @@ def _catch_response(monkeypatch, headers, data):
     async def _recv_event(hconn):
         return events.pop(0)
     monkeypatch.setattr(req, '_recv_event', _recv_event)
-    monkeypatch.setattr(req, 'netloc', 'lol')
+    monkeypatch.setattr(req, 'host', 'lol')
     cr = req._catch_response(None)
     try:
         cr.send(None)

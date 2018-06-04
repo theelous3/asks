@@ -109,7 +109,7 @@ class Request:
         # These are unkwargsable, and set by the code.
         self.history_objects = []
         self.scheme = None
-        self.netloc = None
+        self.host = None
         self.path = None
         self.query = None
         self.uri_parameters = None
@@ -136,7 +136,7 @@ class Request:
         '''
         hconnection = h11.Connection(our_role=h11.CLIENT)
         (self.scheme,
-            self.netloc,
+            self.host,
             self.path,
             self.uri_parameters,
             self.query,
@@ -144,11 +144,13 @@ class Request:
 
         if not redirect:
             self.initial_scheme = self.scheme
-            self.initial_netloc = self.netloc
+            self.initial_netloc = self.host
 
-        host = (self.netloc if (self.port == '80' or
-                                self.port == '443')
-                else self.netloc + ':' + self.port)
+        # leave default the host on 80 / 443
+        # otherwise use the base host with :port appended.
+        host = (self.host if (self.port == '80' or
+                              self.port == '443')
+                else self.host.split(':')[0] + ':' + self.port)
         # default header construction
         asks_headers = c_i_dict([('Host', host),
                                  ('Connection', 'keep-alive'),
@@ -163,7 +165,7 @@ class Request:
         if self.persist_cookies is not None:
             self.cookies.update(
                 self.persist_cookies.get_additional_cookies(
-                    self.netloc, self.path))
+                    self.host, self.path))
 
         # formulate path / query and intended extra querys for use in uri
         self._build_path()
@@ -215,7 +217,7 @@ class Request:
         # different top level domain, as they are less likely to be useful.
         if redirect:
             if not (self.scheme == self.initial_scheme and
-               self.netloc == self.initial_netloc):
+               self.host == self.initial_netloc):
                 self.sock._active = False
 
         if self.streaming:
@@ -245,7 +247,7 @@ class Request:
         '''
         await self._send(h11_request, h11_body, hconnection)
         response_obj = await self._catch_response(hconnection)
-        response_obj._parse_cookies(self.netloc)
+        response_obj._parse_cookies(self.host)
 
         # If there's a cookie tracker object, store any cookies we
         # might've picked up along our travels.
@@ -300,7 +302,7 @@ class Request:
         self.path = requote_uri(self.path)
 
         self.req_url = urlunparse(
-            (self.scheme, self.netloc, (self.path or ''), '', '', ''))
+            (self.scheme, self.host, (self.path or ''), '', '', ''))
 
     async def _redirect(self, response_obj):
         '''
@@ -336,7 +338,7 @@ class Request:
             # relative redirect
             if not redirect_uri.netloc:
                 self.uri = urlunparse(
-                    (self.scheme, self.netloc, *redirect_uri[2:]))
+                    (self.scheme, self.host, *redirect_uri[2:]))
 
             # absolute-redirect
             else:
@@ -346,7 +348,7 @@ class Request:
                         allow_redirect = self._location_auth_protect(location)
                 self.uri = location
                 l_scheme, l_netloc, *_ = urlparse(location)
-                if l_scheme != self.scheme or l_netloc != self.netloc:
+                if l_scheme != self.scheme or l_netloc != self.host:
                     await self._get_new_sock()
 
             # follow redirect with correct http method type
@@ -372,6 +374,7 @@ class Request:
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         '''
+        self.sock._active = False
         self.sock = await self.session._grab_connection(self.uri)
         self.port = self.sock.port
 
@@ -570,7 +573,7 @@ class Request:
             elif self.stream is not None:
                 if 199 < resp_data['status_code'] < 300:
                     if not ((self.scheme == self.initial_scheme and
-                            self.netloc == self.initial_netloc) or
+                            self.host == self.initial_netloc) or
                             resp_data['headers']['connection'].lower() == 'close'):
                         self.sock._active = False
                     resp_data['body'] = StreamBody(
@@ -678,7 +681,7 @@ class Request:
                 and the connection type is equally or more secure.
                 False otherwise.
         '''
-        netloc_sans_port = self.netloc.split(':')[0]
+        netloc_sans_port = self.host.split(':')[0]
         netloc_sans_port = netloc_sans_port.replace(
             (re.match(_WWX_MATCH, netloc_sans_port)[0]), '')
 
