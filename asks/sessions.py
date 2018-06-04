@@ -92,7 +92,7 @@ class BaseSession(metaclass=ABCMeta):
                              ' Host should be top level only: ', path)
 
         host, port = get_netloc_port(scheme, host)
-        print('HOST IS', host, 'PORT IS', port)
+
         if scheme == 'http':
             return await self._open_connection_http(
                 (host, int(port))), port
