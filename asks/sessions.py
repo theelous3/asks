@@ -203,6 +203,7 @@ class BaseSession(metaclass=ABCMeta):
             except Exception as e:
                 if sock:
                     await self._handle_exception(e, sock)
+                raise
 
             # any BaseException is considered unlawful murder, and
             # Session.cleanup should be called to tidy up sockets.
