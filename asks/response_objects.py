@@ -92,7 +92,7 @@ class Response:
         If the response's body is valid json, we load it as a python dict
         and return it.
         '''
-        body = self._decompress(self.body, self.encoding)
+        body = self._handle_decompression()
         return _json.loads(body)
 
     @property
@@ -100,14 +100,14 @@ class Response:
         '''
         Returns the (maybe decompressed) decoded version of the body.
         '''
-        return self._decompress(self.body, self.encoding)
+        return self._handle_decompression(self.encoding)
 
     @property
     def content(self):
         '''
         Returns the content as-is after decompression, if any.
         '''
-        return self._decompress(self.body)
+        return self._handle_decompression()
 
     @property
     def raw(self):
@@ -115,6 +115,12 @@ class Response:
         Returns the response body as received.
         '''
         return self.body
+
+    def _handle_decompression(self, encoding=None):
+        try:
+            return self._decompress(self.body, self.encoding)
+        except TypeError:
+            raise StreamInProgressError("Can't use content attribs on a streamed response.")
 
 
 class Cookie(SimpleNamespace):
@@ -149,8 +155,7 @@ class Cookie(SimpleNamespace):
 
 class StreamBody:
 
-    def __init__(self, session, hconnection, sock, content_encoding=None, encoding=None):
-        self.session = session
+    def __init__(self, hconnection, sock, content_encoding=None, encoding=None):
         self.hconnection = hconnection
         self.sock = sock
         self.content_encoding = content_encoding
@@ -179,7 +184,6 @@ class StreamBody:
             return event
 
     async def __aenter__(self):
-        self.session._checked_out_sockets.remove(self.sock)
         return self
 
     async def close(self):

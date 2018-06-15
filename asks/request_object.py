@@ -577,7 +577,6 @@ class Request:
                             resp_data['headers']['connection'].lower() == 'close'):
                         self.sock._active = False
                     resp_data['body'] = StreamBody(
-                        self.session,
                         hconnection,
                         self.sock,
                         resp_data['headers'].get('content-encoding', None),
