@@ -1,9 +1,13 @@
 asks - The Response Object
 ==========================
 
-A plain ol' response object, ``Response`` is returned from every request.
+A plain ol' response object, ``Response`` is returned by default.
 
 It has some attribs/properties to access the response content. Nothing too voodoo.
+
+If you set ``stream=True`` a ``StreamResponse`` object is returned.
+
+Both response types are subclasses of ``BaseResponse``, for all of your typing needs.
 
 Encoding
 ________
@@ -45,6 +49,7 @@ The headers are available as a dict through ``Response.headers`` ::
 
 JSON
 ____
+Only available on ``Response`` objects.
 
 If the response body is valid JSON you can load it as a python dict by calling the response object's ``.json()`` method.
 
@@ -62,6 +67,8 @@ If the response was compressed, it will be decompressed. ::
 View Body (text decoded, content, raw)
 ______________________________________
 
+These are only available on the ``Response`` object; reutnred when ``stream=False``, which is the default behaviour.
+
 Generally the way to see the body as it was intended is to use the ``.content`` property. This will return the content as is, after decompression if there was any.
 
 For something slightly more human readable, you may want to try the ``.text`` property. This will attempt to decompress (if needed) and decode the content (with ``.encoding``). This for example, makes html and json etc. quite readable in your shell.
@@ -75,7 +82,12 @@ To view the body exactly as it was sent, just use the ``.body`` attribute. Note 
         r.text
         r.body
 
-If the request was made with ``stream=True``, the ``.body`` attribute will point to an iterable ``StreamBody`` object from which you can stream data.
+
+Streaming
+_________
+
+If the request was made with ``stream=True``, the object returned will be a ``StreamResponse`` whose ``.body`` attribute will point to an iterable ``StreamBody`` object from which you can stream data.
+
 To disable automatic decompression on the stream, set the ``StreamBody.decompress_data`` to ``False``. ::
 
     async def main():
@@ -83,6 +95,7 @@ To disable automatic decompression on the stream, set the ``StreamBody.decompres
         r.decompress_data = False
         async for chunk in r:
             print(r)
+
 
 Cookies
 _______

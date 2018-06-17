@@ -24,7 +24,7 @@ from multio import asynclib
 from .utils import requote_uri
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
-from .response_objects import Response, StreamBody
+from .response_objects import Response, StreamResponse, StreamBody
 from .errors import TooManyRedirects
 
 
@@ -157,7 +157,7 @@ class Request:
                                  ('Accept-Encoding', 'gzip, deflate'),
                                  ('Accept', '*/*'),
                                  ('Content-Length', '0'),
-                                 ('User-Agent', 'python-asks/1.7.19')
+                                 ('User-Agent', 'python-asks/2.0.0')
                                  ])
 
         # check for a CookieTracker object, and if it's there inject
@@ -592,6 +592,9 @@ class Request:
         else:
             endof = await self._recv_event(hconnection)
             assert isinstance(endof, h11.EndOfMessage)
+
+        if self.streaming:
+            return StreamResponse(**resp_data)
 
         return Response(**resp_data)
 

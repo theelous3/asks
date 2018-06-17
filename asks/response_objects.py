@@ -12,7 +12,7 @@ from multio import asynclib
 from .http_utils import decompress, parse_content_encoding
 
 
-class Response:
+class BaseResponse:
     '''
     A response object supporting a range of methods and attribs
     for accessing the status line, header, cookies, history and
@@ -39,7 +39,9 @@ class Response:
         self.cookies = []
 
     def __repr__(self):
-        return '<Response {} {}>'.format(self.status_code, self.reason_phrase)
+        return '<{} {} {}>'.format(self.__class__.__name__,
+                                   self.status_code,
+                                   self.reason_phrase)
 
     def _guess_encoding(self):
         try:
@@ -74,25 +76,27 @@ class Response:
         except KeyError:
             pass
 
-    def _decompress(self, body, encoding=None):
+    def _decompress(self, encoding=None):
         content_encoding = self.headers.get('Content-Encoding', None)
         if content_encoding is not None:
             decompressor = decompress(parse_content_encoding(content_encoding),
                                       encoding)
-            r = decompressor.send(body)
+            r = decompressor.send(self.body)
             return r
         else:
             if encoding is not None:
-                return body.decode(encoding, errors='replace')
+                return self.body.decode(encoding, errors='replace')
             else:
-                return body
+                return self.body
 
+
+class Response(BaseResponse):
     def json(self):
         '''
         If the response's body is valid json, we load it as a python dict
         and return it.
         '''
-        body = self._handle_decompression()
+        body = self._decompress(self.encoding)
         return _json.loads(body)
 
     @property
@@ -100,14 +104,14 @@ class Response:
         '''
         Returns the (maybe decompressed) decoded version of the body.
         '''
-        return self._handle_decompression(self.encoding)
+        return self._decompress(self.encoding)
 
     @property
     def content(self):
         '''
         Returns the content as-is after decompression, if any.
         '''
-        return self._handle_decompression()
+        return self._decompress()
 
     @property
     def raw(self):
@@ -116,41 +120,9 @@ class Response:
         '''
         return self.body
 
-    def _handle_decompression(self, encoding=None):
-        try:
-            return self._decompress(self.body, self.encoding)
-        except TypeError:
-            raise StreamInProgressError("Can't use content attribs on a streamed response.")
 
-
-class Cookie(SimpleNamespace):
-    '''
-    A simple cookie object, for storing cookie stuff :)
-    Needs to be made compatible with the API's cookies kw arg.
-    '''
-    def __init__(self, host, data):
-        self.name = None
-        self.value = None
-        self.domain = None
-        self.path = None
-        self.secure = False
-        self.expires = None
-        self.comment = None
-
-        self.__dict__.update(data)
-
-        super().__init__(**self.__dict__)
-        self.host = host
-
-    def __repr__(self):
-        if self.name is not None:
-            return '<Cookie {} from {}>'.format(self.name, self.host)
-        else:
-            return '<Cookie {} from {}>'.format(self.value, self.host)
-
-    def __iter__(self):
-        for k, v in self.__dict__.items():
-            yield k, v
+class StreamResponse(BaseResponse):
+    ...
 
 
 class StreamBody:
@@ -193,3 +165,33 @@ class StreamBody:
 
     async def __aexit__(self, *exc_info):
         await self.close()
+
+
+class Cookie(SimpleNamespace):
+    '''
+    A simple cookie object, for storing cookie stuff :)
+    Needs to be made compatible with the API's cookies kw arg.
+    '''
+    def __init__(self, host, data):
+        self.name = None
+        self.value = None
+        self.domain = None
+        self.path = None
+        self.secure = False
+        self.expires = None
+        self.comment = None
+
+        self.__dict__.update(data)
+
+        super().__init__(**self.__dict__)
+        self.host = host
+
+    def __repr__(self):
+        if self.name is not None:
+            return '<Cookie {} from {}>'.format(self.name, self.host)
+        else:
+            return '<Cookie {} from {}>'.format(self.value, self.host)
+
+    def __iter__(self):
+        for k, v in self.__dict__.items():
+            yield k, v

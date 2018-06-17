@@ -31,7 +31,3 @@ class RequestTimeout(ConnectivityError):
 
 class ServerClosedConnectionError(ConnectivityError):
     pass
-
-
-class StreamInProgressError(AsksException):
-    pass

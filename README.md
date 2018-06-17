@@ -57,11 +57,14 @@ async def grabber(path):
 async def main(path_list):
     async with trio.open_nursery() as n:
         for path in path_list:
-            n.spawn(grabber(path))
+            n.start_soon(grabber(path))
 
 s = asks.Session()
 trio.run(main, path_list)
 ```
 
+#### Changelog
 
-### Shoutout to ##lp, and the fine peeps of 8banana
+*2.0.0* - Setting `stream=True` means that the response returned will be a `StreamResponse` object rather than the default `Response` object.
+
+##### Shoutout to ##lp, and the fine peeps of 8banana
