@@ -75,8 +75,8 @@ To view the body exactly as it was sent, just use the ``.body`` attribute. Note 
         r.text
         r.body
 
-If the request was made with ``stream=True``, the ``.body`` attribute will point to an iterable `StreamBody` object from which you can stream data.
-To disable automatic decompression on the stream, set the `StreamBody.decompress_data` to `False`. ::
+If the request was made with ``stream=True``, the ``.body`` attribute will point to an iterable ``StreamBody`` object from which you can stream data.
+To disable automatic decompression on the stream, set the ``StreamBody.decompress_data`` to ``False``. ::
 
     async def main():
         r = await asks.get('http://example.com')
