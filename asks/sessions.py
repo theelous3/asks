@@ -100,7 +100,8 @@ class BaseSession(metaclass=ABCMeta):
             return await self._open_connection_https(
                 (host, int(port))), port
 
-    async def request(self, method, url=None, *, path='', retries=1, **kwargs):
+    async def request(self, method, url=None, *, path='', retries=1,
+                      connection_timeout=60, **kwargs):
         '''
         This is the template for all of the `http method` methods for
         the Session.
@@ -163,7 +164,8 @@ class BaseSession(metaclass=ABCMeta):
 
             sock = None
             try:
-                sock = await self._grab_connection(url)
+                sock = await self.timeout_manager(
+                    connection_timeout, self._grab_connection, url)
                 port = sock.port
 
                 req_obj = Request(self,
@@ -179,7 +181,7 @@ class BaseSession(metaclass=ABCMeta):
                 if timeout is None:
                     sock, r = await req_obj.make_request()
                 else:
-                    sock, r = await self.timeout_manager(timeout, req_obj)
+                    sock, r = await self.timeout_manager(timeout, req_obj.make_request)
 
                 if sock is not None:
                     try:
@@ -232,13 +234,12 @@ class BaseSession(metaclass=ABCMeta):
     delete = partialmethod(request, 'DELETE')
     options = partialmethod(request, 'OPTIONS')
 
-    async def timeout_manager(self, timeout, req_obj):
+    async def timeout_manager(self, timeout, coro, *args):
         try:
             async with asynclib.timeout_after(timeout):
-                sock, r = await req_obj.make_request()
+                return (await coro(*args))
         except asynclib.TaskTimeout as e:
             raise RequestTimeout from e
-        return sock, r
 
     async def _handle_exception(self, e, sock):
         """

@@ -140,13 +140,15 @@ You can limit the number of redirects by setting ``max_redirects``. By default, 
         r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
 
 
-Set Timeout
-___________
+Set Timeout(s)
+______________
 
-Don't want to wait forever? Me neither. You may set a timeout with the timeout arg. This limits the total time alotted for the request. ::
+Don't want to wait forever? Me neither. You may set a timeout with the ``timeout`` arg. This limits the time alotted for the request. ::
 
     async def example():
         r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
+
+Note that the ``timeout`` arg does not account for the time required to actually establish the connection. That is controlled by a second timeout, the ``connection_timeout``, which defaults to 60 seconds. It's used in the exact same way as ``timeout``. For reasoning, read `this <https://github.com/theelous3/asks/issues/64#issuecomment-392378388>`_.
 
 
 Retry limiting

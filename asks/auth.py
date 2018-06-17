@@ -65,7 +65,7 @@ class DigestAuth(PostResponseAuth):
     It will work, but be slightly more resource intensive than it should.
     To be completed!
 
-    Also, it's 2017. Stop using digest auth.
+    Also, it's 2018. Stop using digest auth.
     '''
     _HDR_VAL_PARSE = re.compile(r'\b(\w+)=(?:"([^\\"]+)"|(\S+))')
 
