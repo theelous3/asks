@@ -160,6 +160,7 @@ class StreamBody:
         self.sock = sock
         self.content_encoding = content_encoding
         self.encoding = encoding
+        self.decompress_data = True
 
     @async_generator
     async def __aiter__(self):
@@ -169,7 +170,8 @@ class StreamBody:
             event = await self._recv_event()
             if isinstance(event, h11.Data):
                 if self.content_encoding is not None:
-                    event.data = decompressor.send(event.data)
+                    if self.decompress_data:
+                        event.data = decompressor.send(event.data)
                 await yield_(event.data)
             elif isinstance(event, h11.EndOfMessage):
                 break
