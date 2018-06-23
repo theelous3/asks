@@ -156,7 +156,7 @@ class BaseSession(metaclass=ABCMeta):
             headers.update(req_headers)
         req_headers = headers
 
-        async with self._sema:
+        async with self.sema:
             if url is None:
                 url = self._make_url() + path
 
