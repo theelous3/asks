@@ -51,31 +51,6 @@ class BaseResponse:
         except LookupError:  # IndexError/KeyError are LookupError subclasses
             pass
 
-    def _parse_cookies(self, host):
-        '''
-        Why the hell is this here.
-        '''
-        cookie_pie = []
-        try:
-            for cookie in self.headers['set-cookie']:
-                cookie_jar = {}
-                name_val, *rest = cookie.split(';')
-                name, value = name_val.split('=', 1)
-                cookie_jar['name'] = name.strip()
-                cookie_jar['value'] = value
-                for item in rest:
-                    try:
-                        name, value = item.split('=')
-                        if value.startswith('.'):
-                            value = value[1:]
-                        cookie_jar[name.lower().lstrip()] = value
-                    except ValueError:
-                        cookie_jar[item.lower().lstrip()] = True
-                cookie_pie.append(cookie_jar)
-            self.cookies = [Cookie(host, x) for x in cookie_pie]
-        except KeyError:
-            pass
-
     def _decompress(self, encoding=None):
         content_encoding = self.headers.get('Content-Encoding', None)
         if content_encoding is not None:

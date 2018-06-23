@@ -1,4 +1,7 @@
-__all__ = ['CookieTracker']
+__all__ = ['CookieTracker', 'parse_cookies']
+
+
+from .response_objects import Cookie
 
 
 class CookieTracker:
@@ -39,3 +42,29 @@ class CookieTracker:
             for cookie_obj in self.domain_dict[domain]:
                 cookies_to_go[cookie_obj.name] = cookie_obj.value
         return cookies_to_go
+
+
+def parse_cookies(response, host):
+    """
+    Sticks cookies to a response.
+    """
+    cookie_pie = []
+    try:
+        for cookie in response.headers['set-cookie']:
+            cookie_jar = {}
+            name_val, *rest = cookie.split(';')
+            name, value = name_val.split('=', 1)
+            cookie_jar['name'] = name.strip()
+            cookie_jar['value'] = value
+            for item in rest:
+                try:
+                    name, value = item.split('=')
+                    if value.startswith('.'):
+                        value = value[1:]
+                    cookie_jar[name.lower().lstrip()] = value
+                except ValueError:
+                    cookie_jar[item.lower().lstrip()] = True
+            cookie_pie.append(cookie_jar)
+        response.cookies = [Cookie(host, x) for x in cookie_pie]
+    except KeyError:
+        pass

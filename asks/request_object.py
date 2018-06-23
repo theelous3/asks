@@ -22,6 +22,7 @@ from h11 import RemoteProtocolError
 from multio import asynclib
 
 from .utils import requote_uri
+from .cookie_utils import parse_cookies
 from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
 from .response_objects import Response, StreamResponse, StreamBody
@@ -247,7 +248,7 @@ class Request:
         '''
         await self._send(h11_request, h11_body, hconnection)
         response_obj = await self._catch_response(hconnection)
-        response_obj._parse_cookies(self.host)
+        parse_cookies(response_obj, self.host)
 
         # If there's a cookie tracker object, store any cookies we
         # might've picked up along our travels.
