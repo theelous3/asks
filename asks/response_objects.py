@@ -64,6 +64,12 @@ class BaseResponse:
             else:
                 return self.body
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        ...
+
 
 class Response(BaseResponse):
     def json(self):
