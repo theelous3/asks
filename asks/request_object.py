@@ -173,7 +173,7 @@ class Request:
 
         # handle building the request body, if any
         body = ''
-        if any((self.data, self.files, self.json)):
+        if any((self.data, self.files, self.json is not None)):
             content_type, content_len, body = await self._formulate_body()
             asks_headers['Content-Type'] = content_type
             asks_headers['Content-Length'] = content_len
@@ -394,7 +394,7 @@ class Request:
         multipart_ctype = 'multipart/form-data; boundary={}'.format(_BOUNDARY)
 
         if self.data is not None:
-            if self.files or self.json:
+            if self.files or self.json is not None:
                 raise TypeError('data arg cannot be used in conjunction with'
                                 'files or json arg.')
             c_type = 'application/x-www-form-urlencoded'
@@ -405,7 +405,7 @@ class Request:
                 c_type = self.mimetype or 'text/plain'
 
         elif self.files is not None:
-            if self.data or self.json:
+            if self.data or self.json is not None:
                 raise TypeError('files arg cannot be used in conjunction with'
                                 'data or json arg.')
             c_type = multipart_ctype
