@@ -27,18 +27,20 @@ class BaseSession(metaclass=ABCMeta):
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     '''
 
-    def __init__(self, headers=None):
+    def __init__(self, headers=None, ssl_context=None):
         '''
         Args:
             headers (dict): Headers to be applied to all requests.
                 headers set by http method call will take precedence and
                 overwrite headers set by the headers arg.
+            ssl_context (ssl.SSLContext): SSL context to use for https connections.
         '''
         if headers is not None:
             self.headers = headers
         else:
             self.headers = {}
 
+        self.ssl_context = ssl_context
         self.encoding = None
         self.source_address = None
         self._cookie_tracker = None
@@ -74,7 +76,7 @@ class BaseSession(metaclass=ABCMeta):
         '''
         sock = await asynclib.open_connection(location[0],
                                               location[1],
-                                              ssl=True,
+                                              ssl=self.ssl_context or True,
                                               server_hostname=location[0],
                                               source_addr=self.source_address)
         sock._active = True
@@ -291,6 +293,7 @@ class Session(BaseSession):
                  headers=None,
                  encoding='utf-8',
                  persist_cookies=None,
+                 ssl_context=None,
                  connections=1):
         '''
         Args:
@@ -302,7 +305,7 @@ class Session(BaseSession):
                 host asks will allow its self to have. The default number of
                 connections is 1. You may increase this value as you see fit.
         '''
-        super().__init__(headers)
+        super().__init__(headers, ssl_context)
         self.encoding = encoding
         self.base_location = base_location
         self.endpoint = endpoint
