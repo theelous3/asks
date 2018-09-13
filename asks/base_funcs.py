@@ -25,7 +25,8 @@ async def request(method, uri, **kwargs):
         Response (asks.Response): The Response object.
     '''
     c_interact = kwargs.pop('persist_cookies', None)
-    async with Session(persist_cookies=c_interact) as s:
+    ssl_context = kwargs.pop('ssl_context', None)
+    async with Session(persist_cookies=c_interact, ssl_context=ssl_context) as s:
         r = await s.request(method, url=uri, **kwargs)
         return r
 
