@@ -506,10 +506,10 @@ class Request:
 
     async def _file_manager(self, path):
         try:
-            async with asynclib.aopen(path, 'rb') as f:
-                return b''.join(await f.readlines()) + b'\r\n'
-        except AttributeError:
             async with await asynclib.aopen(path, 'rb') as f:
+                return b''.join(await f.readlines()) + b'\r\n'
+        except TypeError:
+            async with asynclib.aopen(path, 'rb') as f:
                 return b''.join(await f.readlines()) + b'\r\n'
 
     async def _catch_response(self, hconnection):
