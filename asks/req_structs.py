@@ -2,8 +2,8 @@
 '''
 Some structures used throughout asks.
 '''
-from collections import OrderedDict, MutableMapping, Mapping, deque
-
+from collections import OrderedDict, deque
+from collections.abc import MutableMapping, Mapping
 
 class SocketQ(deque):
     '''
