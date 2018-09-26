@@ -2,11 +2,11 @@
 
 import h11
 
-from asks.request_object import Request
+from asks.request_object import RequestProcessor
 
 
 def _catch_response(monkeypatch, headers, data):
-    req = Request(None, 'get', "toot-toot", None)
+    req = RequestProcessor(None, 'get', "toot-toot", None)
     events = [
         h11._events.Response(status_code=200, headers=headers),
         h11._events.Data(data=data),
