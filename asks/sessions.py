@@ -14,7 +14,7 @@ from multio import asynclib
 from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
 from .req_structs import SocketQ
-from .request_object import Request
+from .request_object import RequestProcessor
 from .utils import get_netloc_port, timeout_manager
 
 __all__ = ['Session']
@@ -170,15 +170,17 @@ class BaseSession(metaclass=ABCMeta):
                     connection_timeout, self._grab_connection, url)
                 port = sock.port
 
-                req_obj = Request(self,
-                                  method,
-                                  url,
-                                  port,
-                                  headers=req_headers,
-                                  encoding=self.encoding,
-                                  sock=sock,
-                                  persist_cookies=self._cookie_tracker,
-                                  **kwargs)
+                req_obj = RequestProcessor(
+                    self,
+                    method,
+                    url,
+                    port,
+                    headers=req_headers,
+                    encoding=self.encoding,
+                    sock=sock,
+                    persist_cookies=self._cookie_tracker,
+                    **kwargs
+                )
 
                 if timeout is None:
                     sock, r = await req_obj.make_request()

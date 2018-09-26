@@ -6,7 +6,7 @@ This is the oldest part of asks, and as such is currently not the cleanest
 it could be. Refactors are required to bring it up to spec!
 '''
 
-__all__ = ['Request']
+__all__ = ['RequestProcessor']
 
 
 from numbers import Number
@@ -34,7 +34,7 @@ _WWX_MATCH = re.compile(r'\Aww.\.')
 _MAX_BYTES = 4096
 
 
-class Request:
+class RequestProcessor:
     '''
     Handles the building, formatting and i/o of requests once the calling
     session passes the required info and calls `make_request`.
@@ -67,6 +67,8 @@ class Request:
 
         callback (func): A callback function to be called on each bytechunk of
             of the response body.
+
+        stream (bool): Weather or not to return a StreamResponse vs Response
 
         timeout (int or float): A numeric representation of the longest time to
             wait on a complete response once a request has been sent.
@@ -152,6 +154,7 @@ class Request:
         host = (self.host if (self.port == '80' or
                               self.port == '443')
                 else self.host.split(':')[0] + ':' + self.port)
+
         # default header construction
         asks_headers = c_i_dict([('Host', host),
                                  ('Connection', 'keep-alive'),
@@ -163,6 +166,7 @@ class Request:
 
         # check for a CookieTracker object, and if it's there inject
         # the relevant cookies in to the (next) request.
+        # What the fuck is this shit.
         if self.persist_cookies is not None:
             self.cookies.update(
                 self.persist_cookies.get_additional_cookies(
