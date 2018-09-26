@@ -12,10 +12,10 @@ from h11 import RemoteProtocolError
 from multio import asynclib
 
 from .cookie_utils import CookieTracker
-from .errors import RequestTimeout, BadHttpResponse
+from .errors import BadHttpResponse
 from .req_structs import SocketQ
 from .request_object import Request
-from .utils import get_netloc_port
+from .utils import get_netloc_port, timeout_manager
 
 __all__ = ['Session']
 
@@ -166,7 +166,7 @@ class BaseSession(metaclass=ABCMeta):
 
             sock = None
             try:
-                sock = await self.timeout_manager(
+                sock = await timeout_manager(
                     connection_timeout, self._grab_connection, url)
                 port = sock.port
 
@@ -183,7 +183,7 @@ class BaseSession(metaclass=ABCMeta):
                 if timeout is None:
                     sock, r = await req_obj.make_request()
                 else:
-                    sock, r = await self.timeout_manager(timeout, req_obj.make_request)
+                    sock, r = await timeout_manager(timeout, req_obj.make_request)
 
                 if sock is not None:
                     try:
@@ -235,13 +235,6 @@ class BaseSession(metaclass=ABCMeta):
     put = partialmethod(request, 'PUT')
     delete = partialmethod(request, 'DELETE')
     options = partialmethod(request, 'OPTIONS')
-
-    async def timeout_manager(self, timeout, coro, *args):
-        try:
-            async with asynclib.timeout_after(timeout):
-                return (await coro(*args))
-        except asynclib.TaskTimeout as e:
-            raise RequestTimeout from e
 
     async def _handle_exception(self, e, sock):
         """

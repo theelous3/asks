@@ -10,6 +10,7 @@ import h11
 from multio import asynclib
 
 from .http_utils import decompress, parse_content_encoding
+from .utils import timeout_manager
 
 
 class BaseResponse:
@@ -113,7 +114,9 @@ class StreamBody:
         self.sock = sock
         self.content_encoding = content_encoding
         self.encoding = encoding
+        # TODO: add decompress data to __call__ args
         self.decompress_data = True
+        self.timeout = None
 
     @async_generator
     async def __aiter__(self):
@@ -132,11 +135,21 @@ class StreamBody:
     async def _recv_event(self):
         while True:
             event = self.hconnection.next_event()
+
             if event is h11.NEED_DATA:
-                self.hconnection.receive_data(
-                    (await asynclib.recv(self.sock, 10000)))
+                if self.timeout is not None:
+                    data = await timeout_manager(self.timeout, asynclib.recv, self.sock, 10000)
+                else:
+                    data = await asynclib.recv(self.sock, 10000)
+
+                self.hconnection.receive_data(data)
                 continue
+
             return event
+
+    def __call__(self, timeout=None):
+        self.timeout = timeout
+        return self
 
     async def __aenter__(self):
         return self

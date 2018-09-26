@@ -150,6 +150,8 @@ Don't want to wait forever? Me neither. You may set a timeout with the ``timeout
 
 Note that the ``timeout`` arg does not account for the time required to actually establish the connection. That is controlled by a second timeout, the ``connection_timeout``, which defaults to 60 seconds. It's used in the exact same way as ``timeout``. For reasoning, read `this <https://github.com/theelous3/asks/issues/64#issuecomment-392378388>`_.
 
+There is a third timeout available for ``StreamResponse.body`` iteration. See `The Response Object <https://asks.readthedocs.io/en/latest/the-response-object.html>`_
+
 
 Retry limiting
 ___________

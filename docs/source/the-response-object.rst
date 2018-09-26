@@ -88,12 +88,14 @@ _________
 
 If the request was made with ``stream=True``, the object returned will be a ``StreamResponse`` whose ``.body`` attribute will point to an iterable ``StreamBody`` object from which you can stream data.
 
+You may add a timeout to each poll for data by including ``timeout`` in the creation of the context manager. Example below alongside disabling data decompression.
+
 To disable automatic decompression on the stream, set the ``StreamBody.decompress_data`` to ``False``. ::
 
     async def main():
         r = await asks.get('http://example.com')
         r.decompress_data = False
-        async for chunk in r:
+        async for chunk in r.body(timeout=5):
             print(r)
 
 
