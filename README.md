@@ -55,9 +55,11 @@ async def grabber(path):
     results.append(r)
 
 async def main(path_list):
+	from asks.sessions import Session
+	s = Session('https://example.org' , connections=2)
     async with trio.open_nursery() as n:
         for path in path_list:
-            n.start_soon(grabber(path))
+            n.start_soon(grabber, s)
 
 s = asks.Session()
 trio.run(main, path_list)
