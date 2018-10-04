@@ -44,24 +44,27 @@ curio.run(example())
 
 import asks
 import trio
+
 asks.init('trio')
 
 path_list = ['a', 'list', 'of', '1000', 'paths']
 
 results = []
 
-async def grabber(path):
-    r = await s.get(path)
+
+async def grabber(s):
+    r = await s.get(path='/get')
     results.append(r)
 
-async def main(path_list):
-	from asks.sessions import Session
-	s = Session('https://example.org' , connections=2)
+
+async def main():
+    from asks.sessions import Session
+    s = Session('https://example.org', connections=2)
     async with trio.open_nursery() as n:
-        for path in path_list:
+        for s in path_list:
             n.start_soon(grabber, s)
 
-s = asks.Session()
+
 trio.run(main, path_list)
 ```
 
