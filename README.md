@@ -45,27 +45,27 @@ curio.run(example())
 import asks
 import trio
 
-asks.init('trio')
+asks.init(trio)
 
-path_list = ['a', 'list', 'of', '1000', 'paths']
+path_list = ['http://httpbin.org/get']
 
 results = []
 
 
-async def grabber(s):
-    r = await s.get(path='/get')
+async def grabber(s, path):
+    r = await s.get(path)
     results.append(r)
 
 
-async def main():
+async def main(path_list):
     from asks.sessions import Session
     s = Session('https://example.org', connections=2)
     async with trio.open_nursery() as n:
-        for s in path_list:
-            n.start_soon(grabber, s)
-
+        for path in path_list:
+            n.start_soon(grabber, s, path)
 
 trio.run(main, path_list)
+
 ```
 
 #### Changelog
