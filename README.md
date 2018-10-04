@@ -47,7 +47,7 @@ import trio
 
 asks.init(trio)
 
-path_list = ['http://httpbin.org/get']
+path_list = ['http://fakeurl.org/get','http://example123.org]
 
 results = []
 
