@@ -1,19 +1,17 @@
 __all__ = ['get_netloc_port', 'requote_uri', 'timeout_manager']
 
-
-from urllib.parse import  quote
+import anyio
 from functools import wraps
-
-from multio import asynclib
+from urllib.parse import quote
 
 from .errors import RequestTimeout
 
 
 async def timeout_manager(timeout, coro, *args):
     try:
-        async with asynclib.timeout_after(timeout):
-            return (await coro(*args))
-    except asynclib.TaskTimeout as e:
+        async with anyio.fail_after(timeout):
+            return await coro(*args)
+    except TimeoutError as e:
         raise RequestTimeout from e
 
 
@@ -84,4 +82,5 @@ def processor(gen):
         g = gen(*args, **kwargs)
         next(g)
         return g
+
     return wrapper

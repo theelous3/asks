@@ -1,15 +1,12 @@
 '''
 The disparate session (Session) is for making requests to multiple locations.
 '''
-
+import anyio
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
-from urllib.parse import urlparse, urlunparse
-
 from h11 import RemoteProtocolError
-
-from multio import asynclib
+from urllib.parse import urlparse, urlunparse
 
 from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
@@ -60,10 +57,9 @@ class BaseSession(metaclass=ABCMeta):
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await asynclib.open_connection(location[0],
-                                              location[1],
-                                              ssl=False,
-                                              source_addr=self.source_address)
+        sock = await anyio.connect_tcp(location[0],
+                                       location[1],
+                                       tls=False)
         sock._active = True
         return sock
 
@@ -74,11 +70,9 @@ class BaseSession(metaclass=ABCMeta):
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await asynclib.open_connection(location[0],
-                                              location[1],
-                                              ssl=self.ssl_context or True,
-                                              server_hostname=location[0],
-                                              source_addr=self.source_address)
+        sock = await anyio.connect_tcp(location[0],
+                                       location[1],
+                                       tls=self.ssl_context or True)
         sock._active = True
         return sock
 
@@ -191,7 +185,7 @@ class BaseSession(metaclass=ABCMeta):
                     try:
                         if r.headers['connection'].lower() == 'close':
                             sock._active = False
-                            await sock.close()
+                            sock.close()
                     except KeyError:
                         pass
                     await self.return_to_pool(sock)
@@ -215,7 +209,7 @@ class BaseSession(metaclass=ABCMeta):
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
                 if sock:
-                    await sock.close()
+                    sock.close()
                 raise e
 
         if retry:
@@ -245,11 +239,11 @@ class BaseSession(metaclass=ABCMeta):
         In all cases we clean up the underlying socket.
         """
         if isinstance(e, (RemoteProtocolError, AssertionError)):
-            await sock.close()
+            sock.close()
             raise BadHttpResponse('Invalid HTTP response from server.') from e
 
         if isinstance(e, Exception):
-            await sock.close()
+            sock.close()
             raise e
 
     @abstractmethod
@@ -311,8 +305,7 @@ class Session(BaseSession):
             self._cookie_tracker = persist_cookies
 
         self._conn_pool = SocketQ()
-
-        self._sema = asynclib.Semaphore(connections)
+        self._sema = anyio.create_semaphore(connections)
 
     @property
     def sema(self):

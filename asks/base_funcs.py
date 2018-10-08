@@ -7,7 +7,6 @@ from functools import partial
 
 from asks.sessions import Session
 
-
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
 
 
@@ -29,6 +28,7 @@ async def request(method, uri, **kwargs):
     async with Session(persist_cookies=c_interact, ssl_context=ssl_context) as s:
         r = await s.request(method, url=uri, **kwargs)
         return r
+
 
 # The functions below are the exact same as the ``request`` function
 # above, with the method argument already passed.

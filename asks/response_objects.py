@@ -1,13 +1,9 @@
 import codecs
-from types import SimpleNamespace
-import json as _json
-from gzip import decompress as gdecompress
-from zlib import decompress as zdecompress
-
-from async_generator import async_generator, yield_
+import functools
 import h11
-
-from multio import asynclib
+import json as _json
+from async_generator import async_generator, yield_
+from types import SimpleNamespace
 
 from .http_utils import decompress, parse_content_encoding
 from .utils import timeout_manager
@@ -137,10 +133,11 @@ class StreamBody:
             event = self.hconnection.next_event()
 
             if event is h11.NEED_DATA:
+                partial = functools.partial(self.sock.receive_some, 10000)
                 if self.timeout is not None:
-                    data = await timeout_manager(self.timeout, asynclib.recv, self.sock, 10000)
+                    data = await timeout_manager(self.timeout, partial)
                 else:
-                    data = await asynclib.recv(self.sock, 10000)
+                    data = await partial()
 
                 self.hconnection.receive_data(data)
                 continue
@@ -155,7 +152,7 @@ class StreamBody:
         return self
 
     async def close(self):
-        await self.sock.close()
+        self.sock.close()
 
     async def __aexit__(self, *exc_info):
         await self.close()

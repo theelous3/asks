@@ -3,7 +3,9 @@
 Some structures used throughout asks.
 '''
 from collections import OrderedDict, deque
-from collections.abc import MutableMapping, Mapping
+
+from collections.abc import Mapping, MutableMapping
+
 
 class SocketQ(deque):
     '''
@@ -26,7 +28,7 @@ class SocketQ(deque):
     async def free_pool(self):
         while self:
             sock = self.pop()
-            await sock.close()
+            sock.close()
 
     def __contains__(self, host_loc):
         for i in self:

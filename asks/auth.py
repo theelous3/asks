@@ -1,13 +1,10 @@
 # pylint: disable=abstract-method
-from abc import abstractmethod, ABCMeta
-
-import re
-
 import base64
+import re
+from abc import ABCMeta, abstractmethod
 from hashlib import md5
 from random import choice
 from string import ascii_lowercase, digits
-
 
 __all__ = ['AuthBase',
            'PreResponseAuth',
@@ -22,6 +19,7 @@ class AuthBase(metaclass=ABCMeta):
     should implement their own __call__ method, returning a dictionary
     for use in headers.
     '''
+
     @abstractmethod
     def __call__(self):
         '''Not Implemented'''
@@ -38,6 +36,7 @@ class PostResponseAuth(AuthBase):
     '''
     Auth class for response dependant auth.
     '''
+
     def __init__(self):
         self.auth_attempted = False
 
@@ -46,6 +45,7 @@ class BasicAuth(PreResponseAuth):
     '''
     Ye Olde Basic HTTP Auth.
     '''
+
     def __init__(self, auth_info, encoding='utf-8'):
         self.auth_info = auth_info
         self.encoding = encoding
@@ -99,12 +99,12 @@ class DigestAuth(PostResponseAuth):
         try:
             if auth_dict['algorithm'].lower() == b'md5-sess':
                 ha1 = bytes(md5(
-                               bytes(md5(b':'.join((usrname,
-                                                    auth_dict['realm'],
-                                                    psword)) +
-                                     b':' + auth_dict['nonce'] + b':' +
-                                         cnonce).hexdigest(),
-                                     self.encoding)).hexdigest(),
+                    bytes(md5(b':'.join((usrname,
+                                         auth_dict['realm'],
+                                         psword)) +
+                              b':' + auth_dict['nonce'] + b':' +
+                              cnonce).hexdigest(),
+                          self.encoding)).hexdigest(),
                             self.encoding)
                 if auth_dict['nonce'] == self.nonce:
                     self.nonce_count += 1
@@ -116,8 +116,8 @@ class DigestAuth(PostResponseAuth):
 
         if ha1 is None:
             ha1 = bytes(md5(b':'.join((usrname,
-                                      auth_dict['realm'],
-                                      psword))).hexdigest(), self.encoding)
+                                       auth_dict['realm'],
+                                       psword))).hexdigest(), self.encoding)
 
         bytes_path = bytes(req_obj.path, self.encoding)
         bytes_method = bytes(req_obj.method, self.encoding)
@@ -126,8 +126,8 @@ class DigestAuth(PostResponseAuth):
                 hashed_body = bytes(md5(response_obj.raw or b'').hexdigest(),
                                     self.encoding)
                 ha2 = bytes(md5(b':'.join((bytes_method,
-                                          bytes_path,
-                                          hashed_body))).hexdigest(),
+                                           bytes_path,
+                                           hashed_body))).hexdigest(),
                             self.encoding)
                 qop = 'auth-int'
             else:
@@ -144,11 +144,11 @@ class DigestAuth(PostResponseAuth):
                 bytes_nc = bytes('{:08x}'.format(self.nonce_count),
                                  self.encoding)
                 response = md5(b':'.join((ha1,
-                                         auth_dict['nonce'],
-                                         bytes_nc,
-                                         cnonce,
-                                         bytes(qop, self.encoding),
-                                         ha2))).hexdigest()
+                                          auth_dict['nonce'],
+                                          bytes_nc,
+                                          cnonce,
+                                          bytes(qop, self.encoding),
+                                          ha2))).hexdigest()
                 if auth_dict['nonce'] == self.nonce:
                     self.nonce_count += 1
                 else:
@@ -170,6 +170,6 @@ class DigestAuth(PostResponseAuth):
             response_items.append('qop={}'.format(qop))
 
         response_items.extend(['nc={:08x}'.format(self.nonce_count),
-                              'cnonce="{}"'.format(str(cnonce,
-                                                   self.encoding))])
+                               'cnonce="{}"'.format(str(cnonce,
+                                                        self.encoding))])
         return {'Authorization': "Digest {}".format(', '.join(response_items))}
