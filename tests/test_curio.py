@@ -5,7 +5,7 @@ import curio
 import pytest
 
 import asks
-from asks.errors import TooManyRedirects, RequestTimeout
+from asks.errors import TooManyRedirects, BadStatus, RequestTimeout
 
 
 def curio_run(func):
@@ -42,6 +42,22 @@ async def test_https_get_alt():
 async def test_http_get():
     r = await asks.get('http://httpbin.org/get')
     assert r.status_code == 200
+
+
+@curio_run
+async def test_http_get_client_error():
+    r = await asks.get('http://httpbin.org/status/400')
+    with pytest.raises(BadStatus) as excinfo:
+        r.raise_for_status()
+    assert excinfo.match('400 Client Error: BAD REQUEST')
+
+
+@curio_run
+async def test_http_get_server_error():
+    r = await asks.get('http://httpbin.org/status/500')
+    with pytest.raises(BadStatus) as excinfo:
+        r.raise_for_status()
+    assert excinfo.match('500 Server Error: INTERNAL SERVER ERROR')
 
 
 # Redirect tests
