@@ -10,6 +10,7 @@ python:
 install:
    - pip install git+https://github.com/agronholm/anyio.git
    - pip install pytest-httpbin trio curio
+   - pip install "pytest >= 3.7.2"
    - pip install -e .
 
 script:
