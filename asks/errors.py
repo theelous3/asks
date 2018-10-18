@@ -25,6 +25,10 @@ class BadHttpResponse(AsksException):
     pass
 
 
+class BadStatus(AsksException):
+    pass
+
+
 class RequestTimeout(ConnectivityError):
     pass
 
