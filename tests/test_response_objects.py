@@ -24,3 +24,9 @@ def test_response_guess_encoding():
         'ascii', '', 200, '', {}, '', '', '')
     r._guess_encoding()
     assert r.encoding == 'ascii'
+
+
+def test_response_json():
+    r = asks.response_objects.Response(
+        None, '', 200, '', {}, '{"foo":"bar"}', '', '')
+    assert r.json() == {'foo': 'bar'}
