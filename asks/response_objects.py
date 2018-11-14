@@ -74,13 +74,14 @@ class BaseResponse:
 
 
 class Response(BaseResponse):
-    def json(self):
+
+    def json(self, **kwargs):
         '''
         If the response's body is valid json, we load it as a python dict
         and return it.
         '''
         body = self._decompress(self.encoding)
-        return _json.loads(body)
+        return _json.loads(body, **kwargs)
 
     def raise_for_status(self):
         '''
