@@ -78,6 +78,17 @@ async def test_http_get(server):
     ordered_steps=True,
 )
 @curio_run
+async def test_http_redirect(server):
+    r = await asks.get(server.http_test_url + '/redirect_1')
+    assert len(r.history) == 1
+
+    # make sure history doesn't persist across responses
+    r.history.append('not a response obj')
+    r = await asks.get(server.http_test_url + '/redirect_1')
+    assert len(r.history) == 1
+
+
+@curio_run
 async def test_http_get_client_error():
     r = await asks.get('http://httpbin.org/status/400')
     with pytest.raises(BadStatus) as excinfo:
@@ -94,15 +105,6 @@ async def test_http_get_server_error():
 
 
 # Redirect tests
-@curio_run
-async def test_http_redirect(server):
-    r = await asks.get(server.http_test_url + '/redirect_1')
-    assert len(r.history) == 1
-
-    # make sure history doesn't persist across responses
-    r.history.append('not a response obj')
-    r = await asks.get(server.http_test_url + '/redirect_1')
-    assert len(r.history) == 1
 
 
 @Server(
