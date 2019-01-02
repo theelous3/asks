@@ -11,6 +11,7 @@ from multio import asynclib
 
 from .http_utils import decompress, parse_content_encoding
 from .utils import timeout_manager
+from .errors import BadStatus
 
 
 class BaseResponse:
@@ -73,13 +74,23 @@ class BaseResponse:
 
 
 class Response(BaseResponse):
-    def json(self):
+
+    def json(self, **kwargs):
         '''
         If the response's body is valid json, we load it as a python dict
         and return it.
         '''
         body = self._decompress(self.encoding)
-        return _json.loads(body)
+        return _json.loads(body, **kwargs)
+
+    def raise_for_status(self):
+        '''
+        Raise BadStatus if one occurred.
+        '''
+        if 400 <= self.status_code < 500:
+            raise BadStatus('{} Client Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url))
+        elif 500 <= self.status_code < 600:
+            raise BadStatus('{} Server Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url))
 
     @property
     def text(self):
