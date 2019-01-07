@@ -1,5 +1,10 @@
 # pylint: disable=wrong-import-position
 
+import ssl
+from os import path
+from tempfile import NamedTemporaryFile
+from functools import partial
+
 from overly import (
     Server,
     ssl_socket_wrapper,
@@ -7,18 +12,15 @@ from overly import (
     send_200,
     send_204,
     send_303,
+    send_400,
     send_404,
+    send_500,
     delay,
     send_request_as_json,
     finish,
     HttpMethods,
 
 )
-
-import ssl
-from os import path
-from tempfile import NamedTemporaryFile
-from functools import partial
 
 import curio
 import pytest
@@ -63,7 +65,7 @@ async def test_http_get(server):
     assert r.status_code == 200
 
 
-# # Redirect tests
+# Redirect tests
 
 
 @Server(
@@ -88,90 +90,92 @@ async def test_http_redirect(server):
     assert len(r.history) == 1
 
 
-@curio_run
-async def test_http_get_client_error():
-    r = await asks.get('http://httpbin.org/status/400')
-    with pytest.raises(BadStatus) as excinfo:
-        r.raise_for_status()
-    assert excinfo.match('400 Client Error: BAD REQUEST')
+# @Server(_TEST_LOC, steps=[send_400, finish])
+# @curio_run
+# async def test_http_get_client_error(server):
+#     r = await asks.get(server.http_test_url)
+#     with pytest.raises(BadStatus) as excinfo:
+#         r.raise_for_status()
+#     assert excinfo.match('400 Client Error: BAD REQUEST')
 
 
-@curio_run
-async def test_http_get_server_error():
-    r = await asks.get('http://httpbin.org/status/500')
-    with pytest.raises(BadStatus) as excinfo:
-        r.raise_for_status()
-    assert excinfo.match('500 Server Error: INTERNAL SERVER ERROR')
+# @Server(_TEST_LOC, steps=[send_500, finish])
+# @curio_run
+# async def test_http_get_server_error(server):
+#     r = await asks.get(server.http_test_url)
+#     with pytest.raises(BadStatus) as excinfo:
+#         r.raise_for_status()
+#     assert excinfo.match('500 Server Error: INTERNAL SERVER ERROR')
 
 
-# Redirect tests
+# # Redirect tests
 
 
-@Server(
-    _TEST_LOC,
-    max_requests=3,
-    steps=[
-        [(HttpMethods.GET, "/redirect_max"), partial(send_303, headers=[('location', 'redirect_max1')]), finish],
-        [(HttpMethods.GET, "/redirect_max1"), partial(send_303, headers=[('location', 'redirect_max')]), finish],
-    ],
-)
-@curio_run
-async def test_http_max_redirect_error(server):
-    with pytest.raises(TooManyRedirects):
-        await asks.get(server.http_test_url + '/redirect_max', max_redirects=1)
+# @Server(
+#     _TEST_LOC,
+#     max_requests=3,
+#     steps=[
+#         [(HttpMethods.GET, "/redirect_max"), partial(send_303, headers=[('location', 'redirect_max1')]), finish],
+#         [(HttpMethods.GET, "/redirect_max1"), partial(send_303, headers=[('location', 'redirect_max')]), finish],
+#     ],
+# )
+# @curio_run
+# async def test_http_max_redirect_error(server):
+#     with pytest.raises(TooManyRedirects):
+#         await asks.get(server.http_test_url + '/redirect_max', max_redirects=1)
 
 
-@Server(
-    _TEST_LOC,
-    max_requests=2,
-    steps=[
-        [(HttpMethods.GET, "/redirect_once"), partial(send_303, headers=[('location', '/')]), finish],
-        [(HttpMethods.GET, "/"), send_200, finish],
-    ],
-)
-@curio_run
-async def test_http_max_redirect(server):
-    r = await asks.get(server.http_test_url + '/redirect_once', max_redirects=2)
-    assert r.status_code == 200
+# @Server(
+#     _TEST_LOC,
+#     max_requests=2,
+#     steps=[
+#         [(HttpMethods.GET, "/redirect_once"), partial(send_303, headers=[('location', '/')]), finish],
+#         [(HttpMethods.GET, "/"), send_200, finish],
+#     ],
+# )
+# @curio_run
+# async def test_http_max_redirect(server):
+#     r = await asks.get(server.http_test_url + '/redirect_once', max_redirects=2)
+#     assert r.status_code == 200
 
 
-# Timeout tests
+# # Timeout tests
 
-@Server(_TEST_LOC, steps=[delay(2), send_200, finish])
-@curio_run
-async def test_http_timeout_error(server):
-    with pytest.raises(RequestTimeout):
-        await asks.get(server.http_test_url, timeout=1)
-
-
-@Server(_TEST_LOC, steps=[send_200, finish])
-@curio_run
-async def test_http_timeout(server):
-    r = await asks.get(server.http_test_url, timeout=10)
-    assert r.status_code == 200
+# @Server(_TEST_LOC, steps=[delay(2), send_200, finish])
+# @curio_run
+# async def test_http_timeout_error(server):
+#     with pytest.raises(RequestTimeout):
+#         await asks.get(server.http_test_url, timeout=1)
 
 
-# Param set test
-
-@Server(_TEST_LOC, steps=[send_request_as_json, finish])
-@curio_run
-async def test_param_dict_set(server):
-    r = await asks.get(server.http_test_url,
-                       params={'cheese': 'the best'})
-    j = r.json()
-    assert next(v == 'the best' for k, v in j['params'] if k == 'cheese')
+# @Server(_TEST_LOC, steps=[send_200, finish])
+# @curio_run
+# async def test_http_timeout(server):
+#     r = await asks.get(server.http_test_url, timeout=10)
+#     assert r.status_code == 200
 
 
-# Data set test
+# # Param set test
+
+# @Server(_TEST_LOC, steps=[send_request_as_json, finish])
+# @curio_run
+# async def test_param_dict_set(server):
+#     r = await asks.get(server.http_test_url,
+#                        params={'cheese': 'the best'})
+#     j = r.json()
+#     assert next(v == 'the best' for k, v in j['params'] if k == 'cheese')
 
 
-@Server(_TEST_LOC, steps=[send_request_as_json, finish])
-@curio_run
-async def test_data_dict_set(server):
-    r = await asks.post(server.http_test_url,
-                        data={'cheese': 'please bby'})
-    j = r.json()
-    assert next(v == 'please bby' for k, v in j['form'] if k == 'cheese')
+# # Data set test
+
+
+# @Server(_TEST_LOC, steps=[send_request_as_json, finish])
+# @curio_run
+# async def test_data_dict_set(server):
+#     r = await asks.post(server.http_test_url,
+#                         data={'cheese': 'please bby'})
+#     j = r.json()
+#     assert next(v == 'please bby' for k, v in j['form'] if k == 'cheese')
 
 
 # # Cookie send test

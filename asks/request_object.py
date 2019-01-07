@@ -630,8 +630,8 @@ class RequestProcessor:
         await asynclib.sendall(self.sock, hconnection.send(request_bytes))
         if body_bytes is not None:
             await asynclib.sendall(self.sock, hconnection.send(body_bytes))
-        await asynclib.sendall(
-            self.sock, hconnection.send(h11.EndOfMessage()))
+        # await asynclib.sendall(
+        #     self.sock, hconnection.send(h11.EndOfMessage()))
 
     async def _auth_handler_pre(self):
         '''
