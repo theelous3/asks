@@ -424,7 +424,8 @@ class RequestProcessor:
 
         return c_type, str(len(body)), body
 
-    def _dict_to_query(self, data, params=True, base_query=False):
+    @staticmethod
+    def _dict_to_query(data, params=True, base_query=False):
         '''
         Turns python dicts in to valid body-queries or queries for use directly
         in the request url. Unlike the stdlib quote() and it's variations,
@@ -439,7 +440,7 @@ class RequestProcessor:
         query = []
 
         for k, v in data.items():
-            if not v:
+            if v is None:
                 continue
             if isinstance(v, (str, Number)):
                 query.append('='.join(quote_plus(x) for x in (k, str(v))))
