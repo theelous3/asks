@@ -72,7 +72,7 @@ class BaseSession(metaclass=ABCMeta):
         '''
         sock = await connect_tcp(location[0],
                                  location[1],
-                                 tls=self.ssl_context or True,
+                                 ssl_context=self.ssl_context or True,
                                  bind_host=self.source_address)
         sock._active = True
         return sock
