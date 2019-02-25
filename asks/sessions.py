@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
+import ssl
 
 from h11 import RemoteProtocolError
 from anyio import connect_tcp, create_semaphore
@@ -72,8 +73,9 @@ class BaseSession(metaclass=ABCMeta):
         '''
         sock = await connect_tcp(location[0],
                                  location[1],
-                                 ssl_context=self.ssl_context or True,
-                                 bind_host=self.source_address)
+                                 ssl_context=self.ssl_context or ssl.SSLContext(),
+                                 bind_host=self.source_address,
+                                 autostart_tls=True)
         sock._active = True
         return sock
 
