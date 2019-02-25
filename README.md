@@ -29,7 +29,6 @@ Note: Currently supports trio's development branch. You can install this by doin
 # A little silly to async one request, but not without its use!
 import asks
 import curio
-asks.init('curio')
 
 async def example():
     r = await asks.get('https://example.org')
@@ -44,23 +43,26 @@ curio.run(example())
 
 import asks
 import trio
-asks.init('trio')
 
-path_list = ['a', 'list', 'of', '1000', 'paths']
+path_list = ['http://fakeurl.org/get','http://example123.org']
 
 results = []
 
-async def grabber(path):
+
+async def grabber(s, path):
     r = await s.get(path)
     results.append(r)
 
+
 async def main(path_list):
+    from asks.sessions import Session
+    s = Session('https://example.org', connections=2)
     async with trio.open_nursery() as n:
         for path in path_list:
-            n.start_soon(grabber(path))
+            n.start_soon(grabber, s, path)
 
-s = asks.Session()
 trio.run(main, path_list)
+
 ```
 
 #### Changelog

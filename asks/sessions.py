@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
+import ssl
 
 from h11 import RemoteProtocolError
 from anyio import connect_tcp, create_semaphore
@@ -72,8 +73,9 @@ class BaseSession(metaclass=ABCMeta):
         '''
         sock = await connect_tcp(location[0],
                                  location[1],
-                                 tls=self.ssl_context or True,
-                                 bind_host=self.source_address)
+                                 ssl_context=self.ssl_context or ssl.SSLContext(),
+                                 bind_host=self.source_address,
+                                 autostart_tls=True)
         sock._active = True
         return sock
 
@@ -186,7 +188,7 @@ class BaseSession(metaclass=ABCMeta):
                     try:
                         if r.headers['connection'].lower() == 'close':
                             sock._active = False
-                            sock.close()
+                            await sock.close()
                     except KeyError:
                         pass
                     await self.return_to_pool(sock)
@@ -210,7 +212,7 @@ class BaseSession(metaclass=ABCMeta):
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
                 if sock:
-                    sock.close()
+                    await sock.close()
                 raise e
 
         if retry:
@@ -240,11 +242,11 @@ class BaseSession(metaclass=ABCMeta):
         In all cases we clean up the underlying socket.
         """
         if isinstance(e, (RemoteProtocolError, AssertionError)):
-            sock.close()
+            await sock.close()
             raise BadHttpResponse('Invalid HTTP response from server.') from e
 
         if isinstance(e, Exception):
-            sock.close()
+            await sock.close()
             raise e
 
     @abstractmethod
