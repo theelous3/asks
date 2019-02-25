@@ -33,7 +33,7 @@ async def test_http_get():
     assert r.status_code == 200
 
 
-@curio_run
+@pytest.mark.anyio
 async def test_http_get_client_error():
     r = await asks.get('http://httpbin.org/status/400')
     with pytest.raises(BadStatus) as excinfo:
@@ -41,7 +41,7 @@ async def test_http_get_client_error():
     assert excinfo.match('400 Client Error: BAD REQUEST')
 
 
-@curio_run
+@pytest.mark.anyio
 async def test_http_get_server_error():
     r = await asks.get('http://httpbin.org/status/500')
     with pytest.raises(BadStatus) as excinfo:
