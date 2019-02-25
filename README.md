@@ -29,7 +29,6 @@ Note: Currently supports trio's development branch. You can install this by doin
 # A little silly to async one request, but not without its use!
 import asks
 import curio
-asks.init('curio')
 
 async def example():
     r = await asks.get('https://example.org')
@@ -44,8 +43,6 @@ curio.run(example())
 
 import asks
 import trio
-
-asks.init(trio)
 
 path_list = ['http://fakeurl.org/get','http://example123.org']
 
