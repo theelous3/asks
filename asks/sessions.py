@@ -179,10 +179,16 @@ class BaseSession(metaclass=ABCMeta):
                     **kwargs
                 )
 
-                if timeout is None:
-                    sock, r = await req_obj.make_request()
-                else:
-                    sock, r = await timeout_manager(timeout, req_obj.make_request)
+                try:
+                    if timeout is None:
+                        sock, r = await req_obj.make_request()
+                    else:
+                        sock, r = await timeout_manager(timeout, req_obj.make_request)
+                except BadHttpResponse:
+                    if timeout is None:
+                        sock, r = await req_obj.make_request()
+                    else:
+                        sock, r = await timeout_manager(timeout, req_obj.make_request)
 
                 if sock is not None:
                     try:
