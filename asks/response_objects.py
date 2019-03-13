@@ -126,6 +126,7 @@ class StreamBody:
         # TODO: add decompress data to __call__ args
         self.decompress_data = True
         self.timeout = None
+        self.read_size = 10000
 
     @async_generator
     async def __aiter__(self):
@@ -146,7 +147,7 @@ class StreamBody:
             event = self.hconnection.next_event()
 
             if event is h11.NEED_DATA:
-                data = await timeout_manager(self.timeout, self.sock.receive_some, 10000)
+                data = await timeout_manager(self.timeout, self.sock.receive_some, read_size)
                 self.hconnection.receive_data(data)
                 continue
 
