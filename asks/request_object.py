@@ -5,6 +5,7 @@ for sending them, as well as receiving responses.
 This is the oldest part of asks, and as such is currently not the cleanest
 it could be. Refactors are required to bring it up to spec!
 '''
+from anyio import aopen
 
 __all__ = ['RequestProcessor']
 
@@ -19,7 +20,6 @@ import re
 
 import h11
 from h11 import RemoteProtocolError
-from multio import asynclib
 
 from .utils import requote_uri
 from .cookie_utils import parse_cookies
@@ -510,12 +510,8 @@ class RequestProcessor:
         return multip_pkg
 
     async def _file_manager(self, path):
-        try:
-            async with await asynclib.aopen(path, 'rb') as f:
-                return b''.join(await f.readlines()) + b'\r\n'
-        except TypeError:
-            async with asynclib.aopen(path, 'rb') as f:
-                return b''.join(await f.readlines()) + b'\r\n'
+        async with await aopen(path, 'rb') as f:
+            return b''.join(await f.readlines()) + b'\r\n'
 
     async def _catch_response(self, hconnection):
         '''
@@ -614,8 +610,7 @@ class RequestProcessor:
         while True:
             event = hconnection.next_event()
             if event is h11.NEED_DATA:
-                hconnection.receive_data(
-                    (await asynclib.recv(self.sock, 10000)))
+                hconnection.receive_data(await self.sock.receive_some(10000))
                 continue
             return event
 
@@ -628,11 +623,10 @@ class RequestProcessor:
             package (list of str): The header package.
             body (str): The str representation of the body.
         '''
-        await asynclib.sendall(self.sock, hconnection.send(request_bytes))
+        await self.sock.send_all(hconnection.send(request_bytes))
         if body_bytes is not None:
-            await asynclib.sendall(self.sock, hconnection.send(body_bytes))
-        await asynclib.sendall(
-            self.sock, hconnection.send(h11.EndOfMessage()))
+            await self.sock.send_all(hconnection.send(body_bytes))
+        await self.sock.send_all(hconnection.send(h11.EndOfMessage()))
 
     async def _auth_handler_pre(self):
         '''

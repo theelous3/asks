@@ -7,8 +7,6 @@ from zlib import decompress as zdecompress
 from async_generator import async_generator, yield_
 import h11
 
-from multio import asynclib
-
 from .http_utils import decompress, parse_content_encoding
 from .utils import timeout_manager
 from .errors import BadStatus
@@ -148,11 +146,7 @@ class StreamBody:
             event = self.hconnection.next_event()
 
             if event is h11.NEED_DATA:
-                if self.timeout is not None:
-                    data = await timeout_manager(self.timeout, asynclib.recv, self.sock, 10000)
-                else:
-                    data = await asynclib.recv(self.sock, 10000)
-
+                data = await timeout_manager(self.timeout, self.sock.receive_some, 10000)
                 self.hconnection.receive_data(data)
                 continue
 
