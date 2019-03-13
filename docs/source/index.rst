@@ -129,7 +129,7 @@ A thousand requests running async at the drop of a hat, using clean burning conn
 Why asks?
 _________
 
-If you like async, but don't like the spaghetti-docs furture-laden many-looped asyncio lib, you'll probably love curio and trio. If you wish you could marry them with requests, you'll probably love asks.
+If you like async, but don't like the spaghetti-docs future-laden many-looped asyncio lib, you'll probably love curio and trio. If you wish you could marry them with requests, you'll probably love asks.
 
 Nice libs like aiohttp suffer the side effect of uglyness due to being specifically for asyncio. Inspired by requests and the fancy new-age async libs, I wanted to take that lovely ultra abstraction and apply it to an async http lib to eleviate some of the pain in dealing with async http.
 
