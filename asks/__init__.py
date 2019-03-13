@@ -5,7 +5,15 @@ from .auth import *
 from .base_funcs import *
 from .sessions import *
 
-# compatibility
+from warnings import warn
+
+
 def init(library):
-	"""Unused. asks+anyio auto-detects your library."""
-	pass
+    """
+    Unused. asks+anyio auto-detects your library.
+    """
+    warn(
+        'init is deprecated. asks + anyio now auto-detects'
+        ' your async library', DeprecationWarning
+    )
+    pass
