@@ -86,9 +86,9 @@ class Response(BaseResponse):
         Raise BadStatus if one occurred.
         '''
         if 400 <= self.status_code < 500:
-            raise BadStatus('{} Client Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url))
+            raise BadStatus('{} Client Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url), self.status_code)
         elif 500 <= self.status_code < 600:
-            raise BadStatus('{} Server Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url))
+            raise BadStatus('{} Server Error: {} for url: {}'.format(self.status_code, self.reason_phrase, self.url), self.status_code)
 
     @property
     def text(self):

@@ -39,6 +39,7 @@ async def test_http_get_client_error():
     with pytest.raises(BadStatus) as excinfo:
         r.raise_for_status()
     assert excinfo.match('400 Client Error: BAD REQUEST')
+    assert excinfo.value.status_code == 400
 
 
 @pytest.mark.anyio
@@ -47,6 +48,7 @@ async def test_http_get_server_error():
     with pytest.raises(BadStatus) as excinfo:
         r.raise_for_status()
     assert excinfo.match('500 Server Error: INTERNAL SERVER ERROR')
+    assert excinfo.value.status_code == 500
 
 
 # Redirect tests
