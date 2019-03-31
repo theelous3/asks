@@ -31,7 +31,6 @@ from .errors import TooManyRedirects
 
 _BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(1e3, 9e3))
 _WWX_MATCH = re.compile(r'\Aww.\.')
-_MAX_BYTES = 4096
 
 
 class RequestProcessor:
