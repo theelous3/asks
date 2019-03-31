@@ -34,6 +34,7 @@ class SocketQ(deque):
                 return True
         return False
 
+
 '''
 The rest of this file's contents are from request's source.
 

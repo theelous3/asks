@@ -118,8 +118,8 @@ class StreamResponse(BaseResponse):
 
 class StreamBody:
 
-    def __init__(self, hconnection, sock, content_encoding=None, encoding=None):
-        self.hconnection = hconnection
+    def __init__(self, h11_connection, sock, content_encoding=None, encoding=None):
+        self.h11_connection = h11_connection
         self.sock = sock
         self.content_encoding = content_encoding
         self.encoding = encoding
@@ -144,11 +144,11 @@ class StreamBody:
 
     async def _recv_event(self):
         while True:
-            event = self.hconnection.next_event()
+            event = self.h11_connection.next_event()
 
             if event is h11.NEED_DATA:
                 data = await timeout_manager(self.timeout, self.sock.receive_some, read_size)
-                self.hconnection.receive_data(data)
+                self.h11_connection.receive_data(data)
                 continue
 
             return event
