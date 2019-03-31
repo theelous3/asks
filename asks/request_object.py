@@ -670,7 +670,7 @@ class RequestProcessor:
             if response_obj.status_code == 401:
                 if not self.auth.auth_attempted:
                     self.history_objects.append(response_obj)
-                    r = await self.make_request()
+                    _, r = await self.make_request()
                     self.auth.auth_attempted = False
                     return r
                 else:
