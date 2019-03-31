@@ -147,7 +147,7 @@ class StreamBody:
             event = self.h11_connection.next_event()
 
             if event is h11.NEED_DATA:
-                data = await timeout_manager(self.timeout, self.sock.receive_some, read_size)
+                data = await timeout_manager(self.timeout, self.sock.receive_some, self.read_size)
                 self.h11_connection.receive_data(data)
                 continue
 
