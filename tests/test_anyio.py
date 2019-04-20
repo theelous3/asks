@@ -251,6 +251,7 @@ async def test_session_stateful():
         await g.spawn(hsession_t_stateful, s)
     assert 'www.google.ie' in s._cookie_tracker.domain_dict.keys()
 
+
 async def session_t_stateful_double_worker(s):
     r = await s.get()
     assert r.status_code == 200
@@ -264,9 +265,6 @@ async def test_session_stateful_double():
         for _ in range(4):
             await g.spawn(session_t_stateful_double_worker, s)
 
-
-# Session Tests
-# ==============
 
 # Test Session with two pooled connections on four get requests.
 async def session_t_smallpool(s):
