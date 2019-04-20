@@ -281,3 +281,11 @@ async def test_Session_smallpool():
     async with create_task_group() as g:
         for _ in range(10):
             await g.spawn(session_t_smallpool, s)
+
+
+def test_instantiate_session_outside_of_event_loop():
+    from asks.sessions import Session
+    try:
+        Session()
+    except RuntimeError:
+        pytest.fail("Could not instantiate Session outside of event loop")
