@@ -157,7 +157,7 @@ class RequestProcessor:
 
         # default header construction
         asks_headers = c_i_dict([('Host', host),
-                                 ('Connection', 'keep-alive'),
+                                 ('Connection', 'close'),
                                  ('Accept-Encoding', 'gzip, deflate'),
                                  ('Accept', '*/*'),
                                  ('Content-Length', '0'),
