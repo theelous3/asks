@@ -315,10 +315,13 @@ class Session(BaseSession):
 
         self._conn_pool = SocketQ()
 
-        self._sema = create_semaphore(connections)
+        self._sema = None
+        self._connections = connections
 
     @property
     def sema(self):
+        if self._sema is None:
+            self._sema = create_semaphore(self._connections)
         return self._sema
 
     def _checkout_connection(self, host_loc):
