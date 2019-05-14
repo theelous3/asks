@@ -2,24 +2,24 @@ language: python
 dist: trusty
 sudo: false
 
-python:
-  - "3.5"
-  - "3.6"
-  - "nightly"
+jobs:
+  include:
+    - python: "3.5"
+
+    - python: "3.6"
+
+    - python: "3.7"
+      dist: xenial
+      sudo: required
 
 install:
-   - ./setup.py develop
-   - pip3 install pytest-httpbin
-   - pip3 install git+https://github.com/python-trio/trio.git
-   - pip3 install git+https://github.com/dabeaz/curio.git
-   - pip3 install pylint
-   - pip3 install multio
+   - pip install git+https://github.com/agronholm/anyio.git
+   - pip install pytest-httpbin trio curio
+   - pip install "pytest >= 3.7.2"
+   - pip install -e .
 
 script:
-  - pytest tests/test_curio.py --verbose --tb=native
-  - pytest tests/test_trio.py --verbose --tb=native
-  - pytest tests/test_request_object.py --verbose --tb=native
-  - pytest tests/test_response_objects.py --verbose --tb=native
+  - pytest tests --verbose --tb=native
   # - pylint asks tests
   # temp disable until bugfix for
   # AttributeError: 'FunctionDef' object has no attribute 'ancestors'

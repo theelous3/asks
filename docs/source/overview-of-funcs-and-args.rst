@@ -50,7 +50,7 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a query 
 You may also pass strings and iterables, asks will attempt to format them correctly. ::
 
     async def example():
-        r = await asks.get('www.example.com', data='Elmo wants data'))
+        r = await asks.post('www.example.com', data='Elmo wants data'))
 
     # sends in request body:
     b'?Elmo+wants+data'

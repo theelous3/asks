@@ -6,10 +6,10 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
+import ssl
 
 from h11 import RemoteProtocolError
-
-from multio import asynclib
+from anyio import connect_tcp, create_semaphore
 
 from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
@@ -60,10 +60,7 @@ class BaseSession(metaclass=ABCMeta):
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await asynclib.open_connection(location[0],
-                                              location[1],
-                                              ssl=False,
-                                              source_addr=self.source_address)
+        sock = await connect_tcp(location[0], location[1], bind_host=self.source_address)
         sock._active = True
         return sock
 
@@ -74,11 +71,11 @@ class BaseSession(metaclass=ABCMeta):
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         '''
-        sock = await asynclib.open_connection(location[0],
-                                              location[1],
-                                              ssl=self.ssl_context or True,
-                                              server_hostname=location[0],
-                                              source_addr=self.source_address)
+        sock = await connect_tcp(location[0],
+                                 location[1],
+                                 ssl_context=self.ssl_context or ssl.SSLContext(),
+                                 bind_host=self.source_address,
+                                 autostart_tls=True)
         sock._active = True
         return sock
 
@@ -182,10 +179,16 @@ class BaseSession(metaclass=ABCMeta):
                     **kwargs
                 )
 
-                if timeout is None:
-                    sock, r = await req_obj.make_request()
-                else:
-                    sock, r = await timeout_manager(timeout, req_obj.make_request)
+                try:
+                    if timeout is None:
+                        sock, r = await req_obj.make_request()
+                    else:
+                        sock, r = await timeout_manager(timeout, req_obj.make_request)
+                except BadHttpResponse:
+                    if timeout is None:
+                        sock, r = await req_obj.make_request()
+                    else:
+                        sock, r = await timeout_manager(timeout, req_obj.make_request)
 
                 if sock is not None:
                     try:
@@ -312,10 +315,13 @@ class Session(BaseSession):
 
         self._conn_pool = SocketQ()
 
-        self._sema = asynclib.Semaphore(connections)
+        self._sema = None
+        self._connections = connections
 
     @property
     def sema(self):
+        if self._sema is None:
+            self._sema = create_semaphore(self._connections)
         return self._sema
 
     def _checkout_connection(self, host_loc):
@@ -372,4 +378,7 @@ class Session(BaseSession):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+    async def close(self):
         await self._conn_pool.free_pool()
