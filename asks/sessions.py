@@ -75,7 +75,8 @@ class BaseSession(metaclass=ABCMeta):
                                  location[1],
                                  ssl_context=self.ssl_context or ssl.SSLContext(),
                                  bind_host=self.source_address,
-                                 autostart_tls=True)
+                                 autostart_tls=True,
+                                 tls_standard_compatible=False)
         sock._active = True
         return sock
 
