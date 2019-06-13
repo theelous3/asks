@@ -544,7 +544,7 @@ class RequestProcessor:
                      }
 
         for header in response.headers:
-            if header[0] == b'set-cookie':
+            if header[0].lower() == b'set-cookie':
                 try:
                     resp_data['headers']['set-cookie'].append(str(header[1],
                                                                   'utf-8'))

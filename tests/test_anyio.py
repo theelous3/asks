@@ -22,6 +22,10 @@ from overly import (
     delay,
     send_request_as_json,
     accept_cookies_and_respond,
+    send_gzip,
+    send_deflate,
+    send_chunked,
+    send_200_blank_headers,
     finish,
     HttpMethods,
 
@@ -37,15 +41,12 @@ _TEST_LOC = ("localhost", 25001)
 _SSL_CONTEXT = ssl.create_default_context(cadata=default_ssl_cert)
 
 
-import time
-
 def curio_run(func):
     def func_wrapper(*args, **kwargs):
         kernel = curio.Kernel()
         r = kernel.run(func(*args, **kwargs))
         kernel.run(shutdown=True)
     return func_wrapper
-
 
 
 @Server(_TEST_LOC, steps=[send_200, finish])
@@ -57,6 +58,8 @@ async def test_http_get(server):
 
 
 # GET tests
+
+
 @Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
 @curio_run
 @pytest.mark.anyio
@@ -195,185 +198,239 @@ async def test_data_dict_set(server):
 @curio_run
 @pytest.mark.anyio
 async def test_cookie_dict_send(server):
-    r = await asks.get(server.http_test_url,
-                       cookies={
-                           'Test-Cookie': 'Test Cookie Value',
-                           'koooookie': 'pie'
-                        })
+
+    cookies = {
+        'Test-Cookie': 'Test Cookie Value',
+        'koooookie': 'pie'
+    }
+
+    r = await asks.get(server.http_test_url, cookies=cookies)
     j = r.json()
-    assert r.headers['cookie'] == r"""Test-Cookie="Test Cookie Value"; koooookie=pie"""
-    assert 'Test-Cookie' in j['cookies']
+
+    for cookie in r.cookies:
+        assert cookie.name in cookies
+        if " " in cookie.value:
+            assert cookie.value == '"' + cookies[cookie.name] + '"'
+        else:
+            assert cookie.value == cookies[cookie.name]
 
 
-# # Custom headers test
-# @pytest.mark.anyio
-# async def test_header_set():
-#     r = await asks.get('http://httpbin.org/headers',
-#                        headers={'Asks-Header': 'Test Header Value'})
-#     j = r.json()
-#     assert 'Asks-Header' in j['headers']
-#     assert 'cOntenT-tYPe' in r.headers
+# Custom headers test
 
 
-# # File send test
-# TEST_DIR = path.dirname(path.abspath(__file__))
-# TEST_FILE1 = path.join(TEST_DIR, 'test_file1.txt')
-# TEST_FILE2 = path.join(TEST_DIR, 'test_file2')
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_header_set(server):
+    r = await asks.get(server.http_test_url, headers={'Asks-Header': 'Test Header Value'})
+    j = r.json()
+
+    assert any(k == 'asks-header' for k, _ in j['headers'])
+    assert 'cOntenT-tYPe' in r.headers
 
 
-# @pytest.mark.anyio
-# async def test_file_send_single():
-#     r = await asks.post('http://httpbin.org/post',
-#                         files={'file_1': TEST_FILE1})
-#     j = r.json()
-#     assert j['files']['file_1'] == 'Compooper'
+# File send test
 
 
-# @pytest.mark.anyio
-# async def test_file_send_double():
-#     r = await asks.post('http://httpbin.org/post',
-#                         files={'file_1': TEST_FILE1,
-#                                'file_2': TEST_FILE2})
-#     j = r.json()
-#     assert j['files']['file_2'] == 'My slug <3'
+TEST_DIR = path.dirname(path.abspath(__file__))
+TEST_FILE1 = path.join(TEST_DIR, 'test_file1.txt')
+TEST_FILE2 = path.join(TEST_DIR, 'test_file2')
 
 
-# @pytest.mark.anyio
-# async def test_file_and_data_send():
-#     r = await asks.post('http://httpbin.org/post',
-#                         files={'file_1': TEST_FILE1,
-#                                'data_1': 'watwatwatwat'})
-#     j = r.json()
-#     assert j['form']['data_1'] == 'watwatwatwat'
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+@pytest.mark.anyio
+async def test_file_send_single(server):
+    r = await asks.post(server.http_test_url,
+                        files={'file_1': TEST_FILE1})
+    j = r.json()
+
+    assert any(file_data['name'] == 'file_1' for file_data in j['files'])
+
+    file_data = next(file_data for file_data in j['files'] if file_data['name'] == 'file_1')
+    assert file_data['file'] == 'Compooper'
 
 
-# # JSON send test
-# @pytest.mark.anyio
-# async def test_json_send():
-#     r = await asks.post('http://httpbin.org/post',
-#                         json={'key_1': True,
-#                               'key_2': 'cheesestring'})
-#     j = r.json()
-#     assert j['json']['key_1'] is True
-#     assert j['json']['key_2'] == 'cheesestring'
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+@pytest.mark.anyio
+async def test_file_send_double(server):
+    r = await asks.post(
+        server.http_test_url,
+        files={
+            'file_1': TEST_FILE1,
+            'file_2': TEST_FILE2
+        }
+    )
+    j = r.json()
+
+    assert any(file_data['name'] == 'file_1' for file_data in j['files'])
+    assert any(file_data['name'] == 'file_2' for file_data in j['files'])
+
+    file_data_1 = next(file_data for file_data in j['files'] if file_data['name'] == 'file_1')
+    file_data_2 = next(file_data for file_data in j['files'] if file_data['name'] == 'file_2')
+    assert file_data_1['file'] == 'Compooper'
+    assert file_data_2['file'] == 'My slug <3'
 
 
-# # Test decompression
-# @pytest.mark.anyio
-# async def test_gzip():
-#     r = await asks.get('http://httpbin.org/gzip')
-#     assert r.text
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+@pytest.mark.anyio
+async def test_file_send_file_and_form_data(server):
+    r = await asks.post(
+        server.http_test_url,
+        files={
+            'file_1': TEST_FILE1,
+            'data_1': 'watwatwatwat=yesyesyes'
+        }
+    )
+    j = r.json()
+
+    assert any(file_data['name'] == 'file_1' for file_data in j['files'])
+    assert any(form_data['name'] == 'data_1' for form_data in j['forms'])
+
+    file_data_1 = next(file_data for file_data in j['files'] if file_data['name'] == 'file_1')
+    assert file_data_1['file'] == 'Compooper'
+
+    form_data_1 = next(form_data for form_data in j['forms'] if form_data['name'] == 'data_1')
+    assert form_data_1['form_data'] == 'watwatwatwat=yesyesyes'
 
 
-# @pytest.mark.anyio
-# async def test_deflate():
-#     r = await asks.get('http://httpbin.org/deflate')
-#     assert r.text
+# JSON send test
 
 
-# # Test chunked TE
-# @pytest.mark.anyio
-# async def test_chunked_te():
-#     r = await asks.get('http://httpbin.org/range/3072')
-#     assert r.status_code == 200
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+@pytest.mark.anyio
+async def test_json_send(server):
+    r = await asks.post(
+        server.http_test_url,
+        json={
+            'key_1': True,
+            'key_2': 'cheesestring'
+        }
+    )
+    j = r.json()
+
+    json_1 = next(iter(j["json"]))
+
+    assert json_1["json"]['key_1'] is True
+    assert json_1["json"]['key_2'] == 'cheesestring'
 
 
-# # Test stream response
-# @pytest.mark.anyio
-# async def test_stream():
-#     img = b''
-#     r = await asks.get('http://httpbin.org/image/png', stream=True)
-#     async for chunk in r.body:
-#         img += chunk
-#     assert len(img) == 8090
+# Test decompression
 
 
-# # Test connection close without content-length and transfer-encoding
-# @pytest.mark.anyio
-# async def test_connection_close():
-#     r = await asks.get('https://www.ua-region.com.ua/search/?q=rrr')
-#     assert r.text
+@Server(_TEST_LOC, steps=[partial(send_gzip, data="wolowolowolo"), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_gzip(server):
+    r = await asks.get(server.http_test_url)
+    assert r.text == "wolowolowolo"
 
 
-# # Test callback
-# @pytest.mark.anyio
-# async def test_callback():
-#     async def callback_example(chunk):
-#         nonlocal callback_data
-#         callback_data += chunk
-
-#     callback_data = b''
-#     await asks.get('http://httpbin.org/image/png',
-#                    callback=callback_example)
-#     assert len(callback_data) == 8090
+@Server(_TEST_LOC, steps=[partial(send_deflate, data="wolowolowolo"), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_deflate(server):
+    r = await asks.get(server.http_test_url)
+    assert r.text == "wolowolowolo"
 
 
-# # Session Tests
-# # =============
-
-# # Test Session with two pooled connections on four get requests.
-# async def hsession_t_smallpool(s):
-#     r = await s.get(path='/get')
-#     assert r.status_code == 200
+# Test chunks and streaming
 
 
-# @pytest.mark.anyio
-# async def test_hsession_smallpool():
-#     from asks.sessions import Session
-#     s = Session('http://httpbin.org', connections=2)
-#     async with create_task_group() as g:
-#         for _ in range(10):
-#             await g.spawn(hsession_t_smallpool, s)
+@Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "]*10), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_chunked(server):
+    r = await asks.get(server.http_test_url)
+    assert r.text == "ham ham ham ham ham ham ham ham ham ham "
 
 
-# # Test stateful Session
-# async def hsession_t_stateful(s):
-#     r = await s.get()
-#     assert r.status_code == 200
+@Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "]*10), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_stream(server):
+    data = b''
+    r = await asks.get(server.http_test_url, stream=True)
+    async for chunk in r.body:
+        data += chunk
+    assert data == b"ham ham ham ham ham ham ham ham ham ham "
 
 
-# @pytest.mark.anyio
-# async def test_session_stateful():
-#     from asks.sessions import Session
-#     s = Session(
-#         'https://google.ie', persist_cookies=True)
-#     async with create_task_group() as g:
-#         await g.spawn(hsession_t_stateful, s)
-#     assert 'www.google.ie' in s._cookie_tracker.domain_dict.keys()
+# Test callback
 
 
-# async def session_t_stateful_double_worker(s):
-#     r = await s.get()
-#     assert r.status_code == 200
+@Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "]*10), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_callback(server):
+    async def callback_example(chunk):
+        nonlocal callback_data
+        callback_data += chunk
+
+    callback_data = b''
+    await asks.get(server.http_test_url, callback=callback_example)
+    assert callback_data == b"ham ham ham ham ham ham ham ham ham ham "
 
 
-# @pytest.mark.anyio
-# async def test_session_stateful_double():
-#     from asks.sessions import Session
-#     s = Session('https://google.ie', persist_cookies=True)
-#     async with create_task_group() as g:
-#         for _ in range(4):
-#             await g.spawn(session_t_stateful_double_worker, s)
+# Test connection close without content-length and transfer-encoding
+
+@Server(_TEST_LOC, steps=[partial(send_200_blank_headers, headers=[("connection", "close")]), finish])
+@curio_run
+@pytest.mark.anyio
+async def test_connection_close_no_content_len(server):
+    r = await asks.get(server.http_test_url)
+    assert r.text == "200"
 
 
-# # Test Session with two pooled connections on four get requests.
-# async def session_t_smallpool(s):
-#     r = await s.get('http://httpbin.org/get')
-#     assert r.status_code == 200
+# Session Tests
+# =============
+
+# Test Session with two pooled connections on ten get requests.
+
+@Server(_TEST_LOC, steps=[partial(send_200_blank_headers, headers=[("connection", "close")]), finish], max_requests=10)
+@curio_run
+@pytest.mark.anyio
+async def test_session_smallpool(server):
+
+    async def worker(s):
+        r = await s.get(path='/get')
+        assert r.status_code == 200
+
+    s = asks.Session(server.http_test_url, connections=2)
+    async with create_task_group() as g:
+        for _ in range(10):
+            await g.spawn(worker, s)
 
 
-# @pytest.mark.anyio
-# async def test_Session_smallpool():
-#     from asks.sessions import Session
-#     s = Session(connections=2)
-#     async with create_task_group() as g:
-#         for _ in range(10):
-#             await g.spawn(session_t_smallpool, s)
+# Test stateful Session
 
 
-# def test_instantiate_session_outside_of_event_loop():
-#     from asks.sessions import Session
-#     try:
-#         Session()
-#     except RuntimeError:
-#         pytest.fail("Could not instantiate Session outside of event loop")
+# TODO check the "" quoting of cookies here (probably in overly)
+@Server(_TEST_LOC, steps=[accept_cookies_and_respond, finish])
+@curio_run
+@pytest.mark.anyio
+async def test_session_stateful(server):
+    s = asks.Session(
+        server.http_test_url,
+        persist_cookies=True
+    )
+    await s.get(
+        cookies={
+            'Test-Cookie': 'Test Cookie Value',
+        }
+    )
+    assert ":".join(str(x) for x in _TEST_LOC) in s._cookie_tracker.domain_dict.keys()
+    assert s._cookie_tracker.domain_dict[":".join(str(x) for x in _TEST_LOC)][0].value == '"Test Cookie Value"'
+
+
+# Test session instantiates outside event loop
+
+
+def test_instantiate_session_outside_of_event_loop():
+    from asks.sessions import Session
+    try:
+        asks.Session()
+    except RuntimeError:
+        pytest.fail("Could not instantiate Session outside of event loop")
