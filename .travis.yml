@@ -14,7 +14,7 @@ jobs:
 
 install:
    - pip install git+https://github.com/agronholm/anyio.git
-   - pip install sansio_multipart curio
+   - pip install overly curio
    - pip install "pytest >= 3.7.2"
    - pip install -e .
 
