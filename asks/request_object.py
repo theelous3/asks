@@ -158,7 +158,7 @@ class RequestProcessor:
                                  ('Accept-Encoding', 'gzip, deflate'),
                                  ('Accept', '*/*'),
                                  ('Content-Length', '0'),
-                                 ('User-Agent', 'python-asks/2.3.3')
+                                 ('User-Agent', 'python-asks/2.3.4')
                                  ])
 
         # check for a CookieTracker object, and if it's there inject

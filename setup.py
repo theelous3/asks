@@ -10,14 +10,14 @@ if version_info < (3, 5, 2):
 setup(
     name='asks',
     description='asks - async http',
-    long_description='asks is an async http lib for curio and trio',
+    long_description='asks is an async http lib for curio, trio and asyncio',
     license='MIT',
-    version='2.3.3',
+    version='2.3.4',
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
     install_requires=['h11', 'async_generator', 'anyio'],
-    tests_require=['pytest', 'curio', 'trio'],
+    tests_require=['pytest', 'curio', 'overly'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'Framework :: Trio',

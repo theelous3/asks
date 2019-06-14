@@ -41,3 +41,4 @@ matrix:
   fast_finish: true
   allow_failures:
     - python: "nightly"
+    - python: "3.5"  # The test suite uses 3.6.x features
