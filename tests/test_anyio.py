@@ -47,7 +47,6 @@ def curio_run(func):
 
 @Server(_TEST_LOC, steps=[send_200, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_http_get(server):
     r = await asks.get(server.http_test_url)
     assert r.status_code == 200
@@ -58,14 +57,12 @@ async def test_http_get(server):
 
 @Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
 @curio_run
-@pytest.mark.anyio
 async def test_https_get(server):
     r = await asks.get(server.https_test_url, ssl_context=_SSL_CONTEXT)
     assert r.status_code == 200
 
 
 # @curio_run
-# @pytest.mark.anyio
 # async def test_bad_www_and_schema_get():
 #     r = await asks.get('http://reddit.com')
 #     assert r.status_code == 200
@@ -73,7 +70,6 @@ async def test_https_get(server):
 
 @Server(_TEST_LOC, steps=[send_400, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_http_get_client_error(server):
     r = await asks.get(server.http_test_url)
     with pytest.raises(BadStatus) as excinfo:
@@ -84,7 +80,6 @@ async def test_http_get_client_error(server):
 
 @Server(_TEST_LOC, steps=[send_500, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_http_get_server_error(server):
     r = await asks.get(server.http_test_url)
     with pytest.raises(BadStatus) as excinfo:
@@ -202,7 +197,6 @@ async def test_data_dict_set(server):
 
 @Server(_TEST_LOC, steps=[accept_cookies_and_respond, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_cookie_dict_send(server):
 
     cookies = {"Test-Cookie": "Test Cookie Value", "koooookie": "pie"}
@@ -242,7 +236,6 @@ TEST_FILE2 = path.join(TEST_DIR, "test_file2")
 
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_file_send_single(server):
     r = await asks.post(server.http_test_url, files={"file_1": TEST_FILE1})
     j = r.json()
@@ -257,7 +250,6 @@ async def test_file_send_single(server):
 
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_file_send_double(server):
     r = await asks.post(
         server.http_test_url, files={"file_1": TEST_FILE1, "file_2": TEST_FILE2}
@@ -279,7 +271,6 @@ async def test_file_send_double(server):
 
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_file_send_file_and_form_data(server):
     r = await asks.post(
         server.http_test_url,
@@ -306,7 +297,6 @@ async def test_file_send_file_and_form_data(server):
 
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_json_send(server):
     r = await asks.post(
         server.http_test_url, json={"key_1": True, "key_2": "cheesestring"}
@@ -324,7 +314,6 @@ async def test_json_send(server):
 
 @Server(_TEST_LOC, steps=[partial(send_gzip, data="wolowolowolo"), finish])
 @curio_run
-@pytest.mark.anyio
 async def test_gzip(server):
     r = await asks.get(server.http_test_url)
     assert r.text == "wolowolowolo"
@@ -332,7 +321,6 @@ async def test_gzip(server):
 
 @Server(_TEST_LOC, steps=[partial(send_deflate, data="wolowolowolo"), finish])
 @curio_run
-@pytest.mark.anyio
 async def test_deflate(server):
     r = await asks.get(server.http_test_url)
     assert r.text == "wolowolowolo"
@@ -343,7 +331,6 @@ async def test_deflate(server):
 
 @Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "] * 10), finish])
 @curio_run
-@pytest.mark.anyio
 async def test_chunked(server):
     r = await asks.get(server.http_test_url)
     assert r.text == "ham ham ham ham ham ham ham ham ham ham "
@@ -351,7 +338,6 @@ async def test_chunked(server):
 
 @Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "] * 10), finish])
 @curio_run
-@pytest.mark.anyio
 async def test_stream(server):
     data = b""
     r = await asks.get(server.http_test_url, stream=True)
@@ -365,7 +351,6 @@ async def test_stream(server):
 
 @Server(_TEST_LOC, steps=[partial(send_chunked, data=["ham "] * 10), finish])
 @curio_run
-@pytest.mark.anyio
 async def test_callback(server):
     async def callback_example(chunk):
         nonlocal callback_data
@@ -384,7 +369,6 @@ async def test_callback(server):
     steps=[partial(send_200_blank_headers, headers=[("connection", "close")]), finish],
 )
 @curio_run
-@pytest.mark.anyio
 async def test_connection_close_no_content_len(server):
     r = await asks.get(server.http_test_url)
     assert r.text == "200"
@@ -402,7 +386,6 @@ async def test_connection_close_no_content_len(server):
     max_requests=10,
 )
 @curio_run
-@pytest.mark.anyio
 async def test_session_smallpool(server):
     async def worker(s):
         r = await s.get(path="/get")
@@ -420,7 +403,6 @@ async def test_session_smallpool(server):
 # TODO check the "" quoting of cookies here (probably in overly)
 @Server(_TEST_LOC, steps=[accept_cookies_and_respond, finish])
 @curio_run
-@pytest.mark.anyio
 async def test_session_stateful(server):
     s = asks.Session(server.http_test_url, persist_cookies=True)
     await s.get(cookies={"Test-Cookie": "Test Cookie Value"})
