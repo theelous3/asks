@@ -26,8 +26,9 @@ class BadHttpResponse(AsksException):
 
 
 class BadStatus(AsksException):
-    def __init__(self, err, status_code=500):
+    def __init__(self, err, response, status_code=500):
         super().__init__(err)
+        self.response = response
         self.status_code = status_code
     pass
 
