@@ -88,6 +88,7 @@ class Response(BaseResponse):
                 '{} Client Error: {} for url: {}'.format(
                     self.status_code, self.reason_phrase, self.url
                 ),
+                self,
                 self.status_code
             )
         elif 500 <= self.status_code < 600:
@@ -95,6 +96,7 @@ class Response(BaseResponse):
                 '{} Server Error: {} for url: {}'.format(
                     self.status_code, self.reason_phrase, self.url
                 ),
+                self,
                 self.status_code
             )
 
