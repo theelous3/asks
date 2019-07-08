@@ -87,6 +87,7 @@ class RequestProcessor:
         self.port = port
         self.auth = None
         self.auth_off_domain = None
+        self.body = None
         self.data = None
         self.params = None
         self.headers = None
@@ -178,6 +179,7 @@ class RequestProcessor:
             content_type, content_len, body = await self._formulate_body()
             asks_headers['Content-Type'] = content_type
             asks_headers['Content-Length'] = content_len
+            self.body = body
 
         # add custom headers, if any
         # note that custom headers take precedence
