@@ -58,8 +58,19 @@ async def test_http_get(server):
 @Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
 @curio_run
 async def test_https_get(server):
+    # If we use ssl_context= to trust the CA, then we can successfully do a
+    # GET over https.
     r = await asks.get(server.https_test_url, ssl_context=_SSL_CONTEXT)
     assert r.status_code == 200
+
+
+@Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
+@curio_run
+async def test_https_get_checks_cert(server):
+    # The server's certificate isn't signed by any real CA. By default, asks
+    # should notice that, and raise an error.
+    with pytest.raises(ssl.SSLCertVerificationError):
+        await asks.get(server.https_test_url)
 
 
 # @curio_run
