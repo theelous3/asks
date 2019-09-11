@@ -27,7 +27,7 @@ Well. That wasn't very exciting. Next, let's make a whole pile of requests, and 
 !Important! Connection (un)limiting
 ___________________________________
 
-The ``Session``'s ``connections`` argument dictates the maximum number of concurrent connections asks will be allowed to make at any point during the ``Sessions`` lifespan. You *will* want to change the number of connections to a value that suits your needs and the server's limitations. If no data is publicly available to guide you here, air on the low side.
+The ``Session``'s ``connections`` argument dictates the maximum number of concurrent connections asks will be allowed to make at any point during the ``Sessions`` lifespan. You *will* want to change the number of connections to a value that suits your needs and the server's limitations. If no data is publicly available to guide you here, err on the low side.
 
 **The default number of connections in the pool for a Session is a measly ONE.** If I arbitrarily picked a number greater than one it would be too high for 49% of people and too low for the other 49%. ::
 
