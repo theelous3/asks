@@ -8,7 +8,7 @@ from functools import partial
 from asks.sessions import Session
 
 
-__all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'request']
+__all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'patch', 'request']
 
 
 async def request(method, uri, **kwargs):
@@ -38,3 +38,4 @@ post = partial(request, 'POST')
 put = partial(request, 'PUT')
 delete = partial(request, 'DELETE')
 options = partial(request, 'OPTIONS')
+patch = partial(request, 'PATCH')

@@ -3,7 +3,7 @@ asks - A Look at Sessions
 
 While something like requests makes grabbing a single request very simple (and asks does too!); the ``Session`` in asks aim to make getting a great many things simple as well.
 
-asks' ``Session`` methods are the same as the base asks functions, supporting ``.get()``, ``.head()``, ``.post()``, ``.put()``, ``.delete()``, ``.options()`` and ``.request()``.
+asks' ``Session`` methods are the same as the base asks functions, supporting ``.get()``, ``.head()``, ``.post()``, ``.put()``, ``.delete()``, ``.options()``, ``.patch()`` and ``.request()``.
 
 For more info on how to use these methods, take a `look-see <https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html>`_.
 

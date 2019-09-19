@@ -241,6 +241,7 @@ class BaseSession(metaclass=ABCMeta):
     put = partialmethod(request, 'PUT')
     delete = partialmethod(request, 'DELETE')
     options = partialmethod(request, 'OPTIONS')
+    patch = partialmethod(request, 'PATCH')
 
     async def _handle_exception(self, e, sock):
         """

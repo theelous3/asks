@@ -15,7 +15,7 @@ If you don't use a ``Session`` you can easily max out your OS's socket resources
 General HTTP methods
 ____________________
 
-asks supports ``get()``, ``head()``, ``post()``, ``put()``, ``delete()``, ``options()`` and ``request()``.
+asks supports ``get()``, ``head()``, ``post()``, ``put()``, ``delete()``, ``options()``, ``patch()`` and ``request()``.
 
 ``request`` takes a http method as a string for its first argument.
 
