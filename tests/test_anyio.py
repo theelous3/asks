@@ -432,3 +432,14 @@ def test_instantiate_session_outside_of_event_loop():
         asks.Session()
     except RuntimeError:
         pytest.fail("Could not instantiate Session outside of event loop")
+
+
+@curio_run
+async def test_session_unknown_kwargs():
+    session = asks.Session("https://httpbin.org/get")
+    try:
+        await session.request("GET", foo=0, bar=3, shite=3)
+    except ValueError as e:
+        assert e.args == ("Unknown keyword arguments", {"foo", "bar", "shite"})
+    else:
+        pytest.fail("Passing unknown keyword arguments does not raise ValueError")

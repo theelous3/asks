@@ -65,7 +65,7 @@ class RequestProcessor:
         callback (func): A callback function to be called on each bytechunk of
             of the response body.
 
-        stream (bool): Weather or not to return a StreamResponse vs Response
+        stream (bool): Whether or not to return a StreamResponse vs Response
 
         timeout (int or float): A numeric representation of the longest time to
             wait on a complete response once a request has been sent.
