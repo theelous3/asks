@@ -446,8 +446,9 @@ def test_instantiate_session_outside_of_event_loop():
 async def test_session_unknown_kwargs():
     session = asks.Session("https://httpbin.org/get")
     try:
-        await session.request("GET", foo=0, bar=3, shite=3)
-    except ValueError as e:
-        assert e.args == ("Unknown keyword arguments", {"foo", "bar", "shite"})
+        await session.request("GET", ko=7, foo=0, bar=3, shite=3)
+    except TypeError as e:
+        # yes, i chose "ko" to make the line 79 characters :D
+        assert e.args == ("request() got an unexpected keyword argument 'ko'",)
     else:
-        pytest.fail("Passing unknown keyword arguments does not raise ValueError")
+        pytest.fail("Passing unknown keyword arguments does not any TypeError")

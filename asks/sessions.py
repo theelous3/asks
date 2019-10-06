@@ -88,7 +88,7 @@ class BaseSession(metaclass=ABCMeta):
         scheme, host, path, parameters, query, fragment = urlparse(
             host_loc)
         if parameters or query or fragment:
-            raise ValueError('Supplied info beyond scheme, host.' +
+            raise TypeError('Supplied info beyond scheme, host.' +
                              ' Host should be top level only: ', path)
 
         host, port = get_netloc_port(scheme, host)
@@ -167,9 +167,11 @@ class BaseSession(metaclass=ABCMeta):
             "stream",
         }
 
-        unknown_kwargs = set(kwargs.keys()) - ALLOWED_KWARGS
-        if unknown_kwargs:
-            raise ValueError("Unknown keyword arguments", unknown_kwargs)
+        unknown_kwarg = \
+            next((k for k in kwargs if k not in ALLOWED_KWARGS), None)
+        if unknown_kwarg is not None:
+            raise TypeError("request() got an unexpected keyword argument " +
+                            repr(unknown_kwarg))
 
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
