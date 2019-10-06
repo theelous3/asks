@@ -67,9 +67,17 @@ async def test_https_get(server):
 @Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
 @curio_run
 async def test_https_get_checks_cert(server):
+    try:
+        expected_error = ssl.SSLCertVerificationError
+    except AttributeError:
+        # If we're running in Python <3.7, we won't have the specific error
+        # that will be raised, but we can expect it to raise an SSLError
+        # nonetheless
+        expected_error = ssl.SSLError
+
     # The server's certificate isn't signed by any real CA. By default, asks
     # should notice that, and raise an error.
-    with pytest.raises(ssl.SSLCertVerificationError):
+    with pytest.raises(expected_error):
         await asks.get(server.https_test_url)
 
 
