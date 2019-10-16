@@ -88,7 +88,7 @@ class BaseSession(metaclass=ABCMeta):
         scheme, host, path, parameters, query, fragment = urlparse(
             host_loc)
         if parameters or query or fragment:
-            raise ValueError('Supplied info beyond scheme, host.' +
+            raise TypeError('Supplied info beyond scheme, host.' +
                              ' Host should be top level only: ', path)
 
         host, port = get_netloc_port(scheme, host)
@@ -142,11 +142,37 @@ class BaseSession(metaclass=ABCMeta):
                             domains.
                         auth (child of AuthBase): An object for handling auth
                             construction.
+                        stream (bool): Whether or not to return a StreamResponse
+                            vs Response
 
         When you call something like Session.get() or asks.post(), you're
         really calling a partial method that has the 'method' argument
         pre-completed.
         '''
+
+        ALLOWED_KWARGS = {
+            "data",
+            "params",
+            "headers",
+            "encoding",
+            "json",
+            "files",
+            "cookies",
+            "callback",
+            "timeout",
+            "retries",
+            "max_redirects",
+            "persist_cookies",
+            "auth",
+            "stream",
+        }
+
+        try:
+            unknown_kwarg = next(k for k in kwargs if k not in ALLOWED_KWARGS)
+        except StopIteration:
+            raise TypeError("request() got an unexpected keyword argument " +
+                            repr(unknown_kwarg)) from None
+
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
 

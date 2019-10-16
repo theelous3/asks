@@ -67,9 +67,17 @@ async def test_https_get(server):
 @Server(_TEST_LOC, steps=[send_200, finish], socket_wrapper=ssl_socket_wrapper)
 @curio_run
 async def test_https_get_checks_cert(server):
+    try:
+        expected_error = ssl.SSLCertVerificationError
+    except AttributeError:
+        # If we're running in Python <3.7, we won't have the specific error
+        # that will be raised, but we can expect it to raise an SSLError
+        # nonetheless
+        expected_error = ssl.SSLError
+
     # The server's certificate isn't signed by any real CA. By default, asks
     # should notice that, and raise an error.
-    with pytest.raises(ssl.SSLCertVerificationError):
+    with pytest.raises(expected_error):
         await asks.get(server.https_test_url)
 
 
@@ -432,3 +440,15 @@ def test_instantiate_session_outside_of_event_loop():
         asks.Session()
     except RuntimeError:
         pytest.fail("Could not instantiate Session outside of event loop")
+
+
+@curio_run
+async def test_session_unknown_kwargs():
+    session = asks.Session("https://httpbin.org/get")
+    try:
+        await session.request("GET", ko=7, foo=0, bar=3, shite=3)
+    except TypeError as e:
+        # yes, i chose "ko" to make the line 79 characters :D
+        assert e.args == ("request() got an unexpected keyword argument 'ko'",)
+    else:
+        pytest.fail("Passing unknown kwargs does not raise TypeError")
