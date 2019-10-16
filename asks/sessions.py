@@ -167,11 +167,11 @@ class BaseSession(metaclass=ABCMeta):
             "stream",
         }
 
-        unknown_kwarg = \
-            next((k for k in kwargs if k not in ALLOWED_KWARGS), None)
-        if unknown_kwarg is not None:
+        try:
+            unknown_kwarg = next(k for k in kwargs if k not in ALLOWED_KWARGS)
+        except StopIteration:
             raise TypeError("request() got an unexpected keyword argument " +
-                            repr(unknown_kwarg))
+                            repr(unknown_kwarg)) from None
 
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
