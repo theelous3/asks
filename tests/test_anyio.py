@@ -451,4 +451,4 @@ async def test_session_unknown_kwargs():
         # yes, i chose "ko" to make the line 79 characters :D
         assert e.args == ("request() got an unexpected keyword argument 'ko'",)
     else:
-        pytest.fail("Passing unknown keyword arguments does not any TypeError")
+        pytest.fail("Passing unknown kwargs does not raise TypeError")
