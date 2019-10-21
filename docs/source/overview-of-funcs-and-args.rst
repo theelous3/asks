@@ -42,7 +42,7 @@ _______________
 The ``params`` and ``data`` args take a dictionary and convert it in to a query string to be appended to to url, or sent in the request body, respectively. ::
 
     async def example():
-        r = await asks.get('www.example.com', params={'Elmo': 'wants data'}))
+        r = await asks.get('www.example.com', params={'Elmo': 'wants data'})
 
     # sends as request path:
     b'?Elmo=wants+data'
@@ -50,7 +50,7 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a query 
 You may also pass strings and iterables, asks will attempt to format them correctly. ::
 
     async def example():
-        r = await asks.post('www.example.com', data='Elmo wants data'))
+        r = await asks.post('www.example.com', data='Elmo wants data')
 
     # sends in request body:
     b'?Elmo+wants+data'
@@ -65,7 +65,7 @@ Add your own custom headers or overwrite the default headers by supplying your o
 
     async def example():
         r = await asks.get('www.example.com',
-                           headers={'Custom-Header': 'My value'}))
+                           headers={'Custom-Header': 'My value'})
 
 
 Sending JSON
@@ -78,7 +78,7 @@ Note that if your workflow here involves opening a json file, you should use cur
                     'Data_2': 'Really important thing'}
 
     async def example():
-        r = await asks.post('www.example.com', json=dict_to_send))
+        r = await asks.post('www.example.com', json=dict_to_send)
 
 *Note: the* ``json`` *arg is incompatible with the* ``data`` *and* ``files`` *args.*
 
@@ -108,7 +108,7 @@ Pass a dict of cookie name(key) / value pairs to the ``cookies`` arg to ship 'em
 
     async def example():
         r = await asks.get('www.example.com',
-                           cookies={'Cookie Monster': 'Yum'}))
+                           cookies={'Cookie Monster': 'Yum'})
 
 
 Cookie Interactions
@@ -126,7 +126,7 @@ ____________
 The default encoding is ``utf-8``. You may override this by supplying a different encoding, be it a standard encoding or a custom one you've registered locally. ::
 
     async def example():
-        r = await asks.get('www.example.com', encoding='Latin-1'))
+        r = await asks.get('www.example.com', encoding='Latin-1')
 
 Handy list of builtin encodings: https://gist.github.com/theelous3/7d6a3fe20a21966b809468fa336195e3
 
@@ -137,7 +137,7 @@ __________________
 You can limit the number of redirects by setting ``max_redirects``. By default, the number of redirects is ``20``. asks will not redirect on HEAD requests. ::
 
     async def example():
-        r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2))
+        r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2)
 
 
 Set Timeout(s)
@@ -146,7 +146,7 @@ ______________
 Don't want to wait forever? Me neither. You may set a timeout with the ``timeout`` arg. This limits the time alotted for the request. ::
 
     async def example():
-        r = await asks.get('www.httpbin.org/redirect/3', timeout=1))
+        r = await asks.get('www.httpbin.org/redirect/3', timeout=1)
 
 Note that the ``timeout`` arg does not account for the time required to actually establish the connection. That is controlled by a second timeout, the ``connection_timeout``, which defaults to 60 seconds. It's used in the exact same way as ``timeout``. For reasoning, read `this <https://github.com/theelous3/asks/issues/64#issuecomment-392378388>`_.
 
@@ -159,7 +159,7 @@ ___________
 You can set a maximum number of retries with ``retries``. This defaults to ``1``, to catch sockets that die in the connection pool, or generally misbehave. There is no upper limit. Be careful :D ::
 
     async def example():
-        r = await asks.get('www.beat_dead_horses.org/neverworks', retries=9999999))
+        r = await asks.get('www.beat_dead_horses.org/neverworks', retries=9999999)
 
 
 Authing
