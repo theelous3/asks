@@ -444,7 +444,7 @@ def test_instantiate_session_outside_of_event_loop():
 
 @curio_run
 async def test_session_unknown_kwargs():
-    with pytest.raises(TypeError, match=r"request() got: .*"):
+    with pytest.raises(TypeError, match="request\(\) got .*"):
         session = asks.Session("https://httpbin.org/get")
         await session.request("GET", ko=7, foo=0, bar=3, shite=3)
         pytest.fail("Passing unknown kwargs does not raise TypeError")
