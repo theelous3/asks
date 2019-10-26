@@ -167,11 +167,8 @@ class BaseSession(metaclass=ABCMeta):
             "stream",
         }
 
-        sentinel = object() 
-        unknown_kwarg = next((k for k in kwargs if k not in ALLOWED_KWARGS), sentinel)
-        # if `unknown_kwargs` is not `sentinel`, the some unkown kwargs are in `kwargs`
-        # and hence we should raise a TypeError
-        if unknown_kwarg is not sentinel:
+        unknown_kwarg = set(kwargs) - ALLOWED_KWARGS
+        if unknown_kwarg:
             raise TypeError("request() got an unexpected keyword argument {!r}".format(unknown_kwarg)) from None
 
         timeout = kwargs.get('timeout', None)
