@@ -172,7 +172,7 @@ class BaseSession(metaclass=ABCMeta):
         # if `unknown_kwargs` is not `sentinel`, the some unkown kwargs are in `kwargs`
         # and hence we should raise a TypeError
         if unknown_kwarg is not sentinel:
-            raise TypeError("request() got an unexpected keyword argument{!r}".format(unknown_kwarg)) from None
+            raise TypeError("request() got an unexpected keyword argument {!r}".format(unknown_kwarg)) from None
 
         timeout = kwargs.get('timeout', None)
         req_headers = kwargs.pop('headers', None)
