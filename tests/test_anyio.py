@@ -159,6 +159,25 @@ async def test_http_max_redirect_error(server):
     max_requests=2,
     steps=[
         [
+            (HttpMethods.GET, "/path/redirect"),
+            partial(send_303, headers=[("location", "../foo/bar")]),
+            finish,
+        ],
+        [(HttpMethods.GET, "/foo/bar"), send_200, finish],
+    ],
+)
+@curio_run
+async def test_redirect_relative_url(server):
+    r = await asks.get(server.http_test_url + "/path/redirect", max_redirects=1)
+    assert len(r.history) == 1
+    assert r.url == "http://{0}:{1}/foo/bar".format(*_TEST_LOC)
+
+
+@Server(
+    _TEST_LOC,
+    max_requests=2,
+    steps=[
+        [
             (HttpMethods.GET, "/redirect_once"),
             partial(send_303, headers=[("location", "/")]),
             finish,
