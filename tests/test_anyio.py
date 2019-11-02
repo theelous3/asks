@@ -444,11 +444,8 @@ def test_instantiate_session_outside_of_event_loop():
 
 @curio_run
 async def test_session_unknown_kwargs():
-    session = asks.Session("https://httpbin.org/get")
-    try:
+    with pytest.raises(TypeError, match="request\(\) got .*"):
+        session = asks.Session("https://httpbin.org/get")
         await session.request("GET", ko=7, foo=0, bar=3, shite=3)
-    except TypeError as e:
-        # yes, i chose "ko" to make the line 79 characters :D
-        assert e.args == ("request() got an unexpected keyword argument 'ko'",)
-    else:
         pytest.fail("Passing unknown kwargs does not raise TypeError")
+

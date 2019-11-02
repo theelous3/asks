@@ -1,6 +1,6 @@
-'''
+"""
 The disparate session (Session) is for making requests to multiple locations.
-'''
+"""
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
@@ -17,24 +17,24 @@ from .req_structs import SocketQ
 from .request_object import RequestProcessor
 from .utils import get_netloc_port, timeout_manager
 
-__all__ = ['Session']
+__all__ = ["Session"]
 
 
 class BaseSession(metaclass=ABCMeta):
-    '''
+    """
     The base class for asks' sessions.
     Contains methods for creating sockets, figuring out which type of
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
-    '''
+    """
 
     def __init__(self, headers=None, ssl_context=None):
-        '''
+        """
         Args:
             headers (dict): Headers to be applied to all requests.
                 headers set by http method call will take precedence and
                 overwrite headers set by the headers arg.
             ssl_context (ssl.SSLContext): SSL context to use for https connections.
-        '''
+        """
         if headers is not None:
             self.headers = headers
         else:
@@ -54,55 +54,60 @@ class BaseSession(metaclass=ABCMeta):
         ...
 
     async def _open_connection_http(self, location):
-        '''
+        """
         Creates a normal async socket, returns it.
         Args:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
-        '''
-        sock = await connect_tcp(location[0], location[1], bind_host=self.source_address)
+        """
+        sock = await connect_tcp(
+            location[0], location[1], bind_host=self.source_address
+        )
         sock._active = True
         return sock
 
     async def _open_connection_https(self, location):
-        '''
+        """
         Creates an async SSL socket, returns it.
         Args:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
-        '''
-        sock = await connect_tcp(location[0],
-                                 location[1],
-                                 ssl_context=self.ssl_context,
-                                 bind_host=self.source_address,
-                                 autostart_tls=True,
-                                 tls_standard_compatible=False)
+        """
+        sock = await connect_tcp(
+            location[0],
+            location[1],
+            ssl_context=self.ssl_context,
+            bind_host=self.source_address,
+            autostart_tls=True,
+            tls_standard_compatible=False,
+        )
         sock._active = True
         return sock
 
     async def _connect(self, host_loc):
-        '''
+        """
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
-        '''
-        scheme, host, path, parameters, query, fragment = urlparse(
-            host_loc)
+        """
+        scheme, host, path, parameters, query, fragment = urlparse(host_loc)
         if parameters or query or fragment:
-            raise TypeError('Supplied info beyond scheme, host.' +
-                             ' Host should be top level only: ', path)
+            raise TypeError(
+                "Supplied info beyond scheme, host."
+                + " Host should be top level only: ",
+                path,
+            )
 
         host, port = get_netloc_port(scheme, host)
 
-        if scheme == 'http':
-            return await self._open_connection_http(
-                (host, int(port))), port
+        if scheme == "http":
+            return await self._open_connection_http((host, int(port))), port
         else:
-            return await self._open_connection_https(
-                (host, int(port))), port
+            return await self._open_connection_https((host, int(port))), port
 
-    async def request(self, method, url=None, *, path='', retries=1,
-                      connection_timeout=60, **kwargs):
-        '''
+    async def request(
+        self, method, url=None, *, path="", retries=1, connection_timeout=60, **kwargs
+    ):
+        """
         This is the template for all of the `http method` methods for
         the Session.
 
@@ -148,7 +153,7 @@ class BaseSession(metaclass=ABCMeta):
         When you call something like Session.get() or asks.post(), you're
         really calling a partial method that has the 'method' argument
         pre-completed.
-        '''
+        """
 
         ALLOWED_KWARGS = {
             "data",
@@ -167,14 +172,16 @@ class BaseSession(metaclass=ABCMeta):
             "stream",
         }
 
-        try:
-            unknown_kwarg = next(k for k in kwargs if k not in ALLOWED_KWARGS)
-        except StopIteration:
-            raise TypeError("request() got an unexpected keyword argument " +
-                            repr(unknown_kwarg)) from None
+        unknown_kwargs = set(kwargs) - ALLOWED_KWARGS
+        if unknown_kwargs:
+            raise TypeError(
+                "request() got unexpected keyword arguments {!r}".format(
+                    ", ".join(str(x) for x in unknown_kwargs)
+                )
+            ) from None
 
-        timeout = kwargs.get('timeout', None)
-        req_headers = kwargs.pop('headers', None)
+        timeout = kwargs.get("timeout", None)
+        req_headers = kwargs.pop("headers", None)
 
         if self.headers is not None:
             headers = copy(self.headers)
@@ -191,7 +198,8 @@ class BaseSession(metaclass=ABCMeta):
             sock = None
             try:
                 sock = await timeout_manager(
-                    connection_timeout, self._grab_connection, url)
+                    connection_timeout, self._grab_connection, url
+                )
                 port = sock.port
 
                 req_obj = RequestProcessor(
@@ -219,7 +227,7 @@ class BaseSession(metaclass=ABCMeta):
 
                 if sock is not None:
                     try:
-                        if r.headers['connection'].lower() == 'close':
+                        if r.headers["connection"].lower() == "close":
                             sock._active = False
                             await sock.close()
                     except KeyError:
@@ -249,25 +257,22 @@ class BaseSession(metaclass=ABCMeta):
                 raise e
 
         if retry:
-            return (await self.request(method,
-                                       url,
-                                       path=path,
-                                       retries=retries,
-                                       headers=headers,
-                                       **kwargs))
+            return await self.request(
+                method, url, path=path, retries=retries, headers=headers, **kwargs
+            )
 
         return r
 
     # These be the actual http methods!
     # They are partial methods of `request`. See the `request` docstring
     # above for information.
-    get = partialmethod(request, 'GET')
-    head = partialmethod(request, 'HEAD')
-    post = partialmethod(request, 'POST')
-    put = partialmethod(request, 'PUT')
-    delete = partialmethod(request, 'DELETE')
-    options = partialmethod(request, 'OPTIONS')
-    patch = partialmethod(request, 'PATCH')
+    get = partialmethod(request, "GET")
+    head = partialmethod(request, "HEAD")
+    post = partialmethod(request, "POST")
+    put = partialmethod(request, "PUT")
+    delete = partialmethod(request, "DELETE")
+    options = partialmethod(request, "OPTIONS")
+    patch = partialmethod(request, "PATCH")
 
     async def _handle_exception(self, e, sock):
         """
@@ -277,7 +282,7 @@ class BaseSession(metaclass=ABCMeta):
         """
         if isinstance(e, (RemoteProtocolError, AssertionError)):
             await sock.close()
-            raise BadHttpResponse('Invalid HTTP response from server.') from e
+            raise BadHttpResponse("Invalid HTTP response from server.") from e
 
         if isinstance(e, Exception):
             await sock.close()
@@ -306,22 +311,24 @@ class BaseSession(metaclass=ABCMeta):
 
 
 class Session(BaseSession):
-    '''
+    """
     The Session class, for handling piles of requests.
 
     This class inherits from BaseSession, where all of the 'http method'
     methods are defined.
-    '''
+    """
 
-    def __init__(self,
-                 base_location=None,
-                 endpoint=None,
-                 headers=None,
-                 encoding='utf-8',
-                 persist_cookies=None,
-                 ssl_context=None,
-                 connections=1):
-        '''
+    def __init__(
+        self,
+        base_location=None,
+        endpoint=None,
+        headers=None,
+        encoding="utf-8",
+        persist_cookies=None,
+        ssl_context=None,
+        connections=1,
+    ):
+        """
         Args:
             encoding (str): The encoding asks'll try to use on response bodies.
             persist_cookies (bool): Passing True turns on browserishlike
@@ -330,7 +337,7 @@ class Session(BaseSession):
             connections (int): The max number of concurrent connections to the
                 host asks will allow its self to have. The default number of
                 connections is 1. You may increase this value as you see fit.
-        '''
+        """
         super().__init__(headers, ssl_context)
         self.encoding = encoding
         self.base_location = base_location
@@ -372,7 +379,7 @@ class Session(BaseSession):
         return sock
 
     async def _grab_connection(self, url):
-        '''
+        """
         The connection pool handler. Returns a connection
         to the caller. If there are no connections ready, and
         as many connections checked out as there are available total,
@@ -385,9 +392,9 @@ class Session(BaseSession):
             url (str): breaks the url down and uses the top level location
                 info to see if we have any connections to the location already
                 lying around.
-        '''
+        """
         scheme, host, _, _, _, _ = urlparse(url)
-        host_loc = urlunparse((scheme, host, '', '', '', ''))
+        host_loc = urlunparse((scheme, host, "", "", "", ""))
 
         sock = self._checkout_connection(host_loc)
 
@@ -397,10 +404,10 @@ class Session(BaseSession):
         return sock
 
     def _make_url(self):
-        '''
+        """
         Puts together the hostloc and current endpoint for use in request uri.
-        '''
-        return (self.base_location or '') + (self.endpoint or '')
+        """
+        return (self.base_location or "") + (self.endpoint or "")
 
     async def __aenter__(self):
         return self
