@@ -10,7 +10,7 @@ __all__ = ['RequestProcessor']
 
 from numbers import Number
 from os.path import basename
-from urllib.parse import urlparse, urlunparse, quote_plus
+from urllib.parse import urljoin, urlparse, urlunparse, quote_plus
 import json as _json
 from random import randint
 import mimetypes
@@ -338,22 +338,14 @@ class RequestProcessor:
 
         if redirect:
             allow_redirect = True
-            redirect_uri = urlparse(location.strip())
-            # relative redirect
-            if not redirect_uri.netloc:
-                self.uri = urlunparse(
-                    (self.scheme, self.host, *redirect_uri[2:]))
-
-            # absolute-redirect
-            else:
-                location = location.strip()
-                if self.auth is not None:
-                    if not self.auth_off_domain:
-                        allow_redirect = self._location_auth_protect(location)
-                self.uri = location
-                l_scheme, l_netloc, *_ = urlparse(location)
-                if l_scheme != self.scheme or l_netloc != self.host:
-                    await self._get_new_sock()
+            location = urljoin(self.uri, location.strip())
+            if self.auth is not None:
+                if not self.auth_off_domain:
+                    allow_redirect = self._location_auth_protect(location)
+            self.uri = location
+            l_scheme, l_netloc, *_ = urlparse(location)
+            if l_scheme != self.scheme or l_netloc != self.host:
+                await self._get_new_sock()
 
             # follow redirect with correct http method type
             if force_get:
