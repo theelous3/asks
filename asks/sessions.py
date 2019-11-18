@@ -6,7 +6,6 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from urllib.parse import urlparse, urlunparse
-import ssl
 
 from h11 import RemoteProtocolError
 from anyio import connect_tcp, create_semaphore
