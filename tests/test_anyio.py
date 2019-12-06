@@ -150,9 +150,11 @@ async def test_http_redirect(server):
 )
 @curio_run
 async def test_http_max_redirect_error(server):
-    with pytest.raises(TooManyRedirects):
-        await asks.get(server.http_test_url + "/redirect_max", max_redirects=1)
-
+    with pytest.raises(TooManyRedirects) as err:
+        r = await asks.get(server.http_test_url + "/redirect_max", max_redirects=1)
+    resp = err.value.response
+    assert resp.history[0].url == server.http_test_url + "/redirect_max"
+    assert len(err.value.response.history) == 1
 
 @Server(
     _TEST_LOC,
