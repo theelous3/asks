@@ -1,12 +1,15 @@
-asks - Useful idioms and tricks.
-================================
+``asks`` - Useful idioms and tricks.
+====================================
 
 Sanely making many requests (with semaphores)
 _____________________________________________
 
-A (bounded) semaphore is like a sofa (sofaphore?). It can only fit so many tasks at once. If we have a semaphore who's maximum size is ``5`` then only ``5`` tasks can sit on it. If one task finishes, another task can sit down. This is an extremely simple and effective way to manage the resources used by asks when making large amounts of requests.
+A (bounded) semaphore is like a sofa (sofaphore?). It can only fit so many tasks at once.
+If we have a semaphore who's maximum size is ``5`` then only ``5`` tasks can sit on it.
+If one task finishes, another task can sit down.
+This is an extremely simple and effective way to manage the resources used by ``asks`` when making large amounts of requests.
 
-If we wanted to request two thousand urls, we wouldn't want to spawn two thousand tasks and have them all fight for cpu time. ::
+If we wanted to request two thousand urls, we wouldn't want to spawn two thousand tasks and have them all fight for CPU time. ::
 
 
     import asks
@@ -29,21 +32,23 @@ If we wanted to request two thousand urls, we wouldn't want to spawn two thousan
 
     curio.run(main(url_list))
 
-This method of limiting works for the single request asks functions and for any of the sessions' methods.
+This method of limiting works for the single-request ``asks`` functions and for any of the sessions' methods.
 
-The result of running this is that the first and second url ('delay/5' and 'delay/1') run. 'delay/1' finishes, and allows the third url, 'delay/2' to run.
+The result of running this is that the first and second url (``delay/5`` and ``delay/1``) run.
+``delay/1`` finishes, and allows the third url, ``delay/2`` to run.
 
-* After one second, 'delay/1' finishes.
-* After three seconds, 'delay/2' finishes.
-* After five seconds, 'delay/5' finishes.
+* After one second, ``delay/1`` finishes.
+* After three seconds, ``delay/2`` finishes.
+* After five seconds, ``delay/5`` finishes.
 
 
 Maintaining Order
 _________________
 
-Due to the nature of async, if you feed a list of urls to asks in some fashion, and store the responses in a list, there is no gaurantee the responses will be in the same order as the list of urls.
+Due to the nature of async, if you feed a list of urls to ``asks`` in some fashion, and store the responses in a list, there is no guarantee the responses will be in the same order as the list of urls.
 
-A handy way of dealing with this on an example ``url_list`` is to pass the enumerated list as a dict ``dict(enumerate(url_list))`` and then create a sorted list from a response dict. This sounds more confusing in writing than it is in code. Take a look: ::
+A handy way of dealing with this on an example ``url_list`` is to pass the enumerated list as a dict ``dict(enumerate(url_list))`` and then create a sorted list from a response dict.
+This sounds more confusing in writing than it is in code. Take a look: ::
 
     import asks
     import curio
@@ -69,7 +74,7 @@ A handy way of dealing with this on an example ``url_list`` is to pass the enume
 
 In the above example, ``sorted_results`` is a list of response objects in the same order as ``url_list``.
 
-There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a heapq, or managing it while iterating curio's taskgroups. Here's an example of that: ::
+There are of course many ways to achieve this, but the above is noob friendly. Another way of handling order would be a ``heapq``, or managing it while iterating curio's taskgroups. Here's an example of that: ::
 
     import asks
     import curio
@@ -99,7 +104,8 @@ There are of course many ways to achieve this, but the above is noob friendly. A
 Handling response body content (downloads etc.)
 ___________________________________________________________
 
-The recommended way to handle this sort of thing, is by streaming. The following examples use a context manager on the response body to ensure the underlying connection is always handled properly: ::
+The recommended way to handle this sort of thing is by streaming.
+The following examples use a context manager on the response body to ensure the underlying connection is always handled properly: ::
 
     import asks
     import curio
@@ -140,7 +146,8 @@ An example of multiple downloads with streaming: ::
 
 The ``callback`` argument lets you pass a function as a callback that will be run on each byte chunk of response body *as the request is being processed* . A simple use case for this is downloading a file.
 
-Below you'll find an example of a single download of an image with a given filename, and multiple downloads with sequential numeric filenames. They are very similar to the streaming examples above.
+Below you'll find an example of a single download of an image with a given filename, and multiple downloads with sequential numeric filenames.
+They are very similar to the streaming examples above.
 
 We define a callback function ``downloader`` that takes bytes and saves 'em, and pass it in. ::
 
@@ -178,10 +185,10 @@ What about downloading a whole bunch of images, and naming them sequentially? ::
     curio.run(main())
 
 
-Resending an asks.Cookie
-________________________
+Resending an ``asks.Cookie``
+____________________________
 
-Simply refrence the ``Cookie`` 's ``.name`` and ``.value`` attributes as you pass them in to the ``cookies`` argument. ::
+Simply reference the ``Cookie`` 's ``.name`` and ``.value`` attributes as you pass them in to the ``cookies`` argument. ::
 
     import asks
     import curio
