@@ -20,8 +20,6 @@ Above you'll find detailed docs with a large number of simple examples to help y
 
 `pip install asks`
 
-Note: Currently supports `trio`'s development branch. You can install this by doing `pip install git+https://github.com/python-trio/trio.git`
-
 
 ## Examples
 
