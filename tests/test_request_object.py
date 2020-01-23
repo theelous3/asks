@@ -40,6 +40,8 @@ def test_http1_0(monkeypatch):
     [{'zero': 0}, '?zero=0'],
     [{'empty': ''}, '?empty='],
     [{'false': False}, '?false=False'],
+    [{'foo': 'abc', 'bar': 'jkl'}, '?foo=abc&bar=jkl'],
+    [{'foo': ['abc def', 'ghi'], 'bar baz': 'jkl'}, '?foo=abc+def&foo=ghi&bar+baz=jkl'],
 ])
 def test_dict_to_query(data, query_str):
     assert RequestProcessor._dict_to_query(data) == query_str
