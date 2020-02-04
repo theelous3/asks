@@ -440,13 +440,17 @@ class RequestProcessor:
                     query.append('='.join(quote_plus(x) for x in (k, key)))
             elif hasattr(v, '__iter__'):
                 for elm in v:
-                    elm_quoted = "+".join(quote_plus(str(y)) for y in elm.split())
-                    query.append("=".join((quote_plus(k), elm_quoted)))
+                    if elm is None:
+                        continue
+                    try:
+                        elm_quoted = '+'.join(quote_plus(str(y)) for y in elm.split())
+                    except AttributeError:  # not a string
+                        elm_quoted = str(elm)
+                    query.append('='.join((quote_plus(k), elm_quoted)))
         if params and query:
             if not base_query:
                 return requote_uri('?' + '&'.join(query))
-            else:
-                return requote_uri('&' + '&'.join(query))
+            return requote_uri('&' + '&'.join(query))
 
         return requote_uri('&'.join(query))
 
