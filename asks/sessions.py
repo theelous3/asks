@@ -89,7 +89,8 @@ class BaseSession(metaclass=ABCMeta):
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
         """
-        scheme, host, path, parameters, query, fragment = urlparse(host_loc)
+        parsed_hostloc = urlparse(host_loc)
+        scheme, host, path, parameters, query, fragment = parsed_hostloc
         if parameters or query or fragment:
             raise TypeError(
                 "Supplied info beyond scheme, host."
@@ -97,8 +98,7 @@ class BaseSession(metaclass=ABCMeta):
                 path,
             )
 
-        host, port = get_netloc_port(scheme, host)
-
+        host, port = get_netloc_port(parsed_hostloc)
         if scheme == "http":
             return await self._open_connection_http((host, int(port))), port
         else:
