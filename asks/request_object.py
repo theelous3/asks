@@ -25,6 +25,7 @@ from .auth import PreResponseAuth, PostResponseAuth
 from .req_structs import CaseInsensitiveDict as c_i_dict
 from .response_objects import Response, StreamResponse, StreamBody
 from .errors import TooManyRedirects
+from .multipart import build_multipart_body
 
 
 _BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(1e3, 9e3))
@@ -60,6 +61,8 @@ class RequestProcessor:
 
         files (dict): A dict of `filename:filepath`s to be sent as multipart.
 
+        multipart (dict): Info to be sent as multipart/form-data.
+
         cookies (dict): A dict of `name:value` cookies to be passed in request.
 
         callback (func): A callback function to be called on each bytechunk of
@@ -94,6 +97,7 @@ class RequestProcessor:
         self.encoding = None
         self.json = None
         self.files = None
+        self.multipart = None
         self.cookies = {}
         self.callback = None
         self.stream = None
@@ -175,7 +179,7 @@ class RequestProcessor:
 
         # handle building the request body, if any
         body = ''
-        if any((self.data, self.files, self.json is not None)):
+        if any((self.data, self.files, self.json, self.multipart is not None)):
             content_type, content_len, body = await self._formulate_body()
             asks_headers['Content-Type'] = content_type
             asks_headers['Content-Length'] = content_len
@@ -389,9 +393,9 @@ class RequestProcessor:
         multipart_ctype = 'multipart/form-data; boundary={}'.format(_BOUNDARY)
 
         if self.data is not None:
-            if self.files or self.json is not None:
+            if self.files or self.json or self.multipart is not None:
                 raise TypeError('data arg cannot be used in conjunction with'
-                                'files or json arg.')
+                                'files, json or multipart arg.')
             c_type = 'application/x-www-form-urlencoded'
             try:
                 body = self._dict_to_query(self.data, params=False)
@@ -400,18 +404,25 @@ class RequestProcessor:
                 c_type = self.mimetype or 'text/plain'
 
         elif self.files is not None:
-            if self.data or self.json is not None:
+            if self.data or self.json or self.multipart is not None:
                 raise TypeError('files arg cannot be used in conjunction with'
-                                'data or json arg.')
+                                'data, json or multipart arg.')
             c_type = multipart_ctype
             body = await self._multipart(self.files)
 
         elif self.json is not None:
-            if self.data or self.files:
+            if self.data or self.files or self.multipart is not None:
                 raise TypeError('json arg cannot be used in conjunction with'
-                                'data or files arg.')
+                                'data, files or multipart arg.')
             c_type = 'application/json'
             body = _json.dumps(self.json)
+
+        elif self.multipart is not None:
+            if self.data or self.json or self.files is not None:
+                raise TypeError('multipart arg cannot be used in conjunction with'
+                                'data, json or files arg.')
+            c_type = multipart_ctype
+            body = await build_multipart_body(self.multipart, self.encoding, _BOUNDARY)
 
         return c_type, str(len(body)), body
 
@@ -498,6 +509,7 @@ class RequestProcessor:
 
             if index == num_of_parts:
                 multip_pkg += b'--' + boundary + b'--\r\n'
+
         return multip_pkg
 
     async def _file_manager(self, path):
