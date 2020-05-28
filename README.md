@@ -2,9 +2,10 @@
 
 
 # asks
-asks is an async requests-like http lib, for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) and [trio](https://github.com/python-trio/trio) async libs.
+`asks` is an async `requests`-like HTTP lib, for use in conjunction with the wonderful [curio](https://github.com/dabeaz/curio) and [trio](https://github.com/python-trio/trio) async libs.
 
-asks aims to have a mostly familiar API, using simple functions/methods like `get()` for getting, `post()` for posting. At the heart of asks is a session class which makes interacting with the web in a sustained and fluid way fast, efficient, and simple. Check out the examples!
+`asks` aims to have a mostly familiar API, using simple functions/methods like `get()` for getting and `post()` for posting.
+At the heart of `asks` is a session class which makes interacting with the web in a sustained and fluid way fast, efficient, and simple. Check out the examples!
 
 
 ## Check the docs!
@@ -18,8 +19,6 @@ Above you'll find detailed docs with a large number of simple examples to help y
 *Requires: Python 3.5.2 or newer.*
 
 `pip install asks`
-
-Note: Currently supports trio's development branch. You can install this by doing `pip install git+https://github.com/python-trio/trio.git`
 
 
 ## Examples
@@ -36,6 +35,7 @@ async def example():
 
 curio.run(example())
 ```
+
 ```python
 # many requests
 # make 1k api calls and store their response objects

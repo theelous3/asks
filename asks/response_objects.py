@@ -36,6 +36,27 @@ class BaseResponse:
         self.history = []
         self.cookies = []
 
+    def raise_for_status(self):
+        '''
+        Raise BadStatus if one occurred.
+        '''
+        if 400 <= self.status_code < 500:
+            raise BadStatus(
+                '{} Client Error: {} for url: {}'.format(
+                    self.status_code, self.reason_phrase, self.url
+                ),
+                self,
+                self.status_code
+            )
+        elif 500 <= self.status_code < 600:
+            raise BadStatus(
+                '{} Server Error: {} for url: {}'.format(
+                    self.status_code, self.reason_phrase, self.url
+                ),
+                self,
+                self.status_code
+            )
+
     def __repr__(self):
         return '<{} {} {}>'.format(self.__class__.__name__,
                                    self.status_code,
@@ -78,27 +99,6 @@ class Response(BaseResponse):
         '''
         body = self._decompress(self.encoding)
         return _json.loads(body, **kwargs)
-
-    def raise_for_status(self):
-        '''
-        Raise BadStatus if one occurred.
-        '''
-        if 400 <= self.status_code < 500:
-            raise BadStatus(
-                '{} Client Error: {} for url: {}'.format(
-                    self.status_code, self.reason_phrase, self.url
-                ),
-                self,
-                self.status_code
-            )
-        elif 500 <= self.status_code < 600:
-            raise BadStatus(
-                '{} Server Error: {} for url: {}'.format(
-                    self.status_code, self.reason_phrase, self.url
-                ),
-                self,
-                self.status_code
-            )
 
     @property
     def text(self):
