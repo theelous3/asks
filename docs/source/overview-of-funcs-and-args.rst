@@ -48,13 +48,25 @@ The ``params`` and ``data`` args take a dictionary and convert it in to a query 
     # sends as request path:
     b'?Elmo=wants+data'
 
-You may also pass strings and iterables, ``asks`` will attempt to format them correctly. ::
+    async def example():
+        r = await asks.get('www.example.com', data={'Elmo': 'wants data'})
+
+    # sends in request body:
+    b'Elmo=wants+data'
+
+You may also pass strings, ``asks`` will attempt to format them correctly. ::
+
+    async def example():
+        r = await asks.post('www.example.com', params='Elmo wants data')
+
+    # sends as request path:
+    b'?Elmo%20wants%20data'
 
     async def example():
         r = await asks.post('www.example.com', data='Elmo wants data')
 
     # sends in request body:
-    b'?Elmo+wants+data'
+    b'Elmo wants data'
 
 *Note: the* ``data`` *arg is incompatible with the* ``files`` *and* ``json`` *args.*
 
