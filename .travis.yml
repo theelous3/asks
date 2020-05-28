@@ -4,14 +4,16 @@ sudo: false
 
 jobs:
   include:
+      dist: xenial
     - python: 3.8
     - python: 3.7
-      dist: xenial
-      sudo: required
-
     - python: 3.5  # at some point we might want to re-enable these. Need to break up the tests.
     - python: 3.6  # at some point we might want to re-enable these. Need to break up the tests.
-
+    fast_finish: true
+    allow_failures:
+      - python: "nightly"
+      - python: 3.5  # The test suite uses 3.7.x features
+      - python: 3.6
 
 install:
    - pip install git+https://github.com/agronholm/anyio.git
@@ -37,10 +39,3 @@ notifications:
     on_failure: always
     template:
       - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message} %{build_url}"
-
-matrix:
-  fast_finish: true
-  allow_failures:
-    - python: "nightly"
-    - python: 3.5  # The test suite uses 3.7.x features
-    - python: 3.6
