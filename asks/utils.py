@@ -17,18 +17,14 @@ async def timeout_manager(timeout, coro, *args):
         raise RequestTimeout from e
 
 
-def get_netloc_port(scheme, netloc):
-    try:
-        netloc, port = netloc.split(':')
-    except ValueError:
-        if scheme == 'https':
+def get_netloc_port(parsed_url):
+    port = parsed_url.port
+    if not port:
+        if parsed_url.scheme == 'https':
             port = '443'
         else:
             port = '80'
-    except TypeError:
-        raise RuntimeError('Something is goofed. Contact the author!')
-    return netloc, port
-
+    return parsed_url.hostname, str(port)
 
 # The unreserved URI characters (RFC 3986)
 UNRESERVED_SET = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
