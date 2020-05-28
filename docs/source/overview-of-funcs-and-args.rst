@@ -56,7 +56,7 @@ You may also pass strings and iterables, ``asks`` will attempt to format them co
     # sends in request body:
     b'?Elmo+wants+data'
 
-*Note: the* ``data`` *arg is incompatible with the* ``files`` *and* ``json`` *args.*
+*Note: the* ``data`` *arg is incompatible with the* ``json``, ``multipart`` *and* ``files`` *args.*
 
 
 Custom Headers
@@ -81,14 +81,62 @@ Note that if your workflow here involves opening a JSON file, you should use ``c
     async def example():
         r = await asks.post('www.example.com', json=dict_to_send)
 
-*Note: the* ``json`` *arg is incompatible with the* ``data`` *and* ``files`` *args.*
+*Note: the* ``json`` *arg is incompatible with the* ``data``, ``multipart`` *and* ``files`` *args.*
 
 
-Sending Files
-_____________
+Sending Files (multipart/form-data)
+___________________________________
 
-Pass a ``dict`` in the form ``{filename: filepath}`` (as many as you like) and ``asks`` will asyncronously get the file data, building a multipart-formatted HTTP body.
-You can also pass non-file paths if you wish to send arbitrary multipart body data sections. ::
+Pass a ``dict`` in the form ``{field: value}`` (as many as you like) to the ``multipart`` argument to
+send a ``multipart/form-data`` request.
+
+To send files, send one of the following as ``value``:
+
+    - A ``pathlib.Path`` object: ``asks`` will asyncronously open and read the file.
+    - An already open binary file-like object. The ``read()`` method can be a normal function or a coroutine (remember a normal file may block!). You can use ``anyio.aopen`` to get an async file object.
+    - An ``asks.multipart.MultipartData`` object, which can be used to override the filename or the mime-type of the sent file.
+
+Other values are converted to strings and sent directly. ::
+
+    async def send_file():
+        r = await asks.post('http://httpbin.org/post',
+                            multipart={'file_1': Path('my_file.txt')})
+        pprint(r.json())
+
+    # if we wanted to send both an already open file and some random data:
+    from anyio import aopen
+
+    async def send_file_and_data():
+        async with await aopen('my_file.txt', 'rb') as my_file:
+            r = await asks.post('http://httpbin.org/post',
+                                multipart={'file_1': my_file,
+                                           'some_data': 'I am multipart hear me roar',
+                                           'some_integer': 3})
+
+    # if we wanted to send some bytes as a file:
+    from asks.multipart import MultipartData
+
+    async def send_bytes():
+        r = await asks.post('http://httpbin.org/post',
+                            multipart={'file_1':
+                                MultipartData(b'some text',
+                                              mime_type='text/plain',
+                                              basename='my_file.txt')})
+        pprint(r.json())
+
+    # if we wanted to override metadata:
+
+    async def send_customized_file():
+        r = await asks.post('http://httpbin.org/post',
+                            multipart={'file_1':
+                                MultipartData(Path('my_file.txt'),
+                                              mime_type='text/plain',
+                                              basename='some_other_name.txt')})
+        pprint(r.json())
+
+*Note: the* ``multipart`` *arg is incompatible with the* ``data``, ``json`` *and* ``files`` *args.*
+
+There is also the older ``files`` API, but ``multipart`` should be preferred over it. To use it, pass a ``dict`` in the form ``{filename: filepath}`` (as many as you like) and ``asks`` will asyncronously get the file data, building a multipart-formatted HTTP body. You can also pass non-file paths if you wish to send arbitrary multipart body data sections. ::
 
     async def send_file():
         r = await asks.post('http://httpbin.org/post',
@@ -100,7 +148,7 @@ You can also pass non-file paths if you wish to send arbitrary multipart body da
                             files={'file_1': 'my_file.txt',
                                    'some_data': 'I am multipart hear me roar'})
 
-*Note: the* ``files`` *arg is incompatible with the* ``data`` *and* ``json`` *args.*
+*Note: the* ``files`` *arg is incompatible with the* ``data``, ``json`` *and* ``multipart`` *args.*
 
 
 Sending Cookies
