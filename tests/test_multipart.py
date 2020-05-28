@@ -9,28 +9,15 @@ import pytest
 from anyio import aopen
 from asks.multipart import build_multipart_body, MultipartData
 
-TEST_DIR = Path(__file__).absolute().parent
 
+@pytest.fixture(scope="session")
+def dummy_file_path(tmpdir_factory):
+    dummy = tmpdir_factory.mktemp("multipart").join("test.txt")
 
-@pytest.fixture
-def mock_aopen():
-    async def mock_aopen(*args, **kwargs):
-        class FakeAsyncFile:
-            async def read(self):
-                return b'dummyfile\n'
+    with open(dummy, 'w') as f:
+        print('dummyfile', file=f)
 
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, *args, **kwargs):
-                pass
-
-            name = 'test.txt'
-
-        return FakeAsyncFile()
-
-    with patch('asks.multipart.aopen', mock_aopen):
-        yield mock_aopen
+    return Path(dummy)
 
 
 @pytest.mark.curio
@@ -81,10 +68,10 @@ async def test_multipart_body_with_file_like_argument():
 
 
 @pytest.mark.curio
-async def test_multipart_body_with_path_argument(mock_aopen):
+async def test_multipart_body_with_path_argument(dummy_file_path):
     assert await build_multipart_body(
         values=OrderedDict({
-            'file': Path('test.txt'),
+            'file': dummy_file_path,
             'notfile': 'abc',
         }),
         encoding='utf8',
@@ -94,14 +81,14 @@ async def test_multipart_body_with_path_argument(mock_aopen):
 
 
 @pytest.mark.curio
-async def test_multipart_body_with_multiple_arguments(mock_aopen):
+async def test_multipart_body_with_multiple_arguments(dummy_file_path):
     # Simulate an open file with a BytesIO.
     f = BytesIO(b'dummyfile2\n')
     f.name = 'test.jpg'
 
     assert await build_multipart_body(
         values=OrderedDict({
-            'file': Path('test.txt'),
+            'file': dummy_file_path,
             'file2': f,
             'notfile': 'abc',
             'integer': 3,
@@ -112,7 +99,7 @@ async def test_multipart_body_with_multiple_arguments(mock_aopen):
 
 
 @pytest.mark.curio
-async def test_multipart_body_with_custom_metadata(mock_aopen):
+async def test_multipart_body_with_custom_metadata():
     # Simulate an open file with a BytesIO.
     f = BytesIO(b'dummyfile but it is a jpeg\n')
     f.name = 'test.jpg'
@@ -131,25 +118,23 @@ async def test_multipart_body_with_custom_metadata(mock_aopen):
 
 
 @pytest.mark.curio
-async def test_multipart_body_with_real_test_file():
+async def test_multipart_body_with_real_test_file(dummy_file_path):
     assert await build_multipart_body(
         values=OrderedDict({
-            'file': TEST_DIR / 'test_multipart.txt',
+            'file': dummy_file_path,
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!5649',
-    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test_multipart.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
 
 
 @pytest.mark.curio
-async def test_multipart_body_with_real_pre_opened_test_file():
-    async with await aopen(TEST_DIR / 'test_multipart.txt', 'rb') as f:
-        print(type(f))
-
+async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path):
+    async with await aopen(dummy_file_path, 'rb') as f:
         assert await build_multipart_body(
             values=OrderedDict({
                 'file': f,
             }),
             encoding='utf8',
             boundary_data='8banana133744910kmmr13a56!102!5649',
-        ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test_multipart.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+        ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
