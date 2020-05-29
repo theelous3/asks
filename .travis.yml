@@ -4,7 +4,7 @@ sudo: false
 
 jobs:
   include:
-      dist: xenial
+    - dist: xenial
     - python: 3.8
     - python: 3.7
 
