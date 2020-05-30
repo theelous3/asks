@@ -269,7 +269,11 @@ class RequestProcessor:
         # check redirects
         if self.method != 'HEAD':
             if self.max_redirects < 0:
-                raise TooManyRedirects
+                # The most recent response is already on this history stack at this point
+                # Pop it and set it's history to the remaining stack.
+                response_obj = self.history_objects.pop()
+                response_obj.history = self.history_objects
+                raise TooManyRedirects(response_obj)
             response_obj = await self._redirect(response_obj)
         response_obj.history = self.history_objects
 

@@ -11,6 +11,9 @@ class AsksException(Exception):
 
 
 class TooManyRedirects(AsksException):
+    def __init__(self, response):
+        super().__init__("Max redirects exceeded!")
+        self.response = response
     pass
 
 
