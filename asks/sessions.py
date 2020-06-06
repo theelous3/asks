@@ -141,6 +141,8 @@ class BaseSession(metaclass=ABCMeta):
                             connection errors.
                         max_redirects (int): The maximum number of redirects
                             allowed.
+                        follow_redirects (bool): Whether to follow redirects
+                            or return raw 3xx responses.
                         persist_cookies (True or None): Passing True
                             instantiates a CookieTracker object to manage the
                             return of cookies to the server under the relevant
@@ -167,6 +169,7 @@ class BaseSession(metaclass=ABCMeta):
             "timeout",
             "retries",
             "max_redirects",
+            "follow_redirects",
             "persist_cookies",
             "auth",
             "stream",

@@ -72,6 +72,9 @@ class RequestProcessor:
 
         max_redirects (int): The maximum number of redirects allowed.
 
+        follow_redirects (bool): Whether to follow redirects or return raw 3xx
+            responses.
+
         persist_cookies (True or None): Passing True instantiates a
             CookieTracker object to manage the return of cookies to the server
             under the relevant domains.
@@ -99,6 +102,7 @@ class RequestProcessor:
         self.stream = None
         self.timeout = None
         self.max_redirects = 20
+        self.follow_redirects = True
         self.sock = None
         self.persist_cookies = None
         self.mimetype = None
@@ -270,7 +274,8 @@ class RequestProcessor:
         if self.method != 'HEAD':
             if self.max_redirects < 0:
                 raise TooManyRedirects
-            response_obj = await self._redirect(response_obj)
+            if self.follow_redirects:
+                response_obj = await self._redirect(response_obj)
         response_obj.history = self.history_objects
 
         return response_obj
