@@ -1,6 +1,4 @@
 language: python
-dist: trusty
-sudo: false
 
 jobs:
   include:
