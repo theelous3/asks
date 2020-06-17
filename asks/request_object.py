@@ -163,7 +163,7 @@ class RequestProcessor:
                                  ('Accept-Encoding', 'gzip, deflate'),
                                  ('Accept', '*/*'),
                                  ('Content-Length', '0'),
-                                 ('User-Agent', 'python-asks/2.3.7')
+                                 ('User-Agent', 'python-asks/2.4.7')
                                  ])
 
         # check for a CookieTracker object, and if it's there inject
@@ -497,7 +497,7 @@ class RequestProcessor:
                     mime_type = 'application/octet-stream'
                 else:
                     mime_type = '/'.join(mime_type)
-                multip_pkg += bytes('; Content-Type: ' + mime_type,
+                multip_pkg += bytes('\r\nContent-Type: ' + mime_type,
                                     self.encoding)
                 multip_pkg += b'\r\n'*2 + pkg_body
 

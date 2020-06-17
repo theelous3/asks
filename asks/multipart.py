@@ -134,7 +134,7 @@ async def build_multipart_body(values, encoding, boundary_data):
             (
                 b''
                 if multipart_data.mime_type is None
-                else '; Content-Type: {}'.format(multipart_data.mime_type).encode(encoding)
+                else '\r\nContent-Type: {}'.format(multipart_data.mime_type).encode(encoding)
             ),
             b'\r\n\r\n',
             await multipart_data.to_bytes(),

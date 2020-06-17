@@ -32,7 +32,7 @@ async def test_multipart_body_dummy_file():
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!5649',
-    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
 
 
 @pytest.mark.curio
@@ -48,7 +48,7 @@ async def test_multipart_body_with_not_file_argument():
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!8423',
-    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
 
 
 @pytest.mark.curio
@@ -64,7 +64,7 @@ async def test_multipart_body_with_file_like_argument():
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!8423',
-    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
 
 
 @pytest.mark.curio
@@ -76,7 +76,7 @@ async def test_multipart_body_with_path_argument(dummy_file_path):
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!8423',
-    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
 
 
 
@@ -95,7 +95,7 @@ async def test_multipart_body_with_multiple_arguments(dummy_file_path):
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!8423',
-    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file2"; filename="test.jpg"; Content-Type: image/jpeg\r\n\r\ndummyfile2\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="integer"\r\n\r\n3\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="file2"; filename="test.jpg"\r\nContent-Type: image/jpeg\r\n\r\ndummyfile2\n\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="notfile"\r\n\r\nabc\r\n--8banana133744910kmmr13a56!102!8423\r\nContent-Disposition: form-data; name="integer"\r\n\r\n3\r\n--8banana133744910kmmr13a56!102!8423--\r\n'
 
 
 @pytest.mark.curio
@@ -114,7 +114,7 @@ async def test_multipart_body_with_custom_metadata():
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!5649',
-    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile but it is a jpeg\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile but it is a jpeg\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
 
 
 @pytest.mark.curio
@@ -125,7 +125,7 @@ async def test_multipart_body_with_real_test_file(dummy_file_path):
         }),
         encoding='utf8',
         boundary_data='8banana133744910kmmr13a56!102!5649',
-    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+    ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
 
 
 @pytest.mark.curio
@@ -137,4 +137,4 @@ async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path):
             }),
             encoding='utf8',
             boundary_data='8banana133744910kmmr13a56!102!5649',
-        ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"; Content-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
+        ) == b'--8banana133744910kmmr13a56!102!5649\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\ndummyfile\n\r\n--8banana133744910kmmr13a56!102!5649--\r\n'
