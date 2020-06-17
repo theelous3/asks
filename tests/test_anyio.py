@@ -191,6 +191,22 @@ async def test_http_under_max_redirect(server):
     r = await asks.get(server.http_test_url + "/redirect_once", max_redirects=2)
     assert r.status_code == 200
 
+@Server(
+    _TEST_LOC,
+    max_requests=1,
+    steps=[
+        [
+            (HttpMethods.GET, "/redirect_once"),
+            partial(send_303, headers=[("location", "/")]),
+            finish,
+        ],
+    ],
+)
+@curio_run
+async def test_dont_follow_redirects(server):
+    r = await asks.get(server.http_test_url + "/redirect_once", follow_redirects=False)
+    assert r.status_code == 303
+    assert r.headers["location"] == "/"
 
 # Timeout tests
 

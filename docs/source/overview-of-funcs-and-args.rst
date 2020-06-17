@@ -202,6 +202,14 @@ You can limit the number of redirects by setting ``max_redirects``. By default, 
         r = await asks.get('www.httpbin.org/redirect/3', max_redirects=2)
 
 
+Preventing Redirects
+____________________
+
+You can prevent ``asks`` from automatically following redirects by setting ``follow_redirects`` to ``False``. By default, ``asks`` will automatically follow redirects until a non-redirect response or ``max_redirects`` are encountered. ::
+
+    async def example():
+        r = await asks.get('www.httpbin.org/redirect/3', follow_redirects=False)
+
 Set Timeout(s)
 ______________
 
