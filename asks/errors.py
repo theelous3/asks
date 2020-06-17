@@ -1,12 +1,13 @@
-'''
+"""
 Simple exceptions to be raised in case of errors.
-'''
+"""
 
 
 class AsksException(Exception):
-    '''
+    """
     Base exception for all asks errors.
-    '''
+    """
+
     pass
 
 
@@ -15,9 +16,10 @@ class TooManyRedirects(AsksException):
 
 
 class ConnectivityError(AsksException):
-    '''
+    """
     Base exception for network failure errors.
-    '''
+    """
+
     pass
 
 
@@ -30,6 +32,7 @@ class BadStatus(AsksException):
         super().__init__(err)
         self.response = response
         self.status_code = status_code
+
     pass
 
 

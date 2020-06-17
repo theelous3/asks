@@ -1,19 +1,20 @@
-__all__ = ['CookieTracker', 'parse_cookies']
+__all__ = ["CookieTracker", "parse_cookies"]
 
 
 from .response_objects import Cookie
 
 
 class CookieTracker:
-    '''
+    """
     Class for holding cookies in sessions, adding statefullness to
     the otherwise stateless general http method functions.
-    '''
+    """
+
     def __init__(self):
         self.domain_dict = {}
 
     def get_additional_cookies(self, netloc, path):
-        netloc = netloc.replace('://www.', '://', 1)
+        netloc = netloc.replace("://www.", "://", 1)
         return self._check_cookies(netloc + path)
 
     def _store_cookies(self, response_obj):
@@ -29,9 +30,9 @@ class CookieTracker:
 
         if domains:
             paths = []
-            for path in endpoint.split('/'):
+            for path in endpoint.split("/"):
                 paths.append(path)
-                check_domain = '/'.join(paths)
+                check_domain = "/".join(paths)
                 if check_domain in domains:
                     relevant_domains.append(check_domain)
         return self._get_cookies_to_send(relevant_domains)
@@ -50,16 +51,16 @@ def parse_cookies(response, host):
     """
     cookie_pie = []
     try:
-        for cookie in response.headers['set-cookie']:
+        for cookie in response.headers["set-cookie"]:
             cookie_jar = {}
-            name_val, *rest = cookie.split(';')
-            name, value = name_val.split('=', 1)
-            cookie_jar['name'] = name.strip()
-            cookie_jar['value'] = value
+            name_val, *rest = cookie.split(";")
+            name, value = name_val.split("=", 1)
+            cookie_jar["name"] = name.strip()
+            cookie_jar["value"] = value
             for item in rest:
                 try:
-                    name, value = item.split('=')
-                    if value.startswith('.'):
+                    name, value = item.split("=")
+                    if value.startswith("."):
                         value = value[1:]
                     cookie_jar[name.lower().lstrip()] = value
                 except ValueError:

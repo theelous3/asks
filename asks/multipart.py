@@ -6,16 +6,17 @@ from pathlib import Path
 from anyio import aopen, AsyncFile
 
 
-_RAW_BYTES_MIMETYPE = 'application/octet-stream'
+_RAW_BYTES_MIMETYPE = "application/octet-stream"
 
 
 class MultipartData(NamedTuple):
-    '''
+    """
     Describes data to be sent in a multipart/form-data.
 
     This should be used for manually specifying the mimetype or the basename of
     a field to be sent, and/or to send raw bytes as files.
-    '''
+    """
+
     binary_source: Union[Path, bytes, BinaryIO, AsyncFile]
     mime_type: Optional[str] = _RAW_BYTES_MIMETYPE
     basename: Optional[str] = None
@@ -24,7 +25,7 @@ class MultipartData(NamedTuple):
         binary_source = self.binary_source
 
         if isinstance(binary_source, Path):
-            async with await aopen(binary_source, 'rb') as f:
+            async with await aopen(binary_source, "rb") as f:
                 return await f.read()
 
         if isinstance(binary_source, bytes):
@@ -42,7 +43,7 @@ class MultipartData(NamedTuple):
 
 
 def _to_multipart_file(value):
-    '''
+    """
     Ensure a file-like supported type is encapsulated in a MultipartData object.
 
     Args:
@@ -51,24 +52,20 @@ def _to_multipart_file(value):
 
     Returns:
         MultipartData: An object describing a multipart/form-data file field.
-    '''
+    """
 
-    basename = Path(value.name).name if hasattr(value, 'name') else None
+    basename = Path(value.name).name if hasattr(value, "name") else None
     mime_type = (
         mimetypes.guess_type(basename)[0]
         if basename is not None
         else _RAW_BYTES_MIMETYPE
     )
 
-    return MultipartData(
-        binary_source=value,
-        mime_type=mime_type,
-        basename=basename,
-    )
+    return MultipartData(binary_source=value, mime_type=mime_type, basename=basename,)
 
 
 def _to_multipart_form_data(value, encoding):
-    '''
+    """
     Transform a form-data entry into a MultipartData object.
 
     If `value` is one of the supported file-like types, it will be seen as a
@@ -80,23 +77,21 @@ def _to_multipart_form_data(value, encoding):
 
     Returns:
         MultipartData: An object describing a multipart/form-data field.
-    '''
+    """
     if isinstance(value, MultipartData):
         return value
 
-    if isinstance(value, (Path, bytes)) or hasattr(value, 'read'):
+    if isinstance(value, (Path, bytes)) or hasattr(value, "read"):
         return _to_multipart_file(value)
 
     # It's not a supported file type, so we do our best to transform it into form data.
     return MultipartData(
-        binary_source=str(value).encode(encoding),
-        mime_type=None,
-        basename=None,
+        binary_source=str(value).encode(encoding), mime_type=None, basename=None,
     )
 
 
 async def build_multipart_body(values, encoding, boundary_data):
-    '''
+    """
     Forms a multipart request body from  a dict of form fields to values.
 
     Args:
@@ -114,33 +109,39 @@ async def build_multipart_body(values, encoding, boundary_data):
     Returns:
         multipart_body (bytes): The strings representation of the content body,
                                 multipart formatted.
-    '''
-    boundary = b''.join((b'--', bytes(boundary_data, encoding)))
+    """
+    boundary = b"".join((b"--", bytes(boundary_data, encoding)))
 
-    multipart_body = b''
+    multipart_body = b""
 
     for k, v in values.items():
         multipart_data = _to_multipart_form_data(v, encoding)
 
-        multipart_body += b''.join((
-            boundary,
-            b'\r\n',
-            'Content-Disposition: form-data; name="{}"'.format(k).encode(encoding),
+        multipart_body += b"".join(
             (
-                b''
-                if multipart_data.basename is None
-                else '; filename="{}"'.format(multipart_data.basename).encode(encoding)
-            ),
-            (
-                b''
-                if multipart_data.mime_type is None
-                else '\r\nContent-Type: {}'.format(multipart_data.mime_type).encode(encoding)
-            ),
-            b'\r\n\r\n',
-            await multipart_data.to_bytes(),
-            b'\r\n',
-        ))
+                boundary,
+                b"\r\n",
+                'Content-Disposition: form-data; name="{}"'.format(k).encode(encoding),
+                (
+                    b""
+                    if multipart_data.basename is None
+                    else '; filename="{}"'.format(multipart_data.basename).encode(
+                        encoding
+                    )
+                ),
+                (
+                    b""
+                    if multipart_data.mime_type is None
+                    else "\r\nContent-Type: {}".format(multipart_data.mime_type).encode(
+                        encoding
+                    )
+                ),
+                b"\r\n\r\n",
+                await multipart_data.to_bytes(),
+                b"\r\n",
+            )
+        )
 
-    multipart_body += boundary + b'--\r\n'
+    multipart_body += boundary + b"--\r\n"
 
     return multipart_body

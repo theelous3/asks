@@ -356,7 +356,7 @@ async def test_multipart_send_single(server):
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
 async def test_multipart_send_single_already_open(server):
-    with open(TEST_FILE1, 'rb') as f:
+    with open(TEST_FILE1, "rb") as f:
         r = await asks.post(server.http_test_url, multipart={"file_1": f})
     j = r.json()
 
@@ -371,7 +371,7 @@ async def test_multipart_send_single_already_open(server):
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
 async def test_multipart_send_single_already_open_async(server):
-    async with await aopen(TEST_FILE1, 'rb') as f:
+    async with await aopen(TEST_FILE1, "rb") as f:
         r = await asks.post(server.http_test_url, multipart={"file_1": f})
     j = r.json()
 
@@ -386,12 +386,14 @@ async def test_multipart_send_single_already_open_async(server):
 @Server(_TEST_LOC, steps=[send_request_as_json, finish])
 @curio_run
 async def test_multipart_send_raw_bytes(server):
-    r = await asks.post(server.http_test_url, multipart={
-        "file_1": asks.multipart.MultipartData(
-            b'Compooper',
-            basename='in_memory.txt',
-        )
-    })
+    r = await asks.post(
+        server.http_test_url,
+        multipart={
+            "file_1": asks.multipart.MultipartData(
+                b"Compooper", basename="in_memory.txt",
+            )
+        },
+    )
     j = r.json()
 
     assert any(file_data["name"] == "file_1" for file_data in j["files"])
@@ -406,7 +408,8 @@ async def test_multipart_send_raw_bytes(server):
 @curio_run
 async def test_multipart_send_double(server):
     r = await asks.post(
-        server.http_test_url, multipart={"file_1": Path(TEST_FILE1), "file_2": Path(TEST_FILE2)}
+        server.http_test_url,
+        multipart={"file_1": Path(TEST_FILE1), "file_2": Path(TEST_FILE2)},
     )
     j = r.json()
 
@@ -583,4 +586,3 @@ async def test_session_unknown_kwargs():
         session = asks.Session("https://httpbin.org/get")
         await session.request("GET", ko=7, foo=0, bar=3, shite=3)
         pytest.fail("Passing unknown kwargs does not raise TypeError")
-

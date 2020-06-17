@@ -1,7 +1,7 @@
-__all__ = ['get_netloc_port', 'requote_uri', 'timeout_manager']
+__all__ = ["get_netloc_port", "requote_uri", "timeout_manager"]
 
 
-from urllib.parse import  quote
+from urllib.parse import quote
 from functools import wraps
 
 from anyio import fail_after
@@ -20,15 +20,17 @@ async def timeout_manager(timeout, coro, *args):
 def get_netloc_port(parsed_url):
     port = parsed_url.port
     if not port:
-        if parsed_url.scheme == 'https':
-            port = '443'
+        if parsed_url.scheme == "https":
+            port = "443"
         else:
-            port = '80'
+            port = "80"
     return parsed_url.hostname, str(port)
 
+
 # The unreserved URI characters (RFC 3986)
-UNRESERVED_SET = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
-                  "0123456789-._~")
+UNRESERVED_SET = (
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" + "0123456789-._~"
+)
 
 
 def unquote_unreserved(uri):
@@ -36,7 +38,7 @@ def unquote_unreserved(uri):
     characters. This leaves all reserved, illegal and non-ASCII bytes encoded.
     :rtype: str
     """
-    parts = uri.split('%')
+    parts = uri.split("%")
     for i in range(1, len(parts)):
         h = parts[i][0:2]
         if len(h) == 2 and h.isalnum():
@@ -48,10 +50,10 @@ def unquote_unreserved(uri):
             if c in UNRESERVED_SET:
                 parts[i] = c + parts[i][2:]
             else:
-                parts[i] = '%' + parts[i]
+                parts[i] = "%" + parts[i]
         else:
-            parts[i] = '%' + parts[i]
-    return ''.join(parts)
+            parts[i] = "%" + parts[i]
+    return "".join(parts)
 
 
 def requote_uri(uri):
@@ -80,4 +82,5 @@ def processor(gen):
         g = gen(*args, **kwargs)
         next(g)
         return g
+
     return wrapper

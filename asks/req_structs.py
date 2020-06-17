@@ -1,22 +1,22 @@
 # pylint: disable=arguments-differ
-'''
+"""
 Some structures used throughout asks.
-'''
+"""
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Mapping
 
+
 class SocketQ(deque):
-    '''
+    """
     A funky little subclass of deque built for the session classes.
     Allows for connection pooling of sockets to remote hosts.
-    '''
+    """
 
     def index(self, host_loc):
         try:
-            return next(index for index, i in enumerate(self)
-                        if i.host == host_loc)
+            return next(index for index, i in enumerate(self) if i.host == host_loc)
         except StopIteration:
-            raise ValueError('{} not in SocketQ'.format(host_loc)) from None
+            raise ValueError("{} not in SocketQ".format(host_loc)) from None
 
     def pull(self, index):
         x = self[index]
@@ -35,7 +35,7 @@ class SocketQ(deque):
         return False
 
 
-'''
+"""
 The rest of this file's contents are from request's source.
 
 requests is licenced under the Apache 2.0 licence, which can be found here:
@@ -44,7 +44,7 @@ requests is licenced under the Apache 2.0 licence, which can be found here:
 
 requests can be found here:
     https://github.com/kennethreitz/requests
-'''
+"""
 
 
 class CaseInsensitiveDict(MutableMapping):
@@ -94,11 +94,7 @@ class CaseInsensitiveDict(MutableMapping):
 
     def lower_items(self):
         """Like items(), but with all lowercase keys."""
-        return (
-            (lowerkey, keyval[1])
-            for (lowerkey, keyval)
-            in self._store.items()
-        )
+        return ((lowerkey, keyval[1]) for (lowerkey, keyval) in self._store.items())
 
     def __eq__(self, other):
         if isinstance(other, Mapping):
