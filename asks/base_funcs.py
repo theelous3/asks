@@ -5,7 +5,7 @@ to the caller.
 '''
 from functools import partial
 
-from asks.sessions import Session
+from .sessions import Session
 
 
 __all__ = ['get', 'head', 'post', 'put', 'delete', 'options', 'patch', 'request']

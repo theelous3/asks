@@ -130,6 +130,8 @@ class BaseSession(metaclass=ABCMeta):
                             the request body.
                         files (dict): A dict of `filename:filepath`s to be sent
                             as multipart.
+                        multipart (dict): Data (files or form data) to be sent as a
+                            multipart form.
                         cookies (dict): A dict of `name:value` cookies to be
                             passed in request.
                         callback (func): A callback function to be called on
@@ -162,6 +164,7 @@ class BaseSession(metaclass=ABCMeta):
             "encoding",
             "json",
             "files",
+            "multipart",
             "cookies",
             "callback",
             "timeout",

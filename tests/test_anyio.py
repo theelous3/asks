@@ -3,10 +3,11 @@
 import ssl
 from os import path
 from functools import partial
+from pathlib import Path
 
 import pytest
 
-from anyio import create_task_group
+from anyio import create_task_group, aopen
 import curio
 
 from overly import (
@@ -313,6 +314,121 @@ async def test_file_send_file_and_form_data(server):
     r = await asks.post(
         server.http_test_url,
         files={"file_1": TEST_FILE1, "data_1": "watwatwatwat=yesyesyes"},
+    )
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+    assert any(form_data["name"] == "data_1" for form_data in j["forms"])
+
+    file_data_1 = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    assert file_data_1["file"] == "Compooper"
+
+    form_data_1 = next(
+        form_data for form_data in j["forms"] if form_data["name"] == "data_1"
+    )
+    assert form_data_1["form_data"] == "watwatwatwat=yesyesyes"
+
+
+# File send test new multipart API
+
+
+TEST_DIR = path.dirname(path.abspath(__file__))
+TEST_FILE1 = path.join(TEST_DIR, "test_file1.txt")
+TEST_FILE2 = path.join(TEST_DIR, "test_file2")
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_single(server):
+    r = await asks.post(server.http_test_url, multipart={"file_1": Path(TEST_FILE1)})
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+
+    file_data = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    assert file_data["file"] == "Compooper"
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_single_already_open(server):
+    with open(TEST_FILE1, 'rb') as f:
+        r = await asks.post(server.http_test_url, multipart={"file_1": f})
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+
+    file_data = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    assert file_data["file"] == "Compooper"
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_single_already_open_async(server):
+    async with await aopen(TEST_FILE1, 'rb') as f:
+        r = await asks.post(server.http_test_url, multipart={"file_1": f})
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+
+    file_data = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    assert file_data["file"] == "Compooper"
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_raw_bytes(server):
+    r = await asks.post(server.http_test_url, multipart={
+        "file_1": asks.multipart.MultipartData(
+            b'Compooper',
+            basename='in_memory.txt',
+        )
+    })
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+
+    file_data = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    assert file_data["file"] == "Compooper"
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_double(server):
+    r = await asks.post(
+        server.http_test_url, multipart={"file_1": Path(TEST_FILE1), "file_2": Path(TEST_FILE2)}
+    )
+    j = r.json()
+
+    assert any(file_data["name"] == "file_1" for file_data in j["files"])
+    assert any(file_data["name"] == "file_2" for file_data in j["files"])
+
+    file_data_1 = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_1"
+    )
+    file_data_2 = next(
+        file_data for file_data in j["files"] if file_data["name"] == "file_2"
+    )
+    assert file_data_1["file"] == "Compooper"
+    assert file_data_2["file"] == "My slug <3"
+
+
+@Server(_TEST_LOC, steps=[send_request_as_json, finish])
+@curio_run
+async def test_multipart_send_file_and_form_data(server):
+    r = await asks.post(
+        server.http_test_url,
+        multipart={"file_1": Path(TEST_FILE1), "data_1": "watwatwatwat=yesyesyes"},
     )
     j = r.json()
 
