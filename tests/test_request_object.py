@@ -6,10 +6,10 @@ import pytest
 from asks.request_object import RequestProcessor
 
 
-def _catch_response(monkeypatch, headers, data):
+def _catch_response(monkeypatch, headers, data, http_version=b"1.1"):
     req = RequestProcessor(None, "get", "toot-toot", None)
     events = [
-        h11._events.Response(status_code=200, headers=headers),
+        h11._events.Response(status_code=200, headers=headers, http_version=http_version),
         h11._events.Data(data=data),
         h11._events.EndOfMessage(),
     ]
@@ -32,8 +32,12 @@ def test_http1_1(monkeypatch):
     assert response.body == b"hello"
 
 
-def test_http1_0(monkeypatch):
+def test_http1_1_connection_close(monkeypatch):
     response = _catch_response(monkeypatch, [("Connection", "close")], b"hello")
+    assert response.body == b"hello"
+
+def test_http1_0_no_content_length(monkeypatch):
+    response = _catch_response(monkeypatch, [], b"hello", b"1.0")
     assert response.body == b"hello"
 
 

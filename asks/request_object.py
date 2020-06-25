@@ -597,7 +597,9 @@ class RequestProcessor:
                 if "chunked" in resp_data["headers"]["transfer-encoding"].lower():
                     get_body = True
             except KeyError:
-                if resp_data["headers"].get("connection", "").lower() == "close":
+                connection_close = resp_data["headers"].get("connection", "").lower() == "close"
+                http_1 = response.http_version == b"1.0"
+                if connection_close or http_1:
                     get_body = True
 
         if get_body:
