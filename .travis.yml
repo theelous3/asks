@@ -7,7 +7,7 @@ jobs:
 
 
 install:
-   - pip install git+https://github.com/agronholm/anyio.git
+   - pip install 'anyio<2'
    - pip install overly curio
    - pip install "pytest >= 3.7.2"
    - pip install -e .
