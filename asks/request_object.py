@@ -244,6 +244,11 @@ class RequestProcessor:
         if self.streaming:
             return None, response_obj
 
+        if 'connection' in asks_headers and asks_headers['connection'] == 'close' and self.sock._active:
+            self.sock._active = False
+            await self.sock.close()
+            return None, response_obj
+
         return self.sock, response_obj
 
     async def _request_io(self, h11_request, h11_body, h11_connection):
