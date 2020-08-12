@@ -575,7 +575,7 @@ class RequestProcessor:
                     for name, value in response.headers
                 ]
             ),
-            "body": b"",
+            "body": bytearray(),
             "url": self.req_url,
         }
 
