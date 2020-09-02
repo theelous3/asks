@@ -5,7 +5,7 @@ The disparate session (Session) is for making requests to multiple locations.
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, urljoin
 
 from h11 import RemoteProtocolError
 from anyio import connect_tcp, create_semaphore
@@ -197,7 +197,7 @@ class BaseSession(metaclass=ABCMeta):
 
         async with self.sema:
             if url is None:
-                url = self._make_url() + path
+                url = urljoin(self._make_url(), path)
 
             retry = False
 
