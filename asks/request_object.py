@@ -240,8 +240,13 @@ class RequestProcessor:
                 self.scheme == self.initial_scheme and self.host == self.initial_netloc
             ):
                 self.sock._active = False
+                await self.sock.close()
 
         if self.streaming:
+            return None, response_obj
+
+        if asks_headers.get('connection', '') == 'close' and self.sock._active:
+            await self.sock.close()
             return None, response_obj
 
         return self.sock, response_obj
