@@ -160,7 +160,7 @@ class StreamBody:
 
             if event is h11.NEED_DATA:
                 data = await timeout_manager(
-                    self.timeout, self.sock.receive_some, self.read_size
+                    self.timeout, self.sock.receive, self.read_size
                 )
                 self.h11_connection.receive_data(data)
                 continue
@@ -175,7 +175,7 @@ class StreamBody:
         return self
 
     async def close(self):
-        await self.sock.close()
+        await self.sock.aclose()
 
     async def __aexit__(self, *exc_info):
         await self.close()

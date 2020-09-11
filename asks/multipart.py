@@ -3,7 +3,7 @@ import mimetypes
 from typing import BinaryIO, NamedTuple, Union, Optional
 from pathlib import Path
 
-from anyio import aopen, AsyncFile
+from anyio import open_file, AsyncFile
 
 
 _RAW_BYTES_MIMETYPE = "application/octet-stream"
@@ -25,7 +25,7 @@ class MultipartData(NamedTuple):
         binary_source = self.binary_source
 
         if isinstance(binary_source, Path):
-            async with await aopen(binary_source, "rb") as f:
+            async with await open_file(binary_source, "rb") as f:
                 return await f.read()
 
         if isinstance(binary_source, bytes):

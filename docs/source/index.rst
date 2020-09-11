@@ -34,7 +34,7 @@ http://trio.rtfd.io
 Installation:
 _____________
 
-`asks` requires `Python 3.5.2 <https://www.python.org>`_ or newer.
+`asks` requires `Python 3.6.2 <https://www.python.org>`_ or newer.
 
 The easiest way to install ``asks`` is to pip it::
 
@@ -145,7 +145,7 @@ Inspired by ``requests`` and the fancy new-age async libs, I wanted to take that
 Features
 ________
 
-``asks`` packs most if not all of the features ``requests`` does. The usual ``.json()``-ing of responses and such. 
+``asks`` packs most if not all of the features ``requests`` does. The usual ``.json()``-ing of responses and such.
 You can take a more in-depth look `here <https://asks.readthedocs.io/en/latest/overview-of-funcs-and-args.html>`_.
 
 Because ``asks`` is aimed at crunching large piles of requests, its ``Session`` has some features you may not be aware of.

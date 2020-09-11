@@ -16,7 +16,7 @@ from random import randint
 import mimetypes
 import re
 
-from anyio import aopen
+from anyio import open_file
 import h11
 
 from .utils import requote_uri
@@ -240,13 +240,13 @@ class RequestProcessor:
                 self.scheme == self.initial_scheme and self.host == self.initial_netloc
             ):
                 self.sock._active = False
-                await self.sock.close()
+                await self.sock.aclose()
 
         if self.streaming:
             return None, response_obj
 
         if asks_headers.get('connection', '') == 'close' and self.sock._active:
-            await self.sock.close()
+            await self.sock.aclose()
             return None, response_obj
 
         return self.sock, response_obj
@@ -544,7 +544,7 @@ class RequestProcessor:
         return multip_pkg
 
     async def _file_manager(self, path):
-        async with await aopen(path, "rb") as f:
+        async with await open_file(path, "rb") as f:
             return b"".join(await f.readlines()) + b"\r\n"
 
     async def _catch_response(self, h11_connection):
@@ -653,7 +653,7 @@ class RequestProcessor:
         while True:
             event = h11_connection.next_event()
             if event is h11.NEED_DATA:
-                h11_connection.receive_data(await self.sock.receive_some(10000))
+                h11_connection.receive_data(await self.sock.receive())
                 continue
             return event
 
@@ -666,10 +666,13 @@ class RequestProcessor:
             package (list of str): The header package.
             body (str): The str representation of the body.
         """
-        await self.sock.send_all(h11_connection.send(request_bytes))
+        await self.sock.send(h11_connection.send(request_bytes))
         if body_bytes is not None:
-            await self.sock.send_all(h11_connection.send(body_bytes))
-        await self.sock.send_all(h11_connection.send(h11.EndOfMessage()))
+            await self.sock.send(h11_connection.send(body_bytes))
+
+        data = h11_connection.send(h11.EndOfMessage())
+        if data:
+            await self.sock.send(data)
 
     async def _auth_handler_pre(self):
         """
