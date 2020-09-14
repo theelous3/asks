@@ -61,7 +61,7 @@ class BaseSession(metaclass=ABCMeta):
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         """
         sock = await connect_tcp(
-            location[0], location[1], bind_host=self.source_address
+            location[0], location[1], local_host=self.source_address
         )
         sock._active = True
         return sock
@@ -77,8 +77,8 @@ class BaseSession(metaclass=ABCMeta):
             location[0],
             location[1],
             ssl_context=self.ssl_context,
-            bind_host=self.source_address,
-            autostart_tls=True,
+            local_host=self.source_address,
+            tls=True,
             tls_standard_compatible=False,
         )
         sock._active = True
@@ -235,7 +235,7 @@ class BaseSession(metaclass=ABCMeta):
                     try:
                         if r.headers["connection"].lower() == "close":
                             sock._active = False
-                            await sock.close()
+                            await sock.aclose()
                     except KeyError:
                         pass
                     await self.return_to_pool(sock)
@@ -259,7 +259,7 @@ class BaseSession(metaclass=ABCMeta):
             # Session.cleanup should be called to tidy up sockets.
             except BaseException as e:
                 if sock:
-                    await sock.close()
+                    await sock.aclose()
                 raise e
 
         if retry:
@@ -287,11 +287,11 @@ class BaseSession(metaclass=ABCMeta):
         In all cases we clean up the underlying socket.
         """
         if isinstance(e, (RemoteProtocolError, AssertionError)):
-            await sock.close()
+            await sock.aclose()
             raise BadHttpResponse("Invalid HTTP response from server.") from e
 
         if isinstance(e, Exception):
-            await sock.close()
+            await sock.aclose()
             raise e
 
     @abstractmethod

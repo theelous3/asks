@@ -3,9 +3,9 @@
 from setuptools import setup
 from sys import version_info
 
-if version_info < (3, 5, 2):
-    # 3.5.2 is when __aiter__ became a synchronous function
-    raise SystemExit('Sorry! asks requires python 3.5.2 or later.')
+if version_info < (3, 6, 2):
+    # AnyIO 2.0 requires v3.6.2
+    raise SystemExit('Sorry! asks requires python 3.6.2 or later.')
 
 setup(
     name='asks',
@@ -16,8 +16,9 @@ setup(
     author='Mark Jameson - aka theelous3',
     url='https://github.com/theelous3/asks',
     packages=['asks'],
-    install_requires=['h11', 'async_generator', 'anyio<2'],
-    tests_require=['pytest', 'curio', 'overly'],
+    python_requires='>= 3.6.2',
+    install_requires=['h11', 'async_generator', 'anyio ~= 2.0'],
+    tests_require=['pytest', 'curio', 'trio', 'overly'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'Framework :: Trio',

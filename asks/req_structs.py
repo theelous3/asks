@@ -26,7 +26,7 @@ class SocketQ(deque):
     async def free_pool(self):
         while self:
             sock = self.pop()
-            await sock.close()
+            await sock.aclose()
 
     def __contains__(self, host_loc):
         for i in self:

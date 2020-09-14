@@ -1,13 +1,14 @@
 """Tests for the generation of multipart/form-data request bodies."""
 from collections import OrderedDict
 from io import BytesIO
-from unittest.mock import MagicMock, patch
 from pathlib import Path
 
 import pytest
+from anyio import open_file
 
-from anyio import aopen
-from asks.multipart import build_multipart_body, MultipartData
+from asks.multipart import MultipartData, build_multipart_body
+
+pytestmark = pytest.mark.anyio
 
 
 @pytest.fixture(scope="session")
@@ -20,7 +21,6 @@ def dummy_file_path(tmpdir_factory):
     return Path(dummy)
 
 
-@pytest.mark.curio
 async def test_multipart_body_dummy_file():
     assert (
         await build_multipart_body(
@@ -38,7 +38,6 @@ async def test_multipart_body_dummy_file():
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_not_file_argument():
     assert (
         await build_multipart_body(
@@ -57,7 +56,6 @@ async def test_multipart_body_with_not_file_argument():
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_file_like_argument():
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile\n")
@@ -73,7 +71,6 @@ async def test_multipart_body_with_file_like_argument():
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_path_argument(dummy_file_path):
     assert (
         await build_multipart_body(
@@ -85,7 +82,6 @@ async def test_multipart_body_with_path_argument(dummy_file_path):
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_multiple_arguments(dummy_file_path):
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile2\n")
@@ -103,7 +99,6 @@ async def test_multipart_body_with_multiple_arguments(dummy_file_path):
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_custom_metadata():
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile but it is a jpeg\n")
@@ -121,7 +116,6 @@ async def test_multipart_body_with_custom_metadata():
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_real_test_file(dummy_file_path):
     assert (
         await build_multipart_body(
@@ -133,9 +127,8 @@ async def test_multipart_body_with_real_test_file(dummy_file_path):
     )
 
 
-@pytest.mark.curio
 async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path):
-    async with await aopen(dummy_file_path, "rb") as f:
+    async with await open_file(dummy_file_path, "rb") as f:
         assert (
             await build_multipart_body(
                 values=OrderedDict({"file": f,}),
