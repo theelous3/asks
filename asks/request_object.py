@@ -174,7 +174,7 @@ class RequestProcessor:
                 ("Accept-Encoding", "gzip, deflate"),
                 ("Accept", "*/*"),
                 ("Content-Length", "0"),
-                ("User-Agent", "python-asks/2.4.11"),
+                ("User-Agent", "python-asks/2.4.12"),
             ]
         )
 
@@ -191,7 +191,7 @@ class RequestProcessor:
 
         # handle building the request body, if any
         body = ""
-        if any((self.data, self.files, self.json, self.multipart is not None)):
+        if any((self.data, self.files, self.json is not None, self.multipart is not None)):
             content_type, content_len, body = await self._formulate_body()
             asks_headers["Content-Type"] = content_type
             asks_headers["Content-Length"] = content_len
