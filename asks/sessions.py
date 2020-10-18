@@ -197,7 +197,7 @@ class BaseSession(metaclass=ABCMeta):
 
         async with self.sema:
             if url is None:
-                url = urljoin(self._make_url(), path)
+                url = self._make_url(path)
 
             retry = False
 
@@ -326,8 +326,8 @@ class Session(BaseSession):
 
     def __init__(
         self,
-        base_location=None,
-        endpoint=None,
+        base_location="",
+        endpoint="",
         headers=None,
         encoding="utf-8",
         persist_cookies=None,
@@ -358,6 +358,29 @@ class Session(BaseSession):
 
         self._sema = None
         self._connections = connections
+
+    @property
+    def base_location(self):
+        return self._base_location
+
+    @base_location.setter
+    def base_location(self, value):
+        if not value:
+            self._base_location = value
+        else:
+            self._base_location = self._normalise_last_slashes(value)
+
+    @property
+    def endpoint(self):
+        return self._endpoint
+
+    @endpoint.setter
+    def endpoint(self, value):
+        if not value:
+            self._endpoint = value
+        else:
+            value = self._normalise_head_slashes(value)
+            self._endpoint = self._normalise_last_slashes(value)
 
     @property
     def sema(self):
@@ -409,11 +432,32 @@ class Session(BaseSession):
 
         return sock
 
-    def _make_url(self):
+    def _make_url(self, path):
         """
         Puts together the hostloc and current endpoint for use in request uri.
         """
-        return (self.base_location or "") + (self.endpoint or "")
+        if not self.base_location:
+            raise ValueError("No base_location set. Cannot construct url.")
+
+        if path:
+            path = self._normalise_last_slashes(path)
+            path = self._normalise_head_slashes(path)
+
+        return "".join((self.base_location, self.endpoint, path))
+
+    @staticmethod
+    def _normalise_last_slashes(url_segment):
+        """
+        Drop any last /'s
+        """
+        return url_segment if not url_segment.endswith("/") else url_segment[:-1]
+
+    @staticmethod
+    def _normalise_head_slashes(url_segment):
+        """
+        Add any missing head /'s
+        """
+        return url_segment if url_segment.startswith("/") else "/" + url_segment
 
     async def __aenter__(self):
         return self
