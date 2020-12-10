@@ -5,8 +5,9 @@ from os import path
 from functools import partial
 from pathlib import Path
 
+import h11
 import pytest
-from anyio import create_task_group, open_file
+from anyio import create_task_group, open_file, EndOfStream
 from overly import (
     Server,
     ssl_socket_wrapper,
@@ -27,6 +28,7 @@ from overly import (
 )
 
 import asks
+from asks.request_object import RequestProcessor
 from asks.errors import TooManyRedirects, BadStatus, RequestTimeout
 
 pytestmark = pytest.mark.anyio
@@ -594,3 +596,28 @@ async def test_session_unknown_kwargs():
         session = asks.Session("https://httpbin.org/get")
         await session.request("GET", ko=7, foo=0, bar=3, shite=3)
         pytest.fail("Passing unknown kwargs does not raise TypeError")
+
+
+async def test_recv_event_anyio2_end_of_stream():
+    class MockH11Connection:
+        def __init__(self):
+            self.data = None
+        def next_event(self):
+            if self.data == b"":
+                return h11.PAUSED
+            else:
+                return h11.NEED_DATA
+        def receive_data(self, data):
+            self.data = data
+
+    class MockSock:
+        def receive(self):
+            raise EndOfStream
+
+    req = RequestProcessor(None, "get", "toot-toot", None)
+    req.sock = MockSock()
+
+    h11_connection = MockH11Connection()
+    event = await req._recv_event(h11_connection)
+    assert event is h11.PAUSED
+    assert h11_connection.data == b""
