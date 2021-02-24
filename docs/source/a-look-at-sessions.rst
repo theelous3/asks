@@ -33,7 +33,6 @@ The ``Session``'s ``connections`` argument dictates the maximum number of concur
 
     import asks
     import curio
-    asks.init('curio')
 
     a_list_of_many_urls = ['wow', 'so', 'many', 'urls']
 
@@ -94,7 +93,6 @@ Please don't actually do this or the http://jsontest.com website will be very un
 
     import asks
     import curio
-    asks.init('curio')
 
     async def worker(s, num):
         r = await s.get(path='/' + str(num))

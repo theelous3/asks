@@ -76,7 +76,6 @@ Here's how to grab a single request and print its content::
     # single_get.py
     import asks
     import curio
-    asks.init('curio')
 
     async def grabber(url):
         r = await asks.get(url)
@@ -104,7 +103,6 @@ We'll use the ``Session`` class here to take advantage of connection pooling.::
 
     import asks
     import curio
-    asks.init('curio')
 
     path_list = ['a', 'list', 'of', '1000', 'paths']
 
