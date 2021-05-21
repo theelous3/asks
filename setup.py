@@ -17,7 +17,7 @@ setup(
     url='https://github.com/theelous3/asks',
     packages=['asks'],
     python_requires='>= 3.6.2',
-    install_requires=['h11', 'async_generator', 'anyio ~= 2.0'],
+    install_requires=['h11', 'async_generator', 'anyio ~= 3.0'],
     tests_require=['pytest', 'curio', 'trio', 'overly'],
     classifiers=[
         'Programming Language :: Python :: 3',

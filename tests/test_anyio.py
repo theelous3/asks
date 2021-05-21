@@ -561,7 +561,7 @@ async def test_session_smallpool(server):
     s = asks.Session(server.http_test_url, connections=2)
     async with create_task_group() as g:
         for _ in range(10):
-            await g.spawn(worker, s)
+            g.start_soon(worker, s)
 
 
 # Test stateful Session

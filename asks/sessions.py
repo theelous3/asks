@@ -8,7 +8,7 @@ from functools import partialmethod
 from urllib.parse import urlparse, urlunparse, urljoin
 
 from h11 import RemoteProtocolError
-from anyio import connect_tcp, create_semaphore
+from anyio import connect_tcp, Semaphore
 
 from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
@@ -385,7 +385,7 @@ class Session(BaseSession):
     @property
     def sema(self):
         if self._sema is None:
-            self._sema = create_semaphore(self._connections)
+            self._sema = Semaphore(self._connections)
         return self._sema
 
     def _checkout_connection(self, host_loc):
