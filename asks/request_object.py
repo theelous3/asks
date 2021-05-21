@@ -16,7 +16,7 @@ from random import randint
 import mimetypes
 import re
 
-from anyio import open_file
+from anyio import open_file, EndOfStream
 import h11
 
 from .utils import requote_uri
@@ -653,7 +653,11 @@ class RequestProcessor:
         while True:
             event = h11_connection.next_event()
             if event is h11.NEED_DATA:
-                h11_connection.receive_data(await self.sock.receive())
+                try:
+                    data = await self.sock.receive()
+                except EndOfStream:
+                    data = b""
+                h11_connection.receive_data(data)
                 continue
             return event
 
