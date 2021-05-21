@@ -47,8 +47,7 @@ Internally ``asks`` uses the excellent `h11 <https://github.com/njsmith/h11>`_. 
 Importing ``asks``
 __________________
 
-You must specify what event loop ``asks`` should use after importing, and at some point before you run any code that uses ``asks``.
-The event loop is set with ``asks.init()``. The following code will run the ``example`` coroutine once with ``curio`` and once with ``trio``: ::
+The following code will run the ``example`` coroutine once with ``curio`` and once with ``trio``: ::
 
     import asks
     import curio
@@ -57,13 +56,9 @@ The event loop is set with ``asks.init()``. The following code will run the ``ex
     async def example():
         r = await asks.get('https://example.org')
 
-    asks.init('curio')
     curio.run(example)
 
-    asks.init('trio')
     trio.run(example)
-
-If you forget to initialise ``asks`` with an event loop you'll get a ``RuntimeError``.
 
 
 A quick note on the examples in these docs
@@ -81,7 +76,6 @@ Here's how to grab a single request and print its content::
     # single_get.py
     import asks
     import curio
-    asks.init('curio')
 
     async def grabber(url):
         r = await asks.get(url)
@@ -109,7 +103,6 @@ We'll use the ``Session`` class here to take advantage of connection pooling.::
 
     import asks
     import curio
-    asks.init('curio')
 
     path_list = ['a', 'list', 'of', '1000', 'paths']
 

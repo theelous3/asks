@@ -14,7 +14,6 @@ If we wanted to request two thousand urls, we wouldn't want to spawn two thousan
 
     import asks
     import curio
-    asks.init('curio')
 
     async def worker(sema, url):
         async with sema:
@@ -52,7 +51,6 @@ This sounds more confusing in writing than it is in code. Take a look: ::
 
     import asks
     import curio
-    asks.init('curio')
 
     results = {}
 
@@ -78,7 +76,6 @@ There are of course many ways to achieve this, but the above is noob friendly. A
 
     import asks
     import curio
-    asks.init('curio')
 
     results = []
     url_list = ["https://www.httpbin.org/get" for _ in range(50)]
@@ -109,7 +106,6 @@ The following examples use a context manager on the response body to ensure the 
 
     import asks
     import curio
-    asks.init('curio')
 
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
@@ -124,7 +120,6 @@ An example of multiple downloads with streaming: ::
 
     import asks
     import curio
-    asks.init('curio')
 
     from functools import partial
 
@@ -153,7 +148,6 @@ We define a callback function ``downloader`` that takes bytes and saves 'em, and
 
     import asks
     import curio
-    asks.init('curio')
 
     async def downloader(bytechunk):
         async with curio.aopen('our_image.png', 'ab') as out_file:
@@ -168,7 +162,6 @@ What about downloading a whole bunch of images, and naming them sequentially? ::
 
     import asks
     import curio
-    asks.init('curio')
 
     from functools import partial
 
@@ -192,7 +185,6 @@ Simply reference the ``Cookie`` 's ``.name`` and ``.value`` attributes as you pa
 
     import asks
     import curio
-    asks.init('curio')
 
     a_cookie = previous_response_object.cookies[0]
 

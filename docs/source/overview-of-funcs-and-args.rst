@@ -261,7 +261,6 @@ You can stream the body of a response by setting ``stream=True`` , and iterating
 
     import asks
     import curio
-    asks.init('curio')
 
     async def main():
         r = await asks.get('http://httpbin.org/image/png', stream=True)
@@ -277,7 +276,6 @@ You can get around this by context-managering the ``.body`` if there is a chance
 
     import asks
     import curio
-    asks.init('curio')
 
     async def main():
         r = await asks.get('http://httpbin.com/image/png', stream=True)
