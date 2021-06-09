@@ -33,7 +33,7 @@ async def example():
     r = await asks.get('https://example.org')
     print(r.content)
 
-curio.run(example())
+anyio.run(example)
 ```
 
 ```python
