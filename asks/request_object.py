@@ -28,7 +28,7 @@ from .errors import TooManyRedirects
 from .multipart import build_multipart_body
 
 
-_BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(1e3, 9e3))
+_BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(10 ** 3, 10 ** 9))
 _WWX_MATCH = re.compile(r"\Aww.\.")
 
 
