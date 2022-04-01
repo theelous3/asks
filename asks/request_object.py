@@ -365,7 +365,7 @@ class RequestProcessor:
             location = urljoin(self.uri, location.strip())
             if self.auth is not None:
                 if not self.auth_off_domain:
-                    allow_redirect = self._location_auth_protect(location)
+                    allow_redirect = await self._location_auth_protect(location)
             self.uri = location
             l_scheme, l_netloc, *_ = urlparse(location)
             if l_scheme != self.scheme or l_netloc != self.host:
