@@ -174,7 +174,7 @@ class RequestProcessor:
                 ("Accept-Encoding", "gzip, deflate"),
                 ("Accept", "*/*"),
                 ("Content-Length", "0"),
-                ("User-Agent", "python-asks/2.4.12"),
+                ("User-Agent", "python-asks/3.0.0"),
             ]
         )
 
