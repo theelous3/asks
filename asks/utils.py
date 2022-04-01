@@ -11,7 +11,7 @@ from .errors import RequestTimeout
 
 async def timeout_manager(timeout, coro, *args):
     try:
-        async with fail_after(timeout):
+        with fail_after(timeout):
             return await coro(*args)
     except TimeoutError as e:
         raise RequestTimeout from e

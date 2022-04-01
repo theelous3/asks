@@ -89,7 +89,7 @@ There are of course many ways to achieve this, but the above is noob friendly. A
     async def main():
         async with curio.TaskGroup() as g:
             for key, url in enumerate(url_list):
-                await g.spawn(worker, key, url)
+                g.start_soon(worker, key, url)
             # Here we iterate the TaskGroup, getting results as they come.
             async for _ in g:
                 print(f"done with {results[-1][0]}")
