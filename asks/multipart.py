@@ -1,10 +1,8 @@
 import mimetypes
-
-from typing import BinaryIO, NamedTuple, Union, Optional
 from pathlib import Path
+from typing import Any, BinaryIO, NamedTuple, Optional, Union
 
-from anyio import open_file, AsyncFile
-
+from anyio import AsyncFile, open_file
 
 _RAW_BYTES_MIMETYPE = "application/octet-stream"
 
@@ -17,11 +15,11 @@ class MultipartData(NamedTuple):
     a field to be sent, and/or to send raw bytes as files.
     """
 
-    binary_source: Union[Path, bytes, BinaryIO, AsyncFile]
+    binary_source: Union[Path, bytes, BinaryIO, AsyncFile[Any]]
     mime_type: Optional[str] = _RAW_BYTES_MIMETYPE
     basename: Optional[str] = None
 
-    async def to_bytes(self):
+    async def to_bytes(self) -> bytes:
         binary_source = self.binary_source
 
         if isinstance(binary_source, Path):
@@ -39,10 +37,10 @@ class MultipartData(NamedTuple):
             return result
 
         # We must then assume it is a coroutine.
-        return await result
+        return bytes(await result)
 
 
-def _to_multipart_file(value):
+def _to_multipart_file(value: Any) -> MultipartData:
     """
     Ensure a file-like supported type is encapsulated in a MultipartData object.
 
@@ -61,10 +59,14 @@ def _to_multipart_file(value):
         else _RAW_BYTES_MIMETYPE
     )
 
-    return MultipartData(binary_source=value, mime_type=mime_type, basename=basename,)
+    return MultipartData(
+        binary_source=value,
+        mime_type=mime_type,
+        basename=basename,
+    )
 
 
-def _to_multipart_form_data(value, encoding):
+def _to_multipart_form_data(value: Any, encoding: str) -> MultipartData:
     """
     Transform a form-data entry into a MultipartData object.
 
@@ -86,11 +88,13 @@ def _to_multipart_form_data(value, encoding):
 
     # It's not a supported file type, so we do our best to transform it into form data.
     return MultipartData(
-        binary_source=str(value).encode(encoding), mime_type=None, basename=None,
+        binary_source=str(value).encode(encoding),
+        mime_type=None,
+        basename=None,
     )
 
 
-async def build_multipart_body(values, encoding, boundary_data):
+async def build_multipart_body(values: Any, encoding: Any, boundary_data: Any) -> bytes:
     """
     Forms a multipart request body from  a dict of form fields to values.
 

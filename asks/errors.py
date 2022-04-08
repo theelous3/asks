@@ -2,6 +2,8 @@
 Simple exceptions to be raised in case of errors.
 """
 
+from typing import Any
+
 
 class AsksException(Exception):
     """
@@ -28,7 +30,12 @@ class BadHttpResponse(AsksException):
 
 
 class BadStatus(AsksException):
-    def __init__(self, err, response, status_code=500):
+    def __init__(
+        self,
+        err: Any,
+        response: "response_objects.BaseResponse",
+        status_code: int = 500,
+    ) -> None:
         super().__init__(err)
         self.response = response
         self.status_code = status_code
@@ -42,3 +49,6 @@ class RequestTimeout(ConnectivityError):
 
 class ServerClosedConnectionError(ConnectivityError):
     pass
+
+
+from . import response_objects  # noqa

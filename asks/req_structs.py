@@ -3,32 +3,48 @@
 Some structures used throughout asks.
 """
 from collections import OrderedDict, deque
-from collections.abc import MutableMapping, Mapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Generator, Iterable, Iterator, Optional, Protocol, cast
 
 
-class SocketQ(deque):
+class SocketLike(Protocol):
+    host: str
+    port: str
+    _active: bool
+
+    async def receive(self, max_bytes: int = 65536) -> bytes:
+        ...
+
+    async def aclose(self) -> None:
+        ...
+
+    async def send(self, item: Optional[bytes]) -> None:
+        ...
+
+
+class SocketQ(deque[SocketLike]):
     """
     A funky little subclass of deque built for the session classes.
     Allows for connection pooling of sockets to remote hosts.
     """
 
-    def index(self, host_loc):
+    def index(self, host_loc: object, _a: int = 0, _b: int = 0) -> int:
         try:
             return next(index for index, i in enumerate(self) if i.host == host_loc)
         except StopIteration:
-            raise ValueError("{} not in SocketQ".format(host_loc)) from None
+            raise ValueError("{!r} not in SocketQ".format(host_loc)) from None
 
-    def pull(self, index):
+    def pull(self, index: Any) -> SocketLike:
         x = self[index]
         del self[index]
         return x
 
-    async def free_pool(self):
+    async def free_pool(self) -> None:
         while self:
             sock = self.pop()
             await sock.aclose()
 
-    def __contains__(self, host_loc):
+    def __contains__(self, host_loc: object) -> bool:
         for i in self:
             if i.host == host_loc:
                 return True
@@ -47,7 +63,7 @@ requests can be found here:
 """
 
 
-class CaseInsensitiveDict(MutableMapping):
+class CaseInsensitiveDict(MutableMapping[str, str]):
     """A case-insensitive ``dict``-like object.
     Implements all methods and operations of
     ``collections.MutableMapping`` as well as dict's ``copy``. Also
@@ -69,34 +85,41 @@ class CaseInsensitiveDict(MutableMapping):
     behavior is undefined.
     """
 
-    def __init__(self, data=None, **kwargs):
-        self._store = OrderedDict()
+    def __init__(
+        self, data: Optional[Iterable[tuple[str, str]]] = None, **kwargs: Any
+    ) -> None:
+        self._store: OrderedDict[str, tuple[str, str]] = OrderedDict()
         if data is None:
             data = {}
         self.update(data, **kwargs)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         # Use the lowercased key for lookups, but store the actual
         # key alongside the value.
         self._store[key.lower()] = (key, value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self._store[key.lower()][1]
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._store[key.lower()]
 
-    def __iter__(self):
-        return (casedkey for casedkey, mappedvalue in self._store.values())
+    def __iter__(self) -> Iterator[str]:
+        return (
+            casedkey
+            for casedkey, mappedvalue in cast(
+                Iterable[tuple[str, tuple[str, str]]], self._store.values()
+            )
+        )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def lower_items(self):
+    def lower_items(self) -> Generator[tuple[str, str], None, None]:
         """Like items(), but with all lowercase keys."""
         return ((lowerkey, keyval[1]) for (lowerkey, keyval) in self._store.items())
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Mapping):
             other = CaseInsensitiveDict(other)
         else:
@@ -105,8 +128,10 @@ class CaseInsensitiveDict(MutableMapping):
         return dict(self.lower_items()) == dict(other.lower_items())
 
     # Copy is required
-    def copy(self):
-        return CaseInsensitiveDict(self._store.values())
+    def copy(self) -> "CaseInsensitiveDict":
+        return CaseInsensitiveDict(
+            ((key, val[1]) for (key, val) in self._store.items())
+        )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(dict(self.items()))

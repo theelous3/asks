@@ -1,15 +1,18 @@
 __all__ = ["get_netloc_port", "requote_uri", "timeout_manager"]
 
 
-from urllib.parse import quote
 from functools import wraps
+from typing import Any, Callable, Optional
+from urllib.parse import ParseResult, quote
 
 from anyio import fail_after
 
 from .errors import RequestTimeout
 
 
-async def timeout_manager(timeout, coro, *args):
+async def timeout_manager(
+    timeout: Optional[float], coro: Callable[..., Any], *args: Any
+) -> Any:
     try:
         with fail_after(timeout):
             return await coro(*args)
@@ -17,13 +20,13 @@ async def timeout_manager(timeout, coro, *args):
         raise RequestTimeout from e
 
 
-def get_netloc_port(parsed_url):
-    port = parsed_url.port
+def get_netloc_port(parsed_url: ParseResult) -> tuple[Optional[str], str]:
+    port: Optional[int] = parsed_url.port
     if not port:
         if parsed_url.scheme == "https":
-            port = "443"
+            port = 443
         else:
-            port = "80"
+            port = 80
     return parsed_url.hostname, str(port)
 
 
@@ -33,7 +36,7 @@ UNRESERVED_SET = (
 )
 
 
-def unquote_unreserved(uri):
+def unquote_unreserved(uri: str) -> str:
     """Un-escape any percent-escape sequences in a URI that are unreserved
     characters. This leaves all reserved, illegal and non-ASCII bytes encoded.
     :rtype: str
@@ -56,7 +59,7 @@ def unquote_unreserved(uri):
     return "".join(parts)
 
 
-def requote_uri(uri):
+def requote_uri(uri: str) -> str:
     """Re-quote the given URI.
     This function passes the given URI through an unquote/quote cycle to
     ensure that it is fully and consistently quoted.
@@ -76,9 +79,9 @@ def requote_uri(uri):
         return quote(uri, safe=safe_without_percent)
 
 
-def processor(gen):
+def processor(gen: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(gen)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         g = gen(*args, **kwargs)
         next(g)
         return g
