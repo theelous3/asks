@@ -1,7 +1,7 @@
 import codecs
 import json as _json
 from types import SimpleNamespace
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Union, cast
 
 import h11
 from async_generator import async_generator, yield_
@@ -21,12 +21,12 @@ class BaseResponse:
 
     def __init__(
         self,
-        encoding: str,
+        encoding: Optional[str],
         http_version: str,
         status_code: int,
         reason_phrase: str,
         headers: dict[str, str],
-        body: bytes,
+        body: Union[str, bytes, bytearray],
         method: str,
         url: str,
     ) -> None:
@@ -38,7 +38,7 @@ class BaseResponse:
         self.body = body
         self.method = method
         self.url = url
-        self.history: list["BaseResponse"] = []
+        self.history: list["Union[Response, StreamResponse]"] = []
         self.cookies: list["Cookie"] = []
 
     def raise_for_status(self) -> None:
@@ -75,18 +75,22 @@ class BaseResponse:
         except LookupError:  # IndexError/KeyError are LookupError subclasses
             pass
 
-    def _decompress(self, encoding: Optional[str] = None) -> Any:
+    def _decompress(self, encoding: Optional[str] = None) -> str:
         content_encoding = self.headers.get("Content-Encoding", None)
         if content_encoding is not None:
             decompressor = decompress(
                 parse_content_encoding(content_encoding), encoding
             )
             r = decompressor.send(self.body)
-            return r
+            return cast(str, r)
         else:
             if encoding is not None:
+                if not isinstance(self.body, bytes) and not isinstance(self.body, bytearray):
+                    raise TypeError("body is not bytes when it should be")
                 return self.body.decode(encoding, errors="replace")
             else:
+                if not isinstance(self.body, str):
+                    raise TypeError("body is not str when it should be")
                 return self.body
 
     async def __aenter__(self) -> "BaseResponse":
@@ -120,7 +124,7 @@ class Response(BaseResponse):
         return self._decompress()
 
     @property
-    def raw(self) -> bytes:
+    def raw(self) -> Union[str, bytes, bytearray]:
         """
         Returns the response body as received.
         """
@@ -151,7 +155,8 @@ class StreamBody:
     @async_generator
     async def __aiter__(self) -> None:
         if self.content_encoding is not None:
-            decompressor = decompress(parse_content_encoding(self.content_encoding))
+            decompressor = decompress(
+                parse_content_encoding(self.content_encoding))
         while True:
             event = await self._recv_event()
             if isinstance(event, h11.Data):

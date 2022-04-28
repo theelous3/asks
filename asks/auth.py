@@ -146,6 +146,10 @@ class DigestAuth(PostResponseAuth):
         bytes_method = bytes(req_obj.method, self.encoding)
         try:
             if b"auth-int" in auth_dict["qop"].lower():
+
+                if isinstance(response_obj.raw, str):
+                    raise ValueError("response_obj.raw is str when it shouldn't")
+
                 hashed_body = bytes(
                     md5(response_obj.raw or b"").hexdigest(), self.encoding
                 )

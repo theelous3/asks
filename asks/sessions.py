@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
 from ssl import SSLContext
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urlunparse
 
 from anyio import Semaphore, connect_tcp
@@ -16,7 +16,7 @@ from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
 from .req_structs import SocketLike, SocketQ
 from .request_object import RequestProcessor
-from .response_objects import Response
+from .response_objects import Response, StreamResponse
 from .utils import get_netloc_port, timeout_manager
 
 __all__ = ["Session"]
@@ -128,7 +128,7 @@ class BaseSession(metaclass=ABCMeta):
         retries: int = 1,
         connection_timeout: int = 60,
         **kwargs: Any
-    ) -> Response:
+    ) -> Union[Response, StreamResponse]:
         """
         This is the template for all of the `http method` methods for
         the Session.

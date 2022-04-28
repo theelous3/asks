@@ -15,7 +15,7 @@ from collections.abc import Awaitable, Callable
 from numbers import Number
 from os.path import basename
 from random import randint
-from typing import Any, Iterable, Optional, Protocol, cast
+from typing import Any, Iterable, Optional, Protocol, Union, cast
 from urllib.parse import quote_plus, urljoin, urlparse, urlunparse
 
 import h11
@@ -98,17 +98,17 @@ class RequestProcessor:
 
     def __init__(
         self,
-        session: "sessions.BaseSession",
+        session: "Optional[sessions.BaseSession]",
         method: str,
         uri: str,
-        port: str,
+        port: Optional[str],
         **kwargs: Any
     ) -> None:
         # These are kwargsable attribs.
         self.session = session
         self.method = method.upper()
         self.uri = uri
-        self.port = port
+        self.port = port or "443"
         self.auth = None
         self.auth_off_domain = None
         self.body: Optional[str] = None
@@ -134,7 +134,7 @@ class RequestProcessor:
         self.__dict__.update(kwargs)
 
         # These are unkwargsable, and set by the code.
-        self.history_objects: list[BaseResponse] = []
+        self.history_objects: list[Union[Response, StreamResponse]] = []
         self.scheme: Optional[str] = None
         self.host: Optional[str] = None
         self.path: Optional[str] = None
@@ -150,7 +150,7 @@ class RequestProcessor:
 
     async def make_request(
         self, redirect: bool = False
-    ) -> tuple[Optional[SocketLike], BaseResponse]:
+    ) -> tuple[Optional[SocketLike], Union[Response, StreamResponse]]:
         """
         Acts as the central hub for preparing requests to be sent, and
         returning them upon completion. Generally just pokes through
@@ -285,7 +285,7 @@ class RequestProcessor:
         h11_request: h11.Request,
         h11_body: Optional[h11.Data],
         h11_connection: h11.Connection,
-    ) -> BaseResponse:
+    ) -> Union[Response, StreamResponse]:
         """
         Takes care of the i/o side of the request once it's been built,
         and calls a couple of cleanup functions to check for redirects / store
@@ -367,7 +367,7 @@ class RequestProcessor:
             (self.scheme, self.host, (self.path or ""), "", "", "")
         )
 
-    async def _redirect(self, response_obj: BaseResponse) -> BaseResponse:
+    async def _redirect(self, response_obj: Union[Response, StreamResponse]) -> Union[Response, StreamResponse]:
         """
         Calls the _check_redirect method of the supplied response object
         in order to determine if the http status code indicates a redirect.
@@ -429,6 +429,8 @@ class RequestProcessor:
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         """
+        if not self.session:
+            raise ValueError("session is none")
         self.sock = await self.session._grab_connection(self.uri)
         self.sock._active = False
         self.port = self.sock.port
@@ -586,7 +588,7 @@ class RequestProcessor:
         async with await open_file(path, "rb") as f:
             return b"".join(await f.readlines()) + b"\r\n"
 
-    async def _catch_response(self, h11_connection: h11.Connection) -> BaseResponse:
+    async def _catch_response(self, h11_connection: Optional[h11.Connection]) -> Union[Response, StreamResponse]:
         """
         Instantiates the parser which manages incoming data, first getting
         the headers, storing cookies, and then parsing the response's body,
@@ -757,8 +759,8 @@ class RequestProcessor:
         return {}
 
     async def _auth_handler_post_check_retry(
-        self, response_obj: BaseResponse
-    ) -> BaseResponse:
+        self, response_obj: Union[Response, StreamResponse]
+    ) -> Union[Response, StreamResponse]:
         """
         The other half of _auth_handler_post_check_retry (what a mouthful).
         If auth has not yet been attempted and the most recent response

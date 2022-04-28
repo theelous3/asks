@@ -4,15 +4,15 @@ They construct a temporary Session, returning the resulting response object
 to the caller.
 """
 from functools import partial
-from typing import Any
+from typing import Any, Union
 
-from .response_objects import Response
+from .response_objects import Response, StreamResponse
 from .sessions import Session
 
 __all__ = ["get", "head", "post", "put", "delete", "options", "patch", "request"]
 
 
-async def request(method: str, uri: str, **kwargs: Any) -> Response:
+async def request(method: str, uri: str, **kwargs: Any) -> Union[Response, StreamResponse]:
     """Base function for one time http requests.
 
     Args:

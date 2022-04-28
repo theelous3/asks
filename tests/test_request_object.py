@@ -1,20 +1,23 @@
 # pylint: disable=no-member
+from typing import Any, Union
 
 import h11
 import pytest
 
 from asks.request_object import RequestProcessor
+from asks.response_objects import Response
 
 
-def _catch_response(monkeypatch, headers, data, http_version=b"1.1"):
+def _catch_response(monkeypatch: pytest.MonkeyPatch, headers: list[tuple[str, str]], data: bytes, http_version: bytes = b"1.1") -> Response:
     req = RequestProcessor(None, "get", "toot-toot", None)
     events = [
-        h11._events.Response(status_code=200, headers=headers, http_version=http_version),
+        h11._events.Response(status_code=200, headers=headers,
+                             http_version=http_version),
         h11._events.Data(data=data),
         h11._events.EndOfMessage(),
     ]
 
-    async def _recv_event(hconn):
+    async def _recv_event(hconn: Any) -> h11._events.Event:
         return events.pop(0)
 
     monkeypatch.setattr(req, "_recv_event", _recv_event)
@@ -27,16 +30,19 @@ def _catch_response(monkeypatch, headers, data, http_version=b"1.1"):
     return response
 
 
-def test_http1_1(monkeypatch):
-    response = _catch_response(monkeypatch, [("Content-Length", "5")], b"hello")
+def test_http1_1(monkeypatch: pytest.MonkeyPatch) -> None:
+    response = _catch_response(
+        monkeypatch, [("Content-Length", "5")], b"hello")
     assert response.body == b"hello"
 
 
-def test_http1_1_connection_close(monkeypatch):
-    response = _catch_response(monkeypatch, [("Connection", "close")], b"hello")
+def test_http1_1_connection_close(monkeypatch: pytest.MonkeyPatch) -> None:
+    response = _catch_response(
+        monkeypatch, [("Connection", "close")], b"hello")
     assert response.body == b"hello"
 
-def test_http1_0_no_content_length(monkeypatch):
+
+def test_http1_0_no_content_length(monkeypatch: pytest.MonkeyPatch) -> None:
     response = _catch_response(monkeypatch, [], b"hello", b"1.0")
     assert response.body == b"hello"
 
@@ -50,5 +56,5 @@ def test_http1_0_no_content_length(monkeypatch):
         [{"false": False}, "?false=False"],
     ],
 )
-def test_dict_to_query(data, query_str):
+def test_dict_to_query(data, query_str) -> None:
     assert RequestProcessor._dict_to_query(data) == query_str
