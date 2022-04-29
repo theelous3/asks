@@ -1,7 +1,7 @@
 import codecs
 import json as _json
 from types import SimpleNamespace
-from typing import Any, Iterator, Optional, Union, cast
+from typing import Any, Generic, Iterator, Optional, TypeVar, Union, cast
 
 import h11
 from async_generator import async_generator, yield_
@@ -12,7 +12,10 @@ from .req_structs import SocketLike
 from .utils import timeout_manager
 
 
-class BaseResponse:
+BodyType = TypeVar('BodyType')
+
+
+class BaseResponse(Generic[BodyType]):
     """
     A response object supporting a range of methods and attribs
     for accessing the status line, header, cookies, history and
@@ -26,7 +29,7 @@ class BaseResponse:
         status_code: int,
         reason_phrase: str,
         headers: dict[str, str],
-        body: Union[str, bytes, bytearray],
+        body: BodyType,
         method: str,
         url: str,
     ) -> None:
@@ -93,14 +96,14 @@ class BaseResponse:
                     raise TypeError("body is not str when it should be")
                 return self.body
 
-    async def __aenter__(self) -> "BaseResponse":
+    async def __aenter__(self) -> "BaseResponse[BodyType]":
         return self
 
     async def __aexit__(self, *exc_info: Any) -> Any:
         ...
 
 
-class Response(BaseResponse):
+class Response(BaseResponse[Union[str, bytes, bytearray]]):
     def json(self, **kwargs: Any) -> Any:
         """
         If the response's body is valid json, we load it as a python dict
@@ -129,10 +132,6 @@ class Response(BaseResponse):
         Returns the response body as received.
         """
         return self.body
-
-
-class StreamResponse(BaseResponse):
-    ...
 
 
 class StreamBody:
@@ -193,6 +192,10 @@ class StreamBody:
 
     async def __aexit__(self, *exc_info: Any) -> None:
         await self.close()
+
+
+class StreamResponse(BaseResponse[StreamBody]):
+    ...
 
 
 class Cookie(SimpleNamespace):

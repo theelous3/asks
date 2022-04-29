@@ -63,7 +63,7 @@ async def test_multipart_body_with_file_like_argument() -> None:
 
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": f, "notfile": "abc",}),
+            values=OrderedDict({"file": f, "notfile": "abc", }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
         )
@@ -74,7 +74,7 @@ async def test_multipart_body_with_file_like_argument() -> None:
 async def test_multipart_body_with_path_argument(dummy_file_path: Path) -> None:
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": dummy_file_path, "notfile": "abc",}),
+            values=OrderedDict({"file": dummy_file_path, "notfile": "abc", }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
         )
@@ -90,7 +90,8 @@ async def test_multipart_body_with_multiple_arguments(dummy_file_path: Path) -> 
     assert (
         await build_multipart_body(
             values=OrderedDict(
-                {"file": dummy_file_path, "file2": f, "notfile": "abc", "integer": 3,}
+                {"file": dummy_file_path, "file2": f,
+                    "notfile": "abc", "integer": 3, }
             ),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
@@ -107,7 +108,8 @@ async def test_multipart_body_with_custom_metadata() -> None:
     assert (
         await build_multipart_body(
             values=OrderedDict(
-                {"file": MultipartData(f, mime_type="text/plain", basename="test.txt"),}
+                {"file": MultipartData(
+                    f, mime_type="text/plain", basename="test.txt"), }
             ),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!5649",
@@ -119,7 +121,7 @@ async def test_multipart_body_with_custom_metadata() -> None:
 async def test_multipart_body_with_real_test_file(dummy_file_path: Path) -> None:
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": dummy_file_path,}),
+            values=OrderedDict({"file": dummy_file_path, }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!5649",
         )
@@ -131,7 +133,7 @@ async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path: Pa
     async with await open_file(dummy_file_path, "rb") as f:
         assert (
             await build_multipart_body(
-                values=OrderedDict({"file": f,}),
+                values=OrderedDict({"file": f, }),
                 encoding="utf8",
                 boundary_data="8banana133744910kmmr13a56!102!5649",
             )

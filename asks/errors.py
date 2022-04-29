@@ -33,7 +33,7 @@ class BadStatus(AsksException):
     def __init__(
         self,
         err: Any,
-        response: "response_objects.BaseResponse",
+        response: "response_objects.BaseResponse[Any]",
         status_code: int = 500,
     ) -> None:
         super().__init__(err)

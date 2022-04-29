@@ -27,7 +27,7 @@ from .errors import TooManyRedirects
 from .multipart import build_multipart_body
 from .req_structs import CaseInsensitiveDict as c_i_dict
 from .req_structs import SocketLike
-from .response_objects import (BaseResponse, Response, StreamBody,
+from .response_objects import (Response, StreamBody,
                                StreamResponse)
 from .utils import requote_uri
 
@@ -202,7 +202,8 @@ class RequestProcessor:
         # What the fuck is this shit.
         if self.persist_cookies is not None:
             self.cookies.update(
-                self.persist_cookies.get_additional_cookies(self.host, self.path)
+                self.persist_cookies.get_additional_cookies(
+                    self.host, self.path)
             )
 
         # formulate path / query and intended extra querys for use in uri
@@ -250,7 +251,8 @@ class RequestProcessor:
 
         # Construct h11 request object.
         req = h11.Request(
-            method=self.method, target=self.path, headers=list(asks_headers.items())
+            method=self.method, target=self.path, headers=list(
+                asks_headers.items())
         )
 
         # call i/o handling func
@@ -570,13 +572,16 @@ class RequestProcessor:
                 if not mime_type_tuple[1]:
                     mime_type = "application/octet-stream"
                 else:
-                    mime_type = "{}/{}".format(mime_type_tuple[0], mime_type_tuple[1])
-                multip_pkg += bytes("\r\nContent-Type: " + mime_type, self.encoding)
+                    mime_type = "{}/{}".format(
+                        mime_type_tuple[0], mime_type_tuple[1])
+                multip_pkg += bytes("\r\nContent-Type: " +
+                                    mime_type, self.encoding)
                 multip_pkg += b"\r\n" * 2 + pkg_body
 
             except (TypeError, FileNotFoundError):
                 pkg_body = bytes(v, self.encoding) + b"\r\n"
-                multip_pkg += bytes(hder_format.format(k) + "\r\n" * 2, self.encoding)
+                multip_pkg += bytes(hder_format.format(k) +
+                                    "\r\n" * 2, self.encoding)
                 multip_pkg += pkg_body
 
             if index == num_of_parts:
@@ -588,7 +593,7 @@ class RequestProcessor:
         async with await open_file(path, "rb") as f:
             return b"".join(await f.readlines()) + b"\r\n"
 
-    async def _catch_response(self, h11_connection: Optional[h11.Connection]) -> Union[Response, StreamResponse]:
+    async def _catch_response(self, h11_connection: h11.Connection) -> Union[Response, StreamResponse]:
         """
         Instantiates the parser which manages incoming data, first getting
         the headers, storing cookies, and then parsing the response's body,
@@ -628,9 +633,11 @@ class RequestProcessor:
         for header in response.headers:
             if header[0].lower() == b"set-cookie":
                 try:
-                    resp_data["headers"]["set-cookie"].append(str(header[1], "utf-8"))
+                    resp_data["headers"]["set-cookie"].append(
+                        str(header[1], "utf-8"))
                 except (KeyError, AttributeError):
-                    resp_data["headers"]["set-cookie"] = [str(header[1], "utf-8")]
+                    resp_data["headers"]["set-cookie"] = [
+                        str(header[1], "utf-8")]
 
         # check whether we should receive body according to RFC 7230
         # https://tools.ietf.org/html/rfc7230#section-3.3.3
@@ -644,7 +651,8 @@ class RequestProcessor:
                     get_body = True
             except KeyError:
                 connection_close = (
-                    resp_data["headers"].get("connection", "").lower() == "close"
+                    resp_data["headers"].get(
+                        "connection", "").lower() == "close"
                 )
                 http_1 = response.http_version == b"1.0"
                 if connection_close or http_1:

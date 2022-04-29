@@ -1,7 +1,7 @@
 __all__ = ["CookieTracker", "parse_cookies"]
 
 
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from .response_objects import BaseResponse, Cookie
 
@@ -21,7 +21,7 @@ class CookieTracker:
         netloc = netloc.replace("://www.", "://", 1)
         return self._check_cookies(netloc + path)
 
-    def _store_cookies(self, response_obj: BaseResponse) -> None:
+    def _store_cookies(self, response_obj: BaseResponse[Any]) -> None:
         for cookie in response_obj.cookies:
             try:
                 self.domain_dict[cookie.host.lstrip()].append(cookie)
@@ -49,7 +49,7 @@ class CookieTracker:
         return cookies_to_go
 
 
-def parse_cookies(response: BaseResponse, host: str) -> None:
+def parse_cookies(response: BaseResponse[Any], host: str) -> None:
     """
     Sticks cookies to a response.
     """

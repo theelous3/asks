@@ -90,4 +90,4 @@ def test_api_url_construction_but_no_base() -> None:
     base_location, endpoint, path = ("", "/some_endpoint", "/some_path")
     session = Session(base_location=base_location, endpoint=endpoint)
     with pytest.raises(ValueError):
-        constructed_url = session._make_url(path)
+        _ = session._make_url(path)
