@@ -7,19 +7,23 @@ __all__ = ["decompress", "decompress_one", "parse_content_encoding"]
 
 
 import codecs
-from zlib import decompressobj, MAX_WBITS
+from typing import Iterator, Optional
+from zlib import MAX_WBITS, decompressobj
 
 from .utils import processor
 
 
-def parse_content_encoding(content_encoding: str) -> [str]:
+def parse_content_encoding(content_encoding: str) -> list[str]:
     compressions = [x.strip() for x in content_encoding.split(",")]
     return compressions
 
 
 @processor
-def decompress(compressions, encoding=None):
-    data = b""
+def decompress(
+    compressions: list[str], encoding: Optional[str] = None
+) -> Iterator[bytes]:
+    encoded: Optional[bytes] = b""
+    decoded: bytes = b""
     # https://tools.ietf.org/html/rfc7231
     # "If one or more encodings have been applied to a representation, the
     # sender that applied the encodings MUST generate a Content-Encoding
@@ -32,9 +36,11 @@ def decompress(compressions, encoding=None):
     if encoding:
         decompressors.append(make_decoder_shim(encoding))
     while True:
-        data = yield data
-        for decompressor in decompressors:
-            data = decompressor.send(data)
+        encoded = yield decoded
+        if encoded is not None:
+            for decompressor in decompressors:
+                encoded = decompressor.send(encoded)
+            decoded = encoded
 
 
 # https://tools.ietf.org/html/rfc7230#section-4.2.1 - #section-4.2.3
@@ -47,20 +53,24 @@ DECOMPRESS_WBITS = {
 
 
 @processor
-def decompress_one(compression):
-    data = b""
+def decompress_one(compression: str) -> Iterator[bytes]:
+    encoded: Optional[bytes] = b""
+    decoded: bytes = b""
     decompressor = decompressobj(wbits=DECOMPRESS_WBITS[compression])
     while True:
-        data = yield data
-        data = decompressor.decompress(data)
+        encoded = yield decoded
+        if encoded is not None:
+            decoded = decompressor.decompress(encoded)
     yield decompressor.flush()
 
 
 @processor
-def make_decoder_shim(encoding):
-    data = b""
+def make_decoder_shim(encoding: str) -> Iterator[str]:
+    encoded: Optional[bytes] = b""
+    decoded: str = ""
     decoder = codecs.getincrementaldecoder(encoding)(errors="replace")
     while True:
-        data = yield data
-        data = decoder.decode(data)
+        encoded = yield decoded
+        if encoded is not None:
+            decoded = decoder.decode(encoded)
     yield decoder.decode(b"", final=True)

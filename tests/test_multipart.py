@@ -12,7 +12,7 @@ pytestmark = pytest.mark.anyio
 
 
 @pytest.fixture(scope="session")
-def dummy_file_path(tmpdir_factory):
+def dummy_file_path(tmpdir_factory: pytest.TempdirFactory) -> Path:
     dummy = tmpdir_factory.mktemp("multipart").join("test.txt")
 
     with open(dummy, "w") as f:
@@ -21,7 +21,7 @@ def dummy_file_path(tmpdir_factory):
     return Path(dummy)
 
 
-async def test_multipart_body_dummy_file():
+async def test_multipart_body_dummy_file() -> None:
     assert (
         await build_multipart_body(
             values=OrderedDict(
@@ -38,7 +38,7 @@ async def test_multipart_body_dummy_file():
     )
 
 
-async def test_multipart_body_with_not_file_argument():
+async def test_multipart_body_with_not_file_argument() -> None:
     assert (
         await build_multipart_body(
             values=OrderedDict(
@@ -56,14 +56,14 @@ async def test_multipart_body_with_not_file_argument():
     )
 
 
-async def test_multipart_body_with_file_like_argument():
+async def test_multipart_body_with_file_like_argument() -> None:
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile\n")
     f.name = "test.txt"
 
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": f, "notfile": "abc",}),
+            values=OrderedDict({"file": f, "notfile": "abc", }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
         )
@@ -71,10 +71,10 @@ async def test_multipart_body_with_file_like_argument():
     )
 
 
-async def test_multipart_body_with_path_argument(dummy_file_path):
+async def test_multipart_body_with_path_argument(dummy_file_path: Path) -> None:
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": dummy_file_path, "notfile": "abc",}),
+            values=OrderedDict({"file": dummy_file_path, "notfile": "abc", }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
         )
@@ -82,7 +82,7 @@ async def test_multipart_body_with_path_argument(dummy_file_path):
     )
 
 
-async def test_multipart_body_with_multiple_arguments(dummy_file_path):
+async def test_multipart_body_with_multiple_arguments(dummy_file_path: Path) -> None:
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile2\n")
     f.name = "test.jpg"
@@ -90,7 +90,8 @@ async def test_multipart_body_with_multiple_arguments(dummy_file_path):
     assert (
         await build_multipart_body(
             values=OrderedDict(
-                {"file": dummy_file_path, "file2": f, "notfile": "abc", "integer": 3,}
+                {"file": dummy_file_path, "file2": f,
+                    "notfile": "abc", "integer": 3, }
             ),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!8423",
@@ -99,7 +100,7 @@ async def test_multipart_body_with_multiple_arguments(dummy_file_path):
     )
 
 
-async def test_multipart_body_with_custom_metadata():
+async def test_multipart_body_with_custom_metadata() -> None:
     # Simulate an open file with a BytesIO.
     f = BytesIO(b"dummyfile but it is a jpeg\n")
     f.name = "test.jpg"
@@ -107,7 +108,8 @@ async def test_multipart_body_with_custom_metadata():
     assert (
         await build_multipart_body(
             values=OrderedDict(
-                {"file": MultipartData(f, mime_type="text/plain", basename="test.txt"),}
+                {"file": MultipartData(
+                    f, mime_type="text/plain", basename="test.txt"), }
             ),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!5649",
@@ -116,10 +118,10 @@ async def test_multipart_body_with_custom_metadata():
     )
 
 
-async def test_multipart_body_with_real_test_file(dummy_file_path):
+async def test_multipart_body_with_real_test_file(dummy_file_path: Path) -> None:
     assert (
         await build_multipart_body(
-            values=OrderedDict({"file": dummy_file_path,}),
+            values=OrderedDict({"file": dummy_file_path, }),
             encoding="utf8",
             boundary_data="8banana133744910kmmr13a56!102!5649",
         )
@@ -127,11 +129,11 @@ async def test_multipart_body_with_real_test_file(dummy_file_path):
     )
 
 
-async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path):
+async def test_multipart_body_with_real_pre_opened_test_file(dummy_file_path: Path) -> None:
     async with await open_file(dummy_file_path, "rb") as f:
         assert (
             await build_multipart_body(
-                values=OrderedDict({"file": f,}),
+                values=OrderedDict({"file": f, }),
                 encoding="utf8",
                 boundary_data="8banana133744910kmmr13a56!102!5649",
             )

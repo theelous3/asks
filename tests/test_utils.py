@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from asks.utils import get_netloc_port
 
 
-def test_netloc_port():
+def test_netloc_port() -> None:
     assert ("example.com", "80") == get_netloc_port(urlparse("http://example.com"))
     assert ("example.com", "443") == get_netloc_port(urlparse("http://example.com:443"))
     assert ("example.com", "443") == get_netloc_port(urlparse("https://example.com"))

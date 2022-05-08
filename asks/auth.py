@@ -1,13 +1,11 @@
 # pylint: disable=abstract-method
-from abc import abstractmethod, ABCMeta
-
-import re
-
 import base64
+import re
+from abc import ABCMeta, abstractmethod
 from hashlib import md5
 from random import choice
 from string import ascii_lowercase, digits
-
+from typing import Any
 
 __all__ = ["AuthBase", "PreResponseAuth", "PostResponseAuth", "BasicAuth", "DigestAuth"]
 
@@ -20,7 +18,11 @@ class AuthBase(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def __call__(self):
+    async def __call__(
+        self,
+        response_obj: "response_objects.Response",
+        req_obj: "request_object.RequestProcessor",
+    ) -> dict[str, str]:
         """Not Implemented"""
 
 
@@ -37,7 +39,9 @@ class PostResponseAuth(AuthBase):
     Auth class for response dependant auth.
     """
 
-    def __init__(self):
+    auth_attempted: bool
+
+    def __init__(self) -> None:
         self.auth_attempted = False
 
 
@@ -46,11 +50,15 @@ class BasicAuth(PreResponseAuth):
     Ye Olde Basic HTTP Auth.
     """
 
-    def __init__(self, auth_info, encoding="utf-8"):
+    def __init__(self, auth_info: Any, encoding: str = "utf-8"):
         self.auth_info = auth_info
         self.encoding = encoding
 
-    async def __call__(self, _):
+    async def __call__(
+        self,
+        response_obj: "response_objects.Response",
+        req_obj: "request_object.RequestProcessor",
+    ) -> dict[str, str]:
         usrname, psword = [bytes(x, self.encoding) for x in self.auth_info]
         encoded_auth = str(base64.b64encode(usrname + b":" + psword), self.encoding)
         return {"Authorization": "Basic {}".format(encoded_auth)}
@@ -69,7 +77,9 @@ class DigestAuth(PostResponseAuth):
 
     _HDR_VAL_PARSE = re.compile(r'\b(\w+)=(?:"([^\\"]+)"|(\S+))')
 
-    def __init__(self, auth_info, encoding="utf-8"):
+    domain_space: list[Any]
+
+    def __init__(self, auth_info: Any, encoding: str = "utf-8") -> None:
         super().__init__()
         self.auth_info = auth_info
         self.encoding = encoding
@@ -77,7 +87,11 @@ class DigestAuth(PostResponseAuth):
         self.nonce = None
         self.nonce_count = 1
 
-    async def __call__(self, response_obj, req_obj):
+    async def __call__(
+        self,
+        response_obj: "response_objects.Response",
+        req_obj: "request_object.RequestProcessor",
+    ) -> dict[str, str]:
 
         usrname, psword = [bytes(x, self.encoding) for x in self.auth_info]
         try:
@@ -128,10 +142,14 @@ class DigestAuth(PostResponseAuth):
                 self.encoding,
             )
 
-        bytes_path = bytes(req_obj.path, self.encoding)
+        bytes_path = bytes(req_obj.path or "", self.encoding)
         bytes_method = bytes(req_obj.method, self.encoding)
         try:
             if b"auth-int" in auth_dict["qop"].lower():
+
+                if isinstance(response_obj.raw, str):
+                    raise ValueError("response_obj.raw is str when it shouldn't")
+
                 hashed_body = bytes(
                     md5(response_obj.raw or b"").hexdigest(), self.encoding
                 )
@@ -160,7 +178,7 @@ class DigestAuth(PostResponseAuth):
                             auth_dict["nonce"],
                             bytes_nc,
                             cnonce,
-                            bytes(qop, self.encoding),
+                            bytes(qop or "", self.encoding),
                             ha2,
                         )
                     )
@@ -190,3 +208,7 @@ class DigestAuth(PostResponseAuth):
             ]
         )
         return {"Authorization": "Digest {}".format(", ".join(response_items))}
+
+
+from . import request_object  # noqa
+from . import response_objects  # noqa

@@ -8,28 +8,38 @@ it could be. Refactors are required to bring it up to spec!
 __all__ = ["RequestProcessor"]
 
 
-from numbers import Number
-from os.path import basename
-from urllib.parse import urljoin, urlparse, urlunparse, quote_plus
 import json as _json
-from random import randint
 import mimetypes
 import re
+from collections.abc import Awaitable, Callable
+from numbers import Number
+from os.path import basename
+from random import randint
+from typing import Any, Iterable, Optional, Protocol, Union, cast
+from urllib.parse import quote_plus, urljoin, urlparse, urlunparse
 
-from anyio import open_file, EndOfStream
 import h11
+from anyio import EndOfStream, open_file
 
-from .utils import requote_uri
+from .auth import PostResponseAuth, PreResponseAuth
 from .cookie_utils import parse_cookies
-from .auth import PreResponseAuth, PostResponseAuth
-from .req_structs import CaseInsensitiveDict as c_i_dict
-from .response_objects import Response, StreamResponse, StreamBody
 from .errors import TooManyRedirects
 from .multipart import build_multipart_body
+from .req_structs import CaseInsensitiveDict as c_i_dict
+from .req_structs import SocketLike
+from .response_objects import (Response, StreamBody,
+                               StreamResponse)
+from .utils import requote_uri
 
-
-_BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(10 ** 3, 10 ** 9))
+_BOUNDARY = "8banana133744910kmmr13a56!102!" + str(randint(10**3, 10**9))
 _WWX_MATCH = re.compile(r"\Aww.\.")
+
+
+class ResponseLike(Protocol):
+    status_code: int
+    reason: bytes
+    http_version: bytes
+    headers: list[tuple[bytes, bytes]]
 
 
 class RequestProcessor:
@@ -38,7 +48,7 @@ class RequestProcessor:
     session passes the required info and calls `make_request`.
 
     Args:
-        session (child of BaseSession): A reference to the calling session.
+        session (child of "session.BaseSession"): A reference to the calling session.
 
         method (str): The HTTP method to be used in the request.
 
@@ -86,29 +96,36 @@ class RequestProcessor:
             socket object may be updated on `connection: close` headers.
     """
 
-    def __init__(self, session, method, uri, port, **kwargs):
+    def __init__(
+        self,
+        session: "Optional[sessions.BaseSession]",
+        method: str,
+        uri: str,
+        port: Optional[str],
+        **kwargs: Any
+    ) -> None:
         # These are kwargsable attribs.
         self.session = session
         self.method = method.upper()
         self.uri = uri
-        self.port = port
+        self.port = port or "443"
         self.auth = None
         self.auth_off_domain = None
-        self.body = None
+        self.body: Optional[str] = None
         self.data = None
         self.params = None
         self.headers = None
-        self.encoding = None
+        self.encoding: str = "utf-8"
         self.json = None
         self.files = None
         self.multipart = None
-        self.cookies = {}
-        self.callback = None
+        self.cookies: dict[str, str] = {}
+        self.callback: Optional[Callable[[bytes], Awaitable[None]]] = None
         self.stream = None
         self.timeout = None
         self.max_redirects = 20
         self.follow_redirects = True
-        self.sock = None
+        self.sock: Optional[SocketLike] = None
         self.persist_cookies = None
         self.mimetype = None
 
@@ -117,21 +134,23 @@ class RequestProcessor:
         self.__dict__.update(kwargs)
 
         # These are unkwargsable, and set by the code.
-        self.history_objects = []
-        self.scheme = None
-        self.host = None
-        self.path = None
-        self.query = None
-        self.uri_parameters = None
+        self.history_objects: list[Union[Response, StreamResponse]] = []
+        self.scheme: Optional[str] = None
+        self.host: Optional[str] = None
+        self.path: Optional[str] = None
+        self.query: Optional[str] = None
+        self.uri_parameters: Optional[str] = None
         self.target_netloc = None
-        self.req_url = None
+        self.req_url: Optional[str] = None
 
-        self.initial_scheme = None
-        self.initial_netloc = None
+        self.initial_scheme: Optional[str] = None
+        self.initial_netloc: Optional[str] = None
 
         self.streaming = False
 
-    async def make_request(self, redirect=False):
+    async def make_request(
+        self, redirect: bool = False
+    ) -> tuple[Optional[SocketLike], Union[Response, StreamResponse]]:
         """
         Acts as the central hub for preparing requests to be sent, and
         returning them upon completion. Generally just pokes through
@@ -183,7 +202,8 @@ class RequestProcessor:
         # What the fuck is this shit.
         if self.persist_cookies is not None:
             self.cookies.update(
-                self.persist_cookies.get_additional_cookies(self.host, self.path)
+                self.persist_cookies.get_additional_cookies(
+                    self.host, self.path)
             )
 
         # formulate path / query and intended extra querys for use in uri
@@ -191,10 +211,14 @@ class RequestProcessor:
 
         # handle building the request body, if any
         body = ""
-        if any((self.data, self.files, self.json is not None, self.multipart is not None)):
+        if any(
+            (self.data, self.files, self.json is not None, self.multipart is not None)
+        ):
             content_type, content_len, body = await self._formulate_body()
-            asks_headers["Content-Type"] = content_type
-            asks_headers["Content-Length"] = content_len
+            if content_type:
+                asks_headers["Content-Type"] = content_type
+            if content_len:
+                asks_headers["Content-Length"] = content_len
             self.body = body
 
         # add custom headers, if any
@@ -216,16 +240,19 @@ class RequestProcessor:
 
         # Construct h11 body object, if any body.
         if body:
-            if not isinstance(body, bytes):
-                body = bytes(body, self.encoding)
-                asks_headers["Content-Length"] = str(len(body))
-            req_body = h11.Data(data=body)
+            if isinstance(body, bytes):
+                body_bytes = body
+            else:
+                body_bytes = bytes(body, self.encoding)
+                asks_headers["Content-Length"] = str(len(body_bytes))
+            req_body = h11.Data(data=body_bytes)
         else:
             req_body = None
 
         # Construct h11 request object.
         req = h11.Request(
-            method=self.method, target=self.path, headers=asks_headers.items()
+            method=self.method, target=self.path, headers=list(
+                asks_headers.items())
         )
 
         # call i/o handling func
@@ -235,7 +262,7 @@ class RequestProcessor:
         # to the calling session's connection pool.
         # We don't want to return sockets that are of a difference schema or
         # different top level domain, as they are less likely to be useful.
-        if redirect:
+        if redirect and self.sock:
             if not (
                 self.scheme == self.initial_scheme and self.host == self.initial_netloc
             ):
@@ -245,13 +272,22 @@ class RequestProcessor:
         if self.streaming:
             return None, response_obj
 
-        if asks_headers.get('connection', '') == 'close' and self.sock._active:
+        if (
+            self.sock
+            and asks_headers.get("connection", "") == "close"
+            and self.sock._active
+        ):
             await self.sock.aclose()
             return None, response_obj
 
         return self.sock, response_obj
 
-    async def _request_io(self, h11_request, h11_body, h11_connection):
+    async def _request_io(
+        self,
+        h11_request: h11.Request,
+        h11_body: Optional[h11.Data],
+        h11_connection: h11.Connection,
+    ) -> Union[Response, StreamResponse]:
         """
         Takes care of the i/o side of the request once it's been built,
         and calls a couple of cleanup functions to check for redirects / store
@@ -273,7 +309,8 @@ class RequestProcessor:
         """
         await self._send(h11_request, h11_body, h11_connection)
         response_obj = await self._catch_response(h11_connection)
-        parse_cookies(response_obj, self.host)
+        if self.host:
+            parse_cookies(response_obj, self.host)
 
         # If there's a cookie tracker object, store any cookies we
         # might've picked up along our travels.
@@ -297,7 +334,7 @@ class RequestProcessor:
 
         return response_obj
 
-    def _build_path(self):
+    def _build_path(self) -> None:
         """
         Constructs the actual request URL with accompanying query if any.
 
@@ -332,7 +369,7 @@ class RequestProcessor:
             (self.scheme, self.host, (self.path or ""), "", "", "")
         )
 
-    async def _redirect(self, response_obj):
+    async def _redirect(self, response_obj: Union[Response, StreamResponse]) -> Union[Response, StreamResponse]:
         """
         Calls the _check_redirect method of the supplied response object
         in order to determine if the http status code indicates a redirect.
@@ -360,7 +397,7 @@ class RequestProcessor:
                 force_get = True
             location = response_obj.headers["Location"]
 
-        if redirect:
+        if redirect and location:
             allow_redirect = True
             location = urljoin(self.uri, location.strip())
             if self.auth is not None:
@@ -388,17 +425,19 @@ class RequestProcessor:
                 _, response_obj = await self.make_request()
         return response_obj
 
-    async def _get_new_sock(self):
+    async def _get_new_sock(self) -> None:
         """
         On 'Connection: close' headers we've to create a new connection.
         This reaches in to the parent session and pulls a switcheroo, dunking
         the current connection and requesting a new one.
         """
-        self.sock._active = False
+        if not self.session:
+            raise ValueError("session is none")
         self.sock = await self.session._grab_connection(self.uri)
+        self.sock._active = False
         self.port = self.sock.port
 
-    async def _formulate_body(self):
+    async def _formulate_body(self) -> tuple[Optional[str], str, str]:
         """
         Takes user supplied data / files and forms it / them
         appropriately, returning the contents type, len,
@@ -455,7 +494,9 @@ class RequestProcessor:
         return c_type, str(len(body)), body
 
     @staticmethod
-    def _dict_to_query(data, params=True, base_query=False):
+    def _dict_to_query(
+        data: dict[str, object], params: bool = True, base_query: bool = False
+    ) -> str:
         """
         Turns python dicts in to valid body-queries or queries for use directly
         in the request url. Unlike the stdlib quote() and it's variations,
@@ -478,6 +519,7 @@ class RequestProcessor:
                 for key in v:
                     query.append("=".join(quote_plus(x) for x in (k, key)))
             elif hasattr(v, "__iter__"):
+                v = cast(Iterable[object], v)
                 for elm in v:
                     query.append(
                         "=".join(
@@ -494,7 +536,7 @@ class RequestProcessor:
 
         return requote_uri("&".join(query))
 
-    async def _multipart(self, files_dict):
+    async def _multipart(self, files_dict: dict[str, str]) -> bytes:
         """
         Forms multipart requests from a dict with name, path k/vs. Name
         does not have to be the actual file name.
@@ -504,10 +546,11 @@ class RequestProcessor:
             as multipart files.
 
         Returns:
-            multip_pkg (str): The strings representation of the content body,
+            multip_pkg (bytes): The bytes representation of the content body,
             multipart formatted.
         """
         boundary = bytes(_BOUNDARY, self.encoding)
+        boundary = bytes(_BOUNDARY, "utf-8")
         hder_format = 'Content-Disposition: form-data; name="{}"'
         hder_format_io = '; filename="{}"'
 
@@ -525,17 +568,20 @@ class RequestProcessor:
                     hder_format.format(k) + hder_format_io.format(basename(v)),
                     self.encoding,
                 )
-                mime_type = mimetypes.guess_type(basename(v))
-                if not mime_type[1]:
+                mime_type_tuple = mimetypes.guess_type(basename(v))
+                if not mime_type_tuple[1]:
                     mime_type = "application/octet-stream"
                 else:
-                    mime_type = "/".join(mime_type)
-                multip_pkg += bytes("\r\nContent-Type: " + mime_type, self.encoding)
+                    mime_type = "{}/{}".format(
+                        mime_type_tuple[0], mime_type_tuple[1])
+                multip_pkg += bytes("\r\nContent-Type: " +
+                                    mime_type, self.encoding)
                 multip_pkg += b"\r\n" * 2 + pkg_body
 
             except (TypeError, FileNotFoundError):
                 pkg_body = bytes(v, self.encoding) + b"\r\n"
-                multip_pkg += bytes(hder_format.format(k) + "\r\n" * 2, self.encoding)
+                multip_pkg += bytes(hder_format.format(k) +
+                                    "\r\n" * 2, self.encoding)
                 multip_pkg += pkg_body
 
             if index == num_of_parts:
@@ -543,11 +589,11 @@ class RequestProcessor:
 
         return multip_pkg
 
-    async def _file_manager(self, path):
+    async def _file_manager(self, path: str) -> bytes:
         async with await open_file(path, "rb") as f:
             return b"".join(await f.readlines()) + b"\r\n"
 
-    async def _catch_response(self, h11_connection):
+    async def _catch_response(self, h11_connection: h11.Connection) -> Union[Response, StreamResponse]:
         """
         Instantiates the parser which manages incoming data, first getting
         the headers, storing cookies, and then parsing the response's body,
@@ -568,15 +614,15 @@ class RequestProcessor:
 
         response = await self._recv_event(h11_connection)
 
-        resp_data = {
+        resp_data: dict[str, Any] = {
             "encoding": self.encoding,
             "method": self.method,
             "status_code": response.status_code,
-            "reason_phrase": str(response.reason, "utf-8"),
-            "http_version": str(response.http_version, "utf-8"),
+            "reason_phrase": response.reason.decode("utf-8"),
+            "http_version": response.http_version.decode("utf-8"),
             "headers": c_i_dict(
                 [
-                    (str(name, "utf-8"), str(value, "utf-8"))
+                    (name.decode("utf-8"), value.decode("utf-8"))
                     for name, value in response.headers
                 ]
             ),
@@ -587,9 +633,11 @@ class RequestProcessor:
         for header in response.headers:
             if header[0].lower() == b"set-cookie":
                 try:
-                    resp_data["headers"]["set-cookie"].append(str(header[1], "utf-8"))
+                    resp_data["headers"]["set-cookie"].append(
+                        str(header[1], "utf-8"))
                 except (KeyError, AttributeError):
-                    resp_data["headers"]["set-cookie"] = [str(header[1], "utf-8")]
+                    resp_data["headers"]["set-cookie"] = [
+                        str(header[1], "utf-8")]
 
         # check whether we should receive body according to RFC 7230
         # https://tools.ietf.org/html/rfc7230#section-3.3.3
@@ -602,7 +650,10 @@ class RequestProcessor:
                 if "chunked" in resp_data["headers"]["transfer-encoding"].lower():
                     get_body = True
             except KeyError:
-                connection_close = resp_data["headers"].get("connection", "").lower() == "close"
+                connection_close = (
+                    resp_data["headers"].get(
+                        "connection", "").lower() == "close"
+                )
                 http_1 = response.http_version == b"1.0"
                 if connection_close or http_1:
                     get_body = True
@@ -649,19 +700,25 @@ class RequestProcessor:
 
         return Response(**resp_data)
 
-    async def _recv_event(self, h11_connection):
+    async def _recv_event(self, h11_connection: h11.Connection) -> ResponseLike:
         while True:
             event = h11_connection.next_event()
             if event is h11.NEED_DATA:
                 try:
-                    data = await self.sock.receive()
+                    if self.sock:
+                        data = await self.sock.receive()
                 except EndOfStream:
                     data = b""
                 h11_connection.receive_data(data)
                 continue
-            return event
+            return cast(ResponseLike, event)
 
-    async def _send(self, request_bytes, body_bytes, h11_connection):
+    async def _send(
+        self,
+        request: h11.Request,
+        body: Optional[h11.Data],
+        h11_connection: h11.Connection,
+    ) -> None:
         """
         Takes a package and body, combines then, then shoots 'em off in to
         the ether.
@@ -670,15 +727,17 @@ class RequestProcessor:
             package (list of str): The header package.
             body (str): The str representation of the body.
         """
-        await self.sock.send(h11_connection.send(request_bytes))
-        if body_bytes is not None:
-            await self.sock.send(h11_connection.send(body_bytes))
+        if not self.sock:
+            return
+        await self.sock.send(h11_connection.send(request))
+        if body is not None:
+            await self.sock.send(h11_connection.send(body))
 
         data = h11_connection.send(h11.EndOfMessage())
         if data:
             await self.sock.send(data)
 
-    async def _auth_handler_pre(self):
+    async def _auth_handler_pre(self) -> dict[str, str]:
         """
         If the user supplied auth does not rely on any response
         (is a PreResponseAuth object) then we call the auth's __call__
@@ -689,7 +748,7 @@ class RequestProcessor:
             return await self.auth(self)
         return {}
 
-    async def _auth_handler_post_get_auth(self):
+    async def _auth_handler_post_get_auth(self) -> dict[str, str]:
         """
         If the user supplied auth does rely on a response
         (is a PostResponseAuth object) then we call the auth's __call__
@@ -704,10 +763,12 @@ class RequestProcessor:
                 if authable_resp.status_code == 401:
                     if not self.auth.auth_attempted:
                         self.auth.auth_attempted = True
-                        return await self.auth(authable_resp, self)
+                        return await self.auth(cast(Response, authable_resp), self)
         return {}
 
-    async def _auth_handler_post_check_retry(self, response_obj):
+    async def _auth_handler_post_check_retry(
+        self, response_obj: Union[Response, StreamResponse]
+    ) -> Union[Response, StreamResponse]:
         """
         The other half of _auth_handler_post_check_retry (what a mouthful).
         If auth has not yet been attempted and the most recent response
@@ -728,7 +789,7 @@ class RequestProcessor:
                     return response_obj
         return response_obj
 
-    async def _location_auth_protect(self, location):
+    async def _location_auth_protect(self, location: str) -> bool:
         """
         Checks to see if the new location is
             1. The same top level domain
@@ -739,28 +800,38 @@ class RequestProcessor:
                 and the connection type is equally or more secure.
                 False otherwise.
         """
+        if not self.host:
+            return False
         netloc_sans_port = self.host.split(":")[0]
-        netloc_sans_port = netloc_sans_port.replace(
-            (re.match(_WWX_MATCH, netloc_sans_port)[0]), ""
-        )
+        match = re.match(_WWX_MATCH, netloc_sans_port)
 
+        if not match:
+            return False
+
+        netloc_sans_port = netloc_sans_port.replace(match.groups()[0], "")
         base_domain = ".".join(netloc_sans_port.split(".")[-2:])
 
         l_scheme, l_netloc, _, _, _, _ = urlparse(location)
         location_sans_port = l_netloc.split(":")[0]
-        location_sans_port = location_sans_port.replace(
-            (re.match(_WWX_MATCH, location_sans_port)[0]), ""
-        )
 
+        match = re.match(_WWX_MATCH, location_sans_port)
+
+        if not match:
+            return False
+
+        location_sans_port = location_sans_port.replace(match.groups()[0], "")
         location_domain = ".".join(location_sans_port.split(".")[-2:])
 
         if base_domain == location_domain:
+            if self.scheme is None:
+                return True
             if l_scheme < self.scheme:
                 return False
             else:
                 return True
+        return False
 
-    async def _body_callback(self, h11_connection):
+    async def _body_callback(self, h11_connection: h11.Connection) -> ResponseLike:
         """
         A callback func to be supplied if the user wants to do something
         directly with the response body's stream.
@@ -769,6 +840,10 @@ class RequestProcessor:
         while True:
             next_event = await self._recv_event(h11_connection)
             if isinstance(next_event, h11.Data):
-                await self.callback(next_event.data)
+                if self.callback is not None:
+                    await self.callback(next_event.data)
             else:
                 return next_event
+
+
+from . import sessions  # noqa

@@ -1,16 +1,21 @@
 import codecs
-from types import SimpleNamespace
 import json as _json
+from types import SimpleNamespace
+from typing import Any, Generic, Iterator, Optional, TypeVar, Union, cast
 
-from async_generator import async_generator, yield_
 import h11
+from async_generator import async_generator, yield_
 
-from .http_utils import decompress, parse_content_encoding
-from .utils import timeout_manager
 from .errors import BadStatus
+from .http_utils import decompress, parse_content_encoding
+from .req_structs import SocketLike
+from .utils import timeout_manager
 
 
-class BaseResponse:
+BodyType = TypeVar('BodyType')
+
+
+class BaseResponse(Generic[BodyType]):
     """
     A response object supporting a range of methods and attribs
     for accessing the status line, header, cookies, history and
@@ -19,15 +24,15 @@ class BaseResponse:
 
     def __init__(
         self,
-        encoding,
-        http_version,
-        status_code,
-        reason_phrase,
-        headers,
-        body,
-        method,
-        url,
-    ):
+        encoding: Optional[str],
+        http_version: str,
+        status_code: int,
+        reason_phrase: str,
+        headers: dict[str, str],
+        body: BodyType,
+        method: str,
+        url: str,
+    ) -> None:
         self.encoding = encoding
         self.http_version = http_version
         self.status_code = status_code
@@ -36,10 +41,10 @@ class BaseResponse:
         self.body = body
         self.method = method
         self.url = url
-        self.history = []
-        self.cookies = []
+        self.history: list["Union[Response, StreamResponse]"] = []
+        self.cookies: list["Cookie"] = []
 
-    def raise_for_status(self):
+    def raise_for_status(self) -> None:
         """
         Raise BadStatus if one occurred.
         """
@@ -60,12 +65,12 @@ class BaseResponse:
                 self.status_code,
             )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{} {} {}>".format(
             self.__class__.__name__, self.status_code, self.reason_phrase
         )
 
-    def _guess_encoding(self):
+    def _guess_encoding(self) -> None:
         try:
             guess = self.headers["content-type"].split("=")[1]
             codecs.lookup(guess)
@@ -73,29 +78,33 @@ class BaseResponse:
         except LookupError:  # IndexError/KeyError are LookupError subclasses
             pass
 
-    def _decompress(self, encoding=None):
+    def _decompress(self, encoding: Optional[str] = None) -> str:
         content_encoding = self.headers.get("Content-Encoding", None)
         if content_encoding is not None:
             decompressor = decompress(
                 parse_content_encoding(content_encoding), encoding
             )
             r = decompressor.send(self.body)
-            return r
+            return cast(str, r)
         else:
             if encoding is not None:
+                if not isinstance(self.body, bytes) and not isinstance(self.body, bytearray):
+                    raise TypeError("body is not bytes when it should be")
                 return self.body.decode(encoding, errors="replace")
             else:
+                if not isinstance(self.body, str):
+                    raise TypeError("body is not str when it should be")
                 return self.body
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "BaseResponse[BodyType]":
         return self
 
-    async def __aexit__(self, *exc_info):
+    async def __aexit__(self, *exc_info: Any) -> Any:
         ...
 
 
-class Response(BaseResponse):
-    def json(self, **kwargs):
+class Response(BaseResponse[Union[str, bytes, bytearray]]):
+    def json(self, **kwargs: Any) -> Any:
         """
         If the response's body is valid json, we load it as a python dict
         and return it.
@@ -104,57 +113,61 @@ class Response(BaseResponse):
         return _json.loads(body, **kwargs)
 
     @property
-    def text(self):
+    def text(self) -> Any:
         """
         Returns the (maybe decompressed) decoded version of the body.
         """
         return self._decompress(self.encoding)
 
     @property
-    def content(self):
+    def content(self) -> Any:
         """
         Returns the content as-is after decompression, if any.
         """
         return self._decompress()
 
     @property
-    def raw(self):
+    def raw(self) -> Union[str, bytes, bytearray]:
         """
         Returns the response body as received.
         """
         return self.body
 
 
-class StreamResponse(BaseResponse):
-    ...
-
-
 class StreamBody:
-    def __init__(self, h11_connection, sock, content_encoding=None, encoding=None):
+    def __init__(
+        self,
+        h11_connection: h11.Connection,
+        sock: SocketLike,
+        content_encoding: Optional[str] = None,
+        encoding: Optional[str] = None,
+    ):
         self.h11_connection = h11_connection
         self.sock = sock
         self.content_encoding = content_encoding
         self.encoding = encoding
         # TODO: add decompress data to __call__ args
         self.decompress_data = True
-        self.timeout = None
+        self.timeout: Optional[float] = None
         self.read_size = 10000
 
     @async_generator
-    async def __aiter__(self):
+    async def __aiter__(self) -> None:
         if self.content_encoding is not None:
-            decompressor = decompress(parse_content_encoding(self.content_encoding))
+            decompressor = decompress(
+                parse_content_encoding(self.content_encoding))
         while True:
             event = await self._recv_event()
             if isinstance(event, h11.Data):
+                data = event.data
                 if self.content_encoding is not None:
                     if self.decompress_data:
-                        event.data = decompressor.send(event.data)
-                await yield_(event.data)
+                        data = decompressor.send(event.data)
+                await yield_(data)
             elif isinstance(event, h11.EndOfMessage):
                 break
 
-    async def _recv_event(self):
+    async def _recv_event(self) -> Any:
         while True:
             event = self.h11_connection.next_event()
 
@@ -167,18 +180,22 @@ class StreamBody:
 
             return event
 
-    def __call__(self, timeout=None):
+    def __call__(self, timeout: Optional[float] = None) -> "StreamBody":
         self.timeout = timeout
         return self
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "StreamBody":
         return self
 
-    async def close(self):
+    async def close(self) -> None:
         await self.sock.aclose()
 
-    async def __aexit__(self, *exc_info):
+    async def __aexit__(self, *exc_info: Any) -> None:
         await self.close()
+
+
+class StreamResponse(BaseResponse[StreamBody]):
+    ...
 
 
 class Cookie(SimpleNamespace):
@@ -187,26 +204,25 @@ class Cookie(SimpleNamespace):
     Needs to be made compatible with the API's cookies kw arg.
     """
 
-    def __init__(self, host, data):
-        self.name = None
-        self.value = None
-        self.domain = None
-        self.path = None
-        self.secure = False
-        self.expires = None
-        self.comment = None
+    def __init__(self, host: str, data: dict[str, Any]) -> None:
+        self.name: Optional[str] = None
+        self.value: Optional[str] = None
+        self.domain: Optional[str] = None
+        self.path: Optional[str] = None
+        self.secure: bool = False
+        self.comment: Optional[str] = None
 
         self.__dict__.update(data)
 
         super().__init__(**self.__dict__)
         self.host = host
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.name is not None:
             return "<Cookie {} from {}>".format(self.name, self.host)
         else:
             return "<Cookie {} from {}>".format(self.value, self.host)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[str, str]]:
         for k, v in self.__dict__.items():
             yield k, v

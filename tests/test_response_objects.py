@@ -1,12 +1,12 @@
 import asks.response_objects
 
 
-def test_response_repr():
+def test_response_repr() -> None:
     r = asks.response_objects.Response("ascii", "", 200, "Meh", {}, "", "", "")
     assert repr(r) == "<Response 200 Meh>"
 
 
-def test_response_guess_encoding():
+def test_response_guess_encoding() -> None:
     r = asks.response_objects.Response(
         "ascii", "", 200, "", {"content-type": "text/plain; charset=utf-8"}, "", "", ""
     )
@@ -24,6 +24,6 @@ def test_response_guess_encoding():
     assert r.encoding == "ascii"
 
 
-def test_response_json():
+def test_response_json() -> None:
     r = asks.response_objects.Response(None, "", 200, "", {}, '{"foo":"bar"}', "", "")
     assert r.json() == {"foo": "bar"}

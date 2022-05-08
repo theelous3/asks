@@ -5,17 +5,19 @@ The disparate session (Session) is for making requests to multiple locations.
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from functools import partialmethod
-from urllib.parse import urlparse, urlunparse, urljoin
+from ssl import SSLContext
+from typing import Any, Optional, Union, cast
+from urllib.parse import urlparse, urlunparse
 
+from anyio import Semaphore, connect_tcp
 from h11 import RemoteProtocolError
-from anyio import connect_tcp, Semaphore
 
 from .cookie_utils import CookieTracker
 from .errors import BadHttpResponse
-from .req_structs import SocketQ
+from .req_structs import SocketLike, SocketQ
 from .request_object import RequestProcessor
+from .response_objects import Response, StreamResponse
 from .utils import get_netloc_port, timeout_manager
-
 
 __all__ = ["Session"]
 
@@ -27,7 +29,11 @@ class BaseSession(metaclass=ABCMeta):
     socket to create, and all of the HTTP methods ('GET', 'POST', etc.)
     """
 
-    def __init__(self, headers=None, ssl_context=None):
+    def __init__(
+        self,
+        headers: Optional[dict[str, str]] = None,
+        ssl_context: Optional[SSLContext] = None,
+    ):
         """
         Args:
             headers (dict): Headers to be applied to all requests.
@@ -41,56 +47,60 @@ class BaseSession(metaclass=ABCMeta):
             self.headers = {}
 
         self.ssl_context = ssl_context
-        self.encoding = None
-        self.source_address = None
-        self._cookie_tracker = None
+        self.encoding: str = "utf-8"
+        self.source_address: Optional[str] = None
+        self._cookie_tracker: Optional[CookieTracker] = None
 
     @property
     @abstractmethod
-    def sema(self):
+    def sema(self) -> Semaphore:
         """
         A semaphore-like context manager.
         """
         ...
 
-    async def _open_connection_http(self, location):
+    async def _open_connection_http(self, location: tuple[str, int]) -> SocketLike:
         """
         Creates a normal async socket, returns it.
         Args:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         """
-        sock = await connect_tcp(
-            location[0], location[1], local_host=self.source_address
+        sock = cast(
+            SocketLike,
+            await connect_tcp(location[0], location[1], local_host=self.source_address),
         )
         sock._active = True
         return sock
 
-    async def _open_connection_https(self, location):
+    async def _open_connection_https(self, location: tuple[str, int]) -> SocketLike:
         """
         Creates an async SSL socket, returns it.
         Args:
             location (tuple(str, int)): A tuple of net location (eg
                 '127.0.0.1' or 'example.org') and port (eg 80 or 25000).
         """
-        sock = await connect_tcp(
-            location[0],
-            location[1],
-            ssl_context=self.ssl_context,
-            local_host=self.source_address,
-            tls=True,
-            tls_standard_compatible=False,
+        sock = cast(
+            SocketLike,
+            await connect_tcp(
+                location[0],
+                location[1],
+                ssl_context=self.ssl_context,
+                local_host=self.source_address,
+                tls=True,
+                tls_standard_compatible=False,
+            ),
         )
         sock._active = True
         return sock
 
-    async def _connect(self, host_loc):
+    async def _connect(self, host_loc: str) -> tuple[SocketLike, str]:
         """
         Simple enough stuff to figure out where we should connect, and creates
         the appropriate connection.
         """
         parsed_hostloc = urlparse(host_loc)
-        scheme, host, path, parameters, query, fragment = parsed_hostloc
+        scheme, _, path, parameters, query, fragment = parsed_hostloc
         if parameters or query or fragment:
             raise TypeError(
                 "Supplied info beyond scheme, host."
@@ -98,15 +108,27 @@ class BaseSession(metaclass=ABCMeta):
                 path,
             )
 
-        host, port = get_netloc_port(parsed_hostloc)
+        host_opt, port = get_netloc_port(parsed_hostloc)
+        if host_opt is not None:
+            host = host_opt
+        else:
+            host = "host"
+
         if scheme == "http":
             return await self._open_connection_http((host, int(port))), port
         else:
             return await self._open_connection_https((host, int(port))), port
 
     async def request(
-        self, method, url=None, *, path="", retries=1, connection_timeout=60, **kwargs
-    ):
+        self,
+        method: str,
+        url: Optional[str] = None,
+        *,
+        path: str = "",
+        retries: int = 1,
+        connection_timeout: int = 60,
+        **kwargs: Any
+    ) -> Union[Response, StreamResponse]:
         """
         This is the template for all of the `http method` methods for
         the Session.
@@ -267,7 +289,7 @@ class BaseSession(metaclass=ABCMeta):
                 method, url, path=path, retries=retries, headers=headers, **kwargs
             )
 
-        return r
+        return cast(Response, r)
 
     # These be the actual http methods!
     # They are partial methods of `request`. See the `request` docstring
@@ -280,7 +302,7 @@ class BaseSession(metaclass=ABCMeta):
     options = partialmethod(request, "OPTIONS")
     patch = partialmethod(request, "PATCH")
 
-    async def _handle_exception(self, e, sock):
+    async def _handle_exception(self, e: Exception, sock: SocketLike) -> None:
         """
         Given an exception, we want to handle it appropriately. Some exceptions we
         prefer to shadow with an asks exception, and some we want to raise directly.
@@ -295,21 +317,21 @@ class BaseSession(metaclass=ABCMeta):
             raise e
 
     @abstractmethod
-    def _make_url(self):
+    def _make_url(self, path: str) -> str:
         """
         A method who's result is concated with a uri path.
         """
         ...
 
     @abstractmethod
-    async def _grab_connection(self, url):
+    async def _grab_connection(self, url: str) -> SocketLike:
         """
         A method that will return a socket-like object.
         """
         ...
 
     @abstractmethod
-    async def return_to_pool(self, sock):
+    async def return_to_pool(self, sock: SocketLike) -> None:
         """
         A method that will accept a socket-like object.
         """
@@ -326,14 +348,14 @@ class Session(BaseSession):
 
     def __init__(
         self,
-        base_location="",
-        endpoint="",
-        headers=None,
-        encoding="utf-8",
-        persist_cookies=None,
-        ssl_context=None,
-        connections=1,
-    ):
+        base_location: str = "",
+        endpoint: str = "",
+        headers: Optional[dict[str, str]] = None,
+        encoding: str = "utf-8",
+        persist_cookies: Optional[bool] = None,
+        ssl_context: Optional[SSLContext] = None,
+        connections: int = 1,
+    ) -> None:
         """
         Args:
             encoding (str): The encoding asks'll try to use on response bodies.
@@ -350,32 +372,33 @@ class Session(BaseSession):
         self.endpoint = endpoint
 
         if persist_cookies is True:
-            self._cookie_tracker = CookieTracker()
+            cookie_tracker = CookieTracker()
         else:
-            self._cookie_tracker = persist_cookies
+            cookie_tracker = None
+        self._cookie_tracker: Optional[CookieTracker] = cookie_tracker
 
         self._conn_pool = SocketQ()
 
-        self._sema = None
+        self._sema: Optional[Semaphore] = None
         self._connections = connections
 
     @property
-    def base_location(self):
+    def base_location(self) -> str:
         return self._base_location
 
     @base_location.setter
-    def base_location(self, value):
+    def base_location(self, value: str) -> None:
         if not value:
             self._base_location = value
         else:
             self._base_location = self._normalise_last_slashes(value)
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> str:
         return self._endpoint
 
     @endpoint.setter
-    def endpoint(self, value):
+    def endpoint(self, value: str) -> None:
         if not value:
             self._endpoint = value
         else:
@@ -383,12 +406,12 @@ class Session(BaseSession):
             self._endpoint = self._normalise_last_slashes(value)
 
     @property
-    def sema(self):
+    def sema(self) -> Semaphore:
         if self._sema is None:
             self._sema = Semaphore(self._connections)
         return self._sema
 
-    def _checkout_connection(self, host_loc):
+    def _checkout_connection(self, host_loc: str) -> Optional[SocketLike]:
         try:
             index = self._conn_pool.index(host_loc)
         except ValueError:
@@ -397,17 +420,17 @@ class Session(BaseSession):
         sock = self._conn_pool.pull(index)
         return sock
 
-    async def return_to_pool(self, sock):
+    async def return_to_pool(self, sock: SocketLike) -> None:
         if sock._active:
             self._conn_pool.appendleft(sock)
 
-    async def _make_connection(self, host_loc):
+    async def _make_connection(self, host_loc: str) -> SocketLike:
         sock, port = await self._connect(host_loc)
         sock.host, sock.port = host_loc, port
 
         return sock
 
-    async def _grab_connection(self, url):
+    async def _grab_connection(self, url: str) -> SocketLike:
         """
         The connection pool handler. Returns a connection
         to the caller. If there are no connections ready, and
@@ -423,7 +446,7 @@ class Session(BaseSession):
                 lying around.
         """
         scheme, host, _, _, _, _ = urlparse(url)
-        host_loc = urlunparse((scheme, host, "", "", "", ""))
+        host_loc: str = urlunparse((scheme, host, "", "", "", ""))
 
         sock = self._checkout_connection(host_loc)
 
@@ -432,7 +455,7 @@ class Session(BaseSession):
 
         return sock
 
-    def _make_url(self, path):
+    def _make_url(self, path: str) -> str:
         """
         Puts together the hostloc and current endpoint for use in request uri.
         """
@@ -446,24 +469,24 @@ class Session(BaseSession):
         return "".join((self.base_location, self.endpoint, path))
 
     @staticmethod
-    def _normalise_last_slashes(url_segment):
+    def _normalise_last_slashes(url_segment: str) -> str:
         """
         Drop any last /'s
         """
         return url_segment if not url_segment.endswith("/") else url_segment[:-1]
 
     @staticmethod
-    def _normalise_head_slashes(url_segment):
+    def _normalise_head_slashes(url_segment: str) -> str:
         """
         Add any missing head /'s
         """
         return url_segment if url_segment.startswith("/") else "/" + url_segment
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "Session":
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         await self.close()
 
-    async def close(self):
+    async def close(self) -> None:
         await self._conn_pool.free_pool()
